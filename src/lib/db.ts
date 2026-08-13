@@ -33,6 +33,43 @@ export async function addSeries(series: Omit<Series, 'id'>): Promise<number> {
   return db.series.add(series)
 }
 
+export async function getExistingTitles(): Promise<Set<string>> {
+  const all = await db.series.toArray()
+  return new Set(all.map(s => s.title.toLowerCase().trim()))
+}
+
+export async function deduplicateSeries(): Promise<number> {
+  const all = await db.series.orderBy('id').toArray()
+  const seen = new Map<string, Series>()
+  const toDelete: number[] = []
+
+  for (const s of all) {
+    const key = s.title.toLowerCase().trim()
+    const existing = seen.get(key)
+    if (!existing) {
+      seen.set(key, s)
+    } else {
+      // Keep the one with more data; drop the other
+      const keepExisting =
+        (existing.posterPath ? 1 : 0) + (existing.tmdbId ? 1 : 0) >=
+        (s.posterPath ? 1 : 0) + (s.tmdbId ? 1 : 0)
+      if (keepExisting) {
+        toDelete.push(s.id!)
+      } else {
+        toDelete.push(existing.id!)
+        seen.set(key, s)
+      }
+    }
+  }
+
+  for (const id of toDelete) {
+    await db.series.delete(id)
+    await db.watchedEpisodes.where('seriesId').equals(id).delete()
+  }
+
+  return toDelete.length
+}
+
 export async function updateSeries(id: number, changes: Partial<Series>): Promise<void> {
   await db.series.update(id, { ...changes, updatedAt: new Date() })
 }

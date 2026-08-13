@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Tv, SlidersHorizontal } from 'lucide-react'
-import { getAllSeries, isDbEmpty } from './lib/db'
+import { getAllSeries, deduplicateSeries } from './lib/db'
 import { importFromCsv } from './lib/import'
 import type { Series, SeriesStatus } from './types'
 import { SeriesGrid } from './components/SeriesGrid'
@@ -28,14 +28,12 @@ export default function App() {
 
   useEffect(() => {
     async function init() {
-      const empty = await isDbEmpty()
-      if (empty) {
-        setImporting(true)
-        await importFromCsv((done, total) => {
-          setImportProgress({ done, total })
-        })
-        setImporting(false)
-      }
+      await deduplicateSeries()
+      setImporting(true)
+      await importFromCsv((done, total) => {
+        setImportProgress({ done, total })
+      })
+      setImporting(false)
       await loadSeries()
     }
     init()

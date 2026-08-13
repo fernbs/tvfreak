@@ -1,5 +1,5 @@
 import Papa from 'papaparse'
-import { addSeries, isDbEmpty } from './db'
+import { addSeries, getExistingTitles } from './db'
 import { searchTv } from './tmdb'
 import type { SeriesStatus } from '../types'
 
@@ -29,9 +29,6 @@ async function sleep(ms: number) {
 export async function importFromCsv(
   onProgress: (done: number, total: number) => void
 ): Promise<void> {
-  const empty = await isDbEmpty()
-  if (!empty) return
-
   const base = import.meta.env.VITE_BASE_URL || '/'
   const csvPath = base.endsWith('/') ? `${base}series_simkl.csv` : `${base}/series_simkl.csv`
   const response = await fetch(csvPath)
@@ -42,7 +39,12 @@ export async function importFromCsv(
     skipEmptyLines: true,
   })
 
-  const rows = parsed.data.filter(r => r.Title?.trim())
+  const existingTitles = await getExistingTitles()
+  const allRows = parsed.data.filter(r => r.Title?.trim())
+  const rows = allRows.filter(r => !existingTitles.has(r.Title.toLowerCase().trim()))
+
+  if (rows.length === 0) return
+
   const total = rows.length
   let done = 0
 
