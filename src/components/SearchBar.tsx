@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, X, Plus, Loader2 } from 'lucide-react'
 import { searchTv, posterUrl } from '../lib/tmdb'
-import { addSeries, getAllSeries } from '../lib/db'
+import { addSeries, getAllSeries } from '../lib/api'
 import type { TmdbSearchResult, SeriesStatus } from '../types'
 import { STATUS_CONFIG } from '../types'
 import { toast } from 'sonner'

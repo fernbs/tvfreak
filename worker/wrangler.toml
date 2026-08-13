@@ -1,0 +1,11 @@
+name = "tvfreak-worker"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tvfreak"
+database_id = "13e56846-0113-4009-ae46-46e69ba3b348"
+
+[migrations]
+migrations_dir = "migrations"

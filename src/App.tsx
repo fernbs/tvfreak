@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Tv, SlidersHorizontal } from 'lucide-react'
-import { getAllSeries, deduplicateSeries } from './lib/db'
+import { getAllSeries, deduplicateSeries } from './lib/api'
 import { importFromCsv } from './lib/import'
 import type { Series, SeriesStatus } from './types'
 import { SeriesGrid } from './components/SeriesGrid'

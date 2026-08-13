@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { getSeasonEpisodes } from '../lib/tmdb'
-import { getWatchedEpisodes, toggleEpisodeWatched } from '../lib/db'
+import { getWatchedEpisodes, toggleEpisodeWatched } from '../lib/api'
 import type { TmdbSeason, TmdbEpisode, WatchedEpisode } from '../types'
 
 interface Props {

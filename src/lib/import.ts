@@ -1,5 +1,5 @@
 import Papa from 'papaparse'
-import { addSeries, getExistingTitles } from './db'
+import { addSeries, getExistingTitles } from './api'
 import { searchTv } from './tmdb'
 import type { SeriesStatus } from '../types'
 

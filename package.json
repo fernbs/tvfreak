@@ -10,7 +10,6 @@
     "deploy": "node node_modules/gh-pages/bin/gh-pages.js -d dist"
   },
   "dependencies": {
-    "dexie": "^4.4.4",
     "framer-motion": "^13.1.0",
     "lucide-react": "^1.31.0",
     "papaparse": "^5.5.4",
