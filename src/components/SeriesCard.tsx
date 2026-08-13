@@ -44,6 +44,13 @@ export function SeriesCard({ series, onClick }: Props) {
         </span>
       </div>
 
+      {/* Next episode badge */}
+      {series.nextEpisodeDate && new Date(series.nextEpisodeDate) > new Date() && (
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#6366F1]/90 text-white leading-tight">
+          {new Date(series.nextEpisodeDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+        </div>
+      )}
+
       {/* Status bar */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[3px]"

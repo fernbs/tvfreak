@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Trash2, Loader2 } from 'lucide-react'
 import { getTvDetails, posterUrl } from '../lib/tmdb'
 import { updateSeries, deleteSeries } from '../lib/api'
-import type { Series, SeriesStatus, TmdbShowDetail } from '../types'
+import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode } from '../types'
 import { STATUS_CONFIG } from '../types'
 import { EpisodeList } from './EpisodeList'
 import { toast } from 'sonner'
@@ -26,11 +26,19 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
       return
     }
     setNotes(series.notes ?? '')
-    if (series.tmdbId) {
+    if (series.tmdbId && series.id) {
       setLoadingDetail(true)
-      getTvDetails(series.tmdbId)
-        .then(d => setDetail(d))
-        .finally(() => setLoadingDetail(false))
+      getTvDetails(series.tmdbId).then(d => {
+        setDetail(d)
+        if (d?.next_episode_to_air) {
+          updateSeries(series.id!, {
+            nextEpisodeDate: d.next_episode_to_air.air_date,
+            nextEpisodeName: d.next_episode_to_air.name,
+          })
+        } else if (series.nextEpisodeDate) {
+          updateSeries(series.id!, { nextEpisodeDate: null, nextEpisodeName: null })
+        }
+      }).finally(() => setLoadingDetail(false))
     }
   }, [series?.id])
 
@@ -161,6 +169,22 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   </p>
                 </div>
               )}
+
+              {/* Next episode */}
+              {detail?.next_episode_to_air && (() => {
+                const ep = detail.next_episode_to_air as TmdbNextEpisode
+                const date = new Date(ep.air_date + 'T00:00:00')
+                const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                return (
+                  <div className="mb-5 px-3 py-2.5 rounded-lg bg-[#6366F1]/10 border border-[#6366F1]/20">
+                    <p className="text-xs text-[#6366F1] font-medium uppercase tracking-wider mb-1">Next episode</p>
+                    <p className="text-sm text-white/80 font-medium">
+                      S{ep.season_number} E{ep.episode_number} · {ep.name}
+                    </p>
+                    <p className="text-xs text-white/40 mt-0.5">{formatted}</p>
+                  </div>
+                )
+              })()}
 
               {/* Episodes */}
               {loadingDetail ? (

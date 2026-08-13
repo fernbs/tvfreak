@@ -5,6 +5,8 @@ const BASE = import.meta.env.VITE_WORKER_URL ?? 'http://localhost:8787'
 function parseSeries(row: Record<string, unknown>): Series {
   return {
     ...row,
+    nextEpisodeDate: (row.nextEpisodeDate as string | null) ?? null,
+    nextEpisodeName: (row.nextEpisodeName as string | null) ?? null,
     addedAt: new Date(row.addedAt as string),
     updatedAt: new Date(row.updatedAt as string),
   } as Series

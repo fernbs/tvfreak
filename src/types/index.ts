@@ -11,6 +11,8 @@ export interface Series {
   lastAirDate: string | null
   numberOfSeasons: number | null
   notes: string
+  nextEpisodeDate: string | null
+  nextEpisodeName: string | null
   addedAt: Date
   updatedAt: Date
 }
@@ -46,6 +48,13 @@ export interface TmdbEpisode {
   overview: string
 }
 
+export interface TmdbNextEpisode {
+  air_date: string
+  episode_number: number
+  season_number: number
+  name: string
+}
+
 export interface TmdbShowDetail {
   id: number
   name: string
@@ -55,6 +64,7 @@ export interface TmdbShowDetail {
   last_air_date: string
   number_of_seasons: number
   seasons: TmdbSeason[]
+  next_episode_to_air: TmdbNextEpisode | null
 }
 
 export const STATUS_CONFIG: Record<SeriesStatus, {
