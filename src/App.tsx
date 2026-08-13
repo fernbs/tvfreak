@@ -28,12 +28,12 @@ export default function App() {
 
   useEffect(() => {
     async function init() {
-      await deduplicateSeries()
       setImporting(true)
       await importFromCsv((done, total) => {
         setImportProgress({ done, total })
       })
       setImporting(false)
+      await deduplicateSeries()
       await loadSeries()
     }
     init()

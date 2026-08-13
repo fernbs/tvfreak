@@ -92,6 +92,23 @@ export async function toggleEpisodeWatched(
   return data.watched
 }
 
+export async function bulkMarkEpisodes(
+  seriesId: number,
+  episodes: { seasonNumber: number; episodeNumber: number }[]
+): Promise<void> {
+  await fetch(`${BASE}/api/series/${seriesId}/watched/bulk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ episodes }),
+  })
+}
+
+export async function unmarkSeasonEpisodes(seriesId: number, seasonNumber: number): Promise<void> {
+  await fetch(`${BASE}/api/series/${seriesId}/watched/season/${seasonNumber}`, {
+    method: 'DELETE',
+  })
+}
+
 export async function isDbEmpty(): Promise<boolean> {
   const series = await getAllSeries()
   return series.length === 0

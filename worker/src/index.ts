@@ -5,8 +5,15 @@ interface Env {
 const ALLOWED_SERIES_FIELDS = new Set([
   'tmdbId', 'title', 'status', 'posterPath', 'overview',
   'firstAirDate', 'lastAirDate', 'numberOfSeasons', 'notes',
-  'addedAt', 'updatedAt',
+  'addedAt', 'updatedAt', 'nextEpisodeDate', 'nextEpisodeName',
 ])
+
+const STATUS_PRIORITY: Record<string, number> = {
+  watching: 3,
+  completed: 2,
+  dropped: 1,
+  plantowatch: 0,
+}
 
 function corsHeaders(origin: string) {
   const allowed =
@@ -61,24 +68,36 @@ export default {
           'SELECT * FROM series ORDER BY id ASC'
         ).all()
 
-        const seen = new Map<string, { id: number; posterPath: unknown; tmdbId: unknown }>()
+        type SeriesRow = { id: number; status: string; posterPath: unknown; tmdbId: unknown }
+        const seen = new Map<string, SeriesRow>()
         const toDelete: number[] = []
 
         for (const s of results) {
           const key = (s.title as string).toLowerCase().trim()
           const id = s.id as number
+          const current: SeriesRow = { id, status: s.status as string, posterPath: s.posterPath, tmdbId: s.tmdbId }
           const existing = seen.get(key)
 
           if (!existing) {
-            seen.set(key, { id, posterPath: s.posterPath, tmdbId: s.tmdbId })
+            seen.set(key, current)
           } else {
-            const existingScore = (existing.posterPath ? 1 : 0) + (existing.tmdbId ? 1 : 0)
-            const currentScore = (s.posterPath ? 1 : 0) + (s.tmdbId ? 1 : 0)
-            if (existingScore >= currentScore) {
+            const existingPriority = STATUS_PRIORITY[existing.status] ?? 0
+            const currentPriority = STATUS_PRIORITY[current.status] ?? 0
+
+            let keepExisting: boolean
+            if (existingPriority !== currentPriority) {
+              keepExisting = existingPriority > currentPriority
+            } else {
+              const existingScore = (existing.posterPath ? 1 : 0) + (existing.tmdbId ? 1 : 0)
+              const currentScore = (current.posterPath ? 1 : 0) + (current.tmdbId ? 1 : 0)
+              keepExisting = existingScore >= currentScore
+            }
+
+            if (keepExisting) {
               toDelete.push(id)
             } else {
               toDelete.push(existing.id)
-              seen.set(key, { id, posterPath: s.posterPath, tmdbId: s.tmdbId })
+              seen.set(key, current)
             }
           }
         }
@@ -156,6 +175,32 @@ export default {
           'SELECT * FROM watchedEpisodes WHERE seriesId = ? ORDER BY seasonNumber, episodeNumber'
         ).bind(id).all()
         return json(results, 200, cors)
+      }
+
+      // /api/series/:id/watched/bulk  (mark multiple episodes watched at once)
+      const bulkMatch = path.match(/^\/api\/series\/(\d+)\/watched\/bulk$/)
+      if (bulkMatch && method === 'POST') {
+        const id = parseInt(bulkMatch[1])
+        const body = await request.json() as { episodes: { seasonNumber: number; episodeNumber: number }[] }
+        const now = new Date().toISOString()
+        const stmts = body.episodes.map(ep =>
+          env.DB.prepare(
+            'INSERT OR IGNORE INTO watchedEpisodes (seriesId, seasonNumber, episodeNumber, watchedAt) VALUES (?, ?, ?, ?)'
+          ).bind(id, ep.seasonNumber, ep.episodeNumber, now)
+        )
+        if (stmts.length > 0) await env.DB.batch(stmts)
+        return json({ ok: true, count: stmts.length }, 200, cors)
+      }
+
+      // /api/series/:id/watched/season/:season  (unmark all in a season)
+      const seasonMatch = path.match(/^\/api\/series\/(\d+)\/watched\/season\/(\d+)$/)
+      if (seasonMatch && method === 'DELETE') {
+        const id = parseInt(seasonMatch[1])
+        const season = parseInt(seasonMatch[2])
+        await env.DB.prepare(
+          'DELETE FROM watchedEpisodes WHERE seriesId = ? AND seasonNumber = ?'
+        ).bind(id, season).run()
+        return json({ ok: true }, 200, cors)
       }
 
       // /api/series/:id/watched/toggle
