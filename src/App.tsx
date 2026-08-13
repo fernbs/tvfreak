@@ -4,12 +4,14 @@ import { getAllSeries, deduplicateSeries } from './lib/api'
 import { importFromCsv } from './lib/import'
 import type { Series, SeriesStatus } from './types'
 import { SeriesGrid } from './components/SeriesGrid'
+import { SeriesCard } from './components/SeriesCard'
 import { DetailPanel } from './components/DetailPanel'
 import { SearchBar } from './components/SearchBar'
 import { StatsBar } from './components/StatsBar'
 import { ImportBanner } from './components/ImportBanner'
 
 type SortKey = 'title' | 'added' | 'updated'
+type View = 'home' | 'library'
 
 export default function App() {
   const [allSeries, setAllSeries] = useState<Series[]>([])
@@ -19,6 +21,7 @@ export default function App() {
   const [selected, setSelected] = useState<Series | null>(null)
   const [filter, setFilter] = useState<SeriesStatus | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('title')
+  const [view, setView] = useState<View>('home')
 
   const loadSeries = useCallback(async () => {
     const data = await getAllSeries()
@@ -51,6 +54,20 @@ export default function App() {
     filter === 'all' ? allSeries : allSeries.filter(s => s.status === filter)
   )
 
+  const watchingNow = [...allSeries]
+    .filter(s => s.status === 'watching')
+    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+
+  const now = new Date()
+  const in14Days = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
+  const upcomingEpisodes = [...allSeries]
+    .filter(s => {
+      if (!s.nextEpisodeDate) return false
+      const d = new Date(s.nextEpisodeDate)
+      return d >= now && d <= in14Days
+    })
+    .sort((a, b) => new Date(a.nextEpisodeDate!).getTime() - new Date(b.nextEpisodeDate!).getTime())
+
   async function handleSeriesUpdated() {
     await loadSeries()
     if (selected?.id) {
@@ -73,6 +90,25 @@ export default function App() {
             <span className="text-base font-bold tracking-tight text-white">TVFREAK</span>
           </div>
 
+          <div className="flex items-center gap-1 ml-2">
+            <button
+              onClick={() => setView('home')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                view === 'home' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
+              }`}
+            >
+              Home
+            </button>
+            <button
+              onClick={() => setView('library')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                view === 'library' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
+              }`}
+            >
+              Library
+            </button>
+          </div>
+
           <div className="flex-1" />
 
           <SearchBar onSeriesAdded={handleSeriesAdded} />
@@ -81,33 +117,87 @@ export default function App() {
 
       {/* Main */}
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6">
-        {/* Filter + sort bar */}
-        <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-          <StatsBar
-            series={allSeries}
-            activeFilter={filter}
-            onFilter={setFilter}
-          />
+        {view === 'home' ? (
+          <div className="space-y-10">
+            {/* Currently Watching */}
+            <section>
+              <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+                Watching now
+              </h2>
+              {loading ? (
+                <p className="text-sm text-white/25">Loading...</p>
+              ) : watchingNow.length === 0 ? (
+                <p className="text-sm text-white/25">No series marked as watching yet.</p>
+              ) : (
+                <div
+                  className="flex gap-3 overflow-x-auto pb-2"
+                  style={{ scrollbarWidth: 'none' }}
+                >
+                  {watchingNow.map(s => (
+                    <div key={s.id} className="w-[108px] shrink-0">
+                      <SeriesCard series={s} onClick={setSelected} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <SlidersHorizontal className="w-4 h-4 text-white/30" />
-            <select
-              value={sort}
-              onChange={e => setSort(e.target.value as SortKey)}
-              className="bg-transparent text-sm text-white/50 outline-none cursor-pointer hover:text-white/80 transition-colors"
-            >
-              <option value="title" className="bg-[#1E1E1E]">A-Z</option>
-              <option value="added" className="bg-[#1E1E1E]">Recently Added</option>
-              <option value="updated" className="bg-[#1E1E1E]">Last Updated</option>
-            </select>
+            {/* Upcoming episodes */}
+            <section>
+              <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+                New episodes this fortnight
+              </h2>
+              {loading ? (
+                <p className="text-sm text-white/25">Loading...</p>
+              ) : upcomingEpisodes.length === 0 ? (
+                <p className="text-sm text-white/25">
+                  Nothing airing in the next 14 days. Open a series to refresh its next episode date.
+                </p>
+              ) : (
+                <div
+                  className="flex gap-3 overflow-x-auto pb-2"
+                  style={{ scrollbarWidth: 'none' }}
+                >
+                  {upcomingEpisodes.map(s => (
+                    <div key={s.id} className="w-[108px] shrink-0">
+                      <SeriesCard series={s} onClick={setSelected} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Filter + sort bar */}
+            <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+              <StatsBar
+                series={allSeries}
+                activeFilter={filter}
+                onFilter={setFilter}
+              />
 
-        <SeriesGrid
-          series={filtered}
-          loading={loading}
-          onSelect={setSelected}
-        />
+              <div className="flex items-center gap-2 shrink-0">
+                <SlidersHorizontal className="w-4 h-4 text-white/30" />
+                <select
+                  value={sort}
+                  onChange={e => setSort(e.target.value as SortKey)}
+                  className="bg-transparent text-sm text-white/50 outline-none cursor-pointer hover:text-white/80 transition-colors"
+                >
+                  <option value="title" className="bg-[#1E1E1E]">A-Z</option>
+                  <option value="added" className="bg-[#1E1E1E]">Recently Added</option>
+                  <option value="updated" className="bg-[#1E1E1E]">Last Updated</option>
+                </select>
+              </div>
+            </div>
+
+            <SeriesGrid
+              series={filtered}
+              loading={loading}
+              onSelect={setSelected}
+            />
+          </>
+        )}
       </main>
 
       <DetailPanel
