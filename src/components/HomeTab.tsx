@@ -39,6 +39,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
     return d
   })
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [visibleCount, setVisibleCount] = useState(20)
   const scrollRef = useRef<HTMLDivElement>(null)
   const touchStartY = useRef(0)
   const isPulling = useRef(false)
@@ -155,6 +156,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
     const pad = (n: number) => String(n).padStart(2, '0')
     const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`
     setSelectedDate(prev => prev === dateStr ? null : dateStr)
+    setVisibleCount(20)
     // Scroll list into view
     setTimeout(() => scrollRef.current?.scrollTo({ top: 260, behavior: 'smooth' }), 50)
   }
@@ -348,7 +350,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
               </div>
             ) : (
               <div className="space-y-2">
-                {listItems.map(({ date, series: s }, i) => (
+                {listItems.slice(0, visibleCount).map(({ date, series: s }, i) => (
                   <button
                     key={`${s.id}-${date}-${i}`}
                     onClick={() => onSelect(s)}
@@ -374,6 +376,14 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                     </div>
                   </button>
                 ))}
+                {visibleCount < listItems.length && (
+                  <button
+                    onClick={() => setVisibleCount(c => c + 20)}
+                    className="w-full py-3 text-xs font-medium text-white/35 hover:text-white/55 active:text-white/55 transition-colors"
+                  >
+                    Load more ({listItems.length - visibleCount} remaining)
+                  </button>
+                )}
               </div>
             )}
           </div>
