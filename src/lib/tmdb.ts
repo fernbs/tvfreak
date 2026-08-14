@@ -59,16 +59,16 @@ export async function getTrending(): Promise<import('../types').TmdbSearchResult
   return data.results ?? []
 }
 
-export async function getTvRecommendations(tmdbId: number): Promise<import('../types').TmdbSearchResult[]> {
-  const url = `${BASE_URL}/tv/${tmdbId}/recommendations?language=en-US&page=1`
+export async function getTvRecommendations(tmdbId: number, page = 1): Promise<import('../types').TmdbSearchResult[]> {
+  const url = `${BASE_URL}/tv/${tmdbId}/recommendations?language=en-US&page=${page}`
   const res = await fetch(url, { headers: headers() })
   if (!res.ok) return []
   const data = await res.json()
   return data.results ?? []
 }
 
-export async function getTvSimilar(tmdbId: number): Promise<import('../types').TmdbSearchResult[]> {
-  const url = `${BASE_URL}/tv/${tmdbId}/similar?language=en-US&page=1`
+export async function getTvSimilar(tmdbId: number, page = 1): Promise<import('../types').TmdbSearchResult[]> {
+  const url = `${BASE_URL}/tv/${tmdbId}/similar?language=en-US&page=${page}`
   const res = await fetch(url, { headers: headers() })
   if (!res.ok) return []
   const data = await res.json()

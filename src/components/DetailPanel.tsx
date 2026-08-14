@@ -19,6 +19,9 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   const [detail, setDetail] = useState<TmdbShowDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
+  const [recsPage, setRecsPage] = useState(1)
+  const [loadingMoreRecs, setLoadingMoreRecs] = useState(false)
+  const [hasMoreRecs, setHasMoreRecs] = useState(false)
   const [localImdbRating, setLocalImdbRating] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [deleteModal, setDeleteModal] = useState(false)
@@ -36,6 +39,8 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     }
     setNotes(series.notes ?? '')
     setRecommendations([])
+    setRecsPage(1)
+    setHasMoreRecs(false)
     setLocalImdbRating(null)
     if (!series.tmdbId) return
 
@@ -65,10 +70,10 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
       }
     }).finally(() => setLoadingDetail(false))
 
-    // Merge recommendations + similar, deduplicate, prefer entries with a poster
+    // Merge recommendations + similar page 1, deduplicate, filter by poster
     Promise.all([
-      getTvRecommendations(series.tmdbId),
-      getTvSimilar(series.tmdbId),
+      getTvRecommendations(series.tmdbId, 1),
+      getTvSimilar(series.tmdbId, 1),
     ]).then(([recs, similar]) => {
       const seen = new Set<number>()
       const merged: TmdbSearchResult[] = []
@@ -76,10 +81,12 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
         if (r.poster_path && !seen.has(r.id)) {
           seen.add(r.id)
           merged.push(r)
-          if (merged.length >= 12) break
         }
       }
       setRecommendations(merged)
+      setRecsPage(1)
+      // Both endpoints return up to 20 each; if either is full, page 2 may exist
+      setHasMoreRecs(recs.length >= 20 || similar.length >= 20)
     })
   }, [series?.tmdbId])
 
@@ -154,6 +161,33 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
       onUpdated()
     } finally {
       setAdding(false)
+    }
+  }
+
+  async function handleLoadMoreRecs() {
+    if (!series?.tmdbId || loadingMoreRecs || !hasMoreRecs) return
+    setLoadingMoreRecs(true)
+    const nextPage = recsPage + 1
+    try {
+      const [recs, similar] = await Promise.all([
+        getTvRecommendations(series.tmdbId, nextPage),
+        getTvSimilar(series.tmdbId, nextPage),
+      ])
+      setRecommendations(prev => {
+        const seen = new Set(prev.map(r => r.id))
+        const added: TmdbSearchResult[] = []
+        for (const r of [...recs, ...similar]) {
+          if (r.poster_path && !seen.has(r.id)) {
+            seen.add(r.id)
+            added.push(r)
+          }
+        }
+        return [...prev, ...added]
+      })
+      setRecsPage(nextPage)
+      setHasMoreRecs(recs.length >= 20 || similar.length >= 20)
+    } finally {
+      setLoadingMoreRecs(false)
     }
   }
 
@@ -347,7 +381,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   <p className="text-xs text-white/30 mb-2.5 uppercase tracking-wider font-medium">
                     More like {series.title.split(' ').slice(0, 2).join(' ')}
                   </p>
-                  <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                     {recommendations.map(r => (
                       <div key={r.id} className="shrink-0 w-[72px]">
                         <div className="w-[72px] h-[108px] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1.5">
@@ -361,6 +395,25 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                         <p className="text-[10px] text-white/50 leading-tight line-clamp-2 text-center">{r.name}</p>
                       </div>
                     ))}
+                    {/* Load more tile */}
+                    {hasMoreRecs && (
+                      <div className="shrink-0 w-[72px] flex flex-col items-center justify-center">
+                        <button
+                          onClick={handleLoadMoreRecs}
+                          disabled={loadingMoreRecs}
+                          className="w-[72px] h-[108px] rounded-xl bg-white/5 border border-white/8 flex flex-col items-center justify-center gap-1.5 active:bg-white/10 transition-colors disabled:opacity-50"
+                        >
+                          {loadingMoreRecs ? (
+                            <Loader2 className="w-4 h-4 text-white/30 animate-spin" />
+                          ) : (
+                            <>
+                              <span className="text-lg text-white/25">+</span>
+                              <span className="text-[9px] text-white/25 font-medium">More</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

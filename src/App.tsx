@@ -31,9 +31,11 @@ export default function App() {
   const migrationDone = localStorage.getItem(MIGRATION_KEY) === 'true'
 
   const loadSeries = useCallback(async () => {
-    const data = await getAllSeries()
-    setAllSeries(data)
-    setLoading(false)
+    try {
+      const data = await getAllSeries()
+      setAllSeries(data)
+    } catch { /* worker unreachable, keep empty state */ }
+    finally { setLoading(false) }
   }, [])
 
   useEffect(() => {
@@ -43,10 +45,12 @@ export default function App() {
         await importFromCsv((done, total) => setImportProgress({ done, total }))
       } catch { /* import file not found or failed, skip silently */ }
       finally { setImporting(false) }
-      await deduplicateSeries()
+      try { await deduplicateSeries() } catch { /* non-fatal */ }
       await loadSeries()
-      const dupes = await getDuplicates()
-      setDuplicates(dupes)
+      try {
+        const dupes = await getDuplicates()
+        setDuplicates(dupes)
+      } catch { /* non-fatal */ }
     }
     init()
   }, [loadSeries])
