@@ -84,8 +84,22 @@ export function LibraryTab({
           </div>
         </div>
 
-        {/* Controls row: view toggle + sort */}
+        {/* Controls row: sort + view toggle */}
         <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-white/25" />
+            <select
+              value={sort}
+              onChange={e => setSort(e.target.value as SortKey)}
+              className="bg-transparent text-xs text-white/40 outline-none"
+            >
+              <option value="title" className="bg-[#1E1E1E]">A-Z</option>
+              <option value="added" className="bg-[#1E1E1E]">Added</option>
+              <option value="updated" className="bg-[#1E1E1E]">Updated</option>
+              <option value="nextEpisode" className="bg-[#1E1E1E]">Next episode</option>
+            </select>
+          </div>
+
           {/* View toggle */}
           <div className="flex items-center gap-0.5 bg-white/6 rounded-lg p-0.5">
             {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
@@ -98,21 +112,7 @@ export function LibraryTab({
               </button>
             ))}
           </div>
-
-          <div className="flex items-center gap-1.5">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-white/25" />
-              <select
-                value={sort}
-                onChange={e => setSort(e.target.value as SortKey)}
-                className="bg-transparent text-xs text-white/40 outline-none"
-              >
-                <option value="title" className="bg-[#1E1E1E]">A-Z</option>
-                <option value="added" className="bg-[#1E1E1E]">Added</option>
-                <option value="updated" className="bg-[#1E1E1E]">Updated</option>
-                <option value="nextEpisode" className="bg-[#1E1E1E]">Next episode</option>
-              </select>
-            </div>
-          </div>
+        </div>
 
         {/* Filter chips */}
         <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
