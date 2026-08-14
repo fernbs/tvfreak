@@ -83,13 +83,20 @@ export default function App() {
     for (const s of toRefresh) {
       try {
         const detail = await getTvDetails(s.tmdbId!)
-        if (detail?.next_episode_to_air) {
+        if (!detail) continue
+        const rating = (detail.vote_average ?? 0) > 0 ? detail.vote_average!.toFixed(1) : null
+        if (detail.next_episode_to_air) {
           await updateSeries(s.id!, {
             nextEpisodeDate: detail.next_episode_to_air.air_date,
             nextEpisodeName: detail.next_episode_to_air.name,
+            ...(rating ? { imdbRating: rating } : {}),
           })
         } else {
-          await updateSeries(s.id!, { nextEpisodeDate: null, nextEpisodeName: null })
+          await updateSeries(s.id!, {
+            nextEpisodeDate: null,
+            nextEpisodeName: null,
+            ...(rating ? { imdbRating: rating } : {}),
+          })
         }
       } catch { /* ignore */ }
       await new Promise(r => setTimeout(r, 300))
@@ -129,11 +136,12 @@ export default function App() {
     checkRevived()
   }, [loading, loadSeries])
 
-  // Once-per-session: auto-flip "watching" series where all episodes are watched
+  // Daily: auto-flip "watching" series where all episodes are watched
   useEffect(() => {
     if (loading) return
-    if (sessionStorage.getItem('watching-status-checked')) return
-    sessionStorage.setItem('watching-status-checked', '1')
+    const lastCheck = parseInt(localStorage.getItem('tvfreak-status-check-ts') ?? '0')
+    if (Date.now() - lastCheck < 24 * 60 * 60 * 1000) return
+    localStorage.setItem('tvfreak-status-check-ts', String(Date.now()))
     async function checkWatchingStatus() {
       const all = await getAllSeries()
       const watching = all.filter(s => s.tmdbId && s.id && s.status === 'watching')
@@ -208,6 +216,31 @@ export default function App() {
       if (changed) await loadSeries()
     }
     cleanupUnreleasedWatched()
+  }, [loading, loadSeries])
+
+  // Once-ever: populate TMDB ratings for completed/dropped series (refreshNextEpisodeDates covers watching/plantowatch)
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-ratings-populated-v1')) return
+    async function populateRatings() {
+      const all = await getAllSeries()
+      const toRate = all.filter(s =>
+        s.tmdbId && s.id && !s.imdbRating &&
+        (s.status === 'completed' || s.status === 'dropped')
+      )
+      for (const s of toRate) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if ((detail?.vote_average ?? 0) > 0) {
+            await updateSeries(s.id!, { imdbRating: detail!.vote_average!.toFixed(1) })
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 250))
+      }
+      localStorage.setItem('tvfreak-ratings-populated-v1', 'true')
+      if (toRate.length > 0) await loadSeries()
+    }
+    populateRatings()
   }, [loading, loadSeries])
 
   async function handleSeriesUpdated() {
