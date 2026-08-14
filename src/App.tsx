@@ -53,11 +53,14 @@ export default function App() {
 
   useEffect(() => {
     async function init() {
-      try {
-        setImporting(true)
-        await importFromCsv((done, total) => setImportProgress({ done, total }))
-      } catch { /* import file not found or failed, skip silently */ }
-      finally { setImporting(false) }
+      if (!localStorage.getItem('tvfreak-csv-import-done')) {
+        try {
+          setImporting(true)
+          await importFromCsv((done, total) => setImportProgress({ done, total }))
+          localStorage.setItem('tvfreak-csv-import-done', 'true')
+        } catch { /* import file not found or failed, skip silently */ }
+        finally { setImporting(false) }
+      }
       try { await deduplicateSeries() } catch { /* non-fatal */ }
       await loadSeries()
       try {
