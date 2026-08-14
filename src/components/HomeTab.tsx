@@ -326,17 +326,32 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
               </div>
             </div>
 
-            {/* Episode list */}
-            {selectedDate && (
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-white/30 uppercase tracking-wider font-medium">
-                  {new Date(selectedDate + 'T12:00:00').toLocaleDateString('default', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </p>
-                <button onClick={() => setSelectedDate(null)} className="text-[10px] text-white/25 active:text-white/50">
-                  Clear
-                </button>
+            {/* Episode list header: date label + view toggle */}
+            <div className="flex items-center justify-between mb-2">
+              {selectedDate ? (
+                <>
+                  <p className="text-xs text-white/30 uppercase tracking-wider font-medium">
+                    {new Date(selectedDate + 'T12:00:00').toLocaleDateString('default', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </p>
+                  <button onClick={() => setSelectedDate(null)} className="text-[10px] text-white/25 active:text-white/50">
+                    Clear
+                  </button>
+                </>
+              ) : (
+                <div />
+              )}
+              <div className="flex items-center gap-0.5 bg-white/6 rounded-lg p-0.5">
+                {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    className={`p-1.5 rounded-md transition-colors ${viewMode === mode ? 'bg-white/12 text-white' : 'text-white/30'}`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
 
             {listItems.length === 0 ? (
               <div className="py-10 text-center">
@@ -348,7 +363,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                   <p className="text-xs text-white/15 mt-1">Pull to refresh to update dates.</p>
                 )}
               </div>
-            ) : (
+            ) : viewMode === 'list' ? (
               <div className="space-y-2">
                 {listItems.slice(0, visibleCount).map(({ date, series: s }, i) => (
                   <button
@@ -358,28 +373,55 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                   >
                     <div className="w-10 h-14 rounded-lg overflow-hidden bg-[#1E1E1E] shrink-0">
                       {s.posterPath && (
-                        <img
-                          src={posterUrl(s.posterPath, 'w185') ?? ''}
-                          alt={s.title}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
+                        <img src={posterUrl(s.posterPath, 'w185') ?? ''} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">{s.title}</p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-xs font-semibold text-[#6366F1]">
-                        {formatAirDate(date)}
-                      </p>
+                      <p className="text-xs font-semibold text-[#6366F1]">{formatAirDate(date)}</p>
                     </div>
                   </button>
                 ))}
                 {visibleCount < listItems.length && (
                   <button
                     onClick={() => setVisibleCount(c => c + 20)}
-                    className="w-full py-3 text-xs font-medium text-white/35 hover:text-white/55 active:text-white/55 transition-colors"
+                    className="w-full py-3 text-xs font-medium text-white/35 active:text-white/55 transition-colors"
+                  >
+                    Load more ({listItems.length - visibleCount} remaining)
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div>
+                <div className={`grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                  {listItems.slice(0, visibleCount).map(({ date, series: s }, i) => (
+                    <button
+                      key={`${s.id}-${date}-${i}`}
+                      onClick={() => onSelect(s)}
+                      className="relative text-left active:opacity-70 transition-opacity"
+                    >
+                      <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1 relative">
+                        {s.posterPath ? (
+                          <img src={posterUrl(s.posterPath, 'w342') ?? ''} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center p-2">
+                            <span className="text-[10px] text-white/20 text-center">{s.title}</span>
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 to-transparent px-1.5 pb-1.5 pt-5">
+                          <p className={`font-semibold text-[#6366F1] ${viewMode === 'big' ? 'text-[10px]' : 'text-[9px]'}`}>{formatAirDate(date)}</p>
+                        </div>
+                      </div>
+                      <p className={`text-white/60 leading-tight line-clamp-2 ${viewMode === 'big' ? 'text-[11px]' : 'text-[10px]'}`}>{s.title}</p>
+                    </button>
+                  ))}
+                </div>
+                {visibleCount < listItems.length && (
+                  <button
+                    onClick={() => setVisibleCount(c => c + 20)}
+                    className="w-full py-3 mt-2 text-xs font-medium text-white/35 active:text-white/55 transition-colors"
                   >
                     Load more ({listItems.length - visibleCount} remaining)
                   </button>
