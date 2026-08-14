@@ -4,6 +4,7 @@ import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries } from './
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
 import { getTvDetails } from './lib/tmdb'
+import { toast } from 'sonner'
 import type { Series } from './types'
 import { BottomNav } from './components/BottomNav'
 import type { Tab } from './components/BottomNav'
@@ -47,35 +48,53 @@ export default function App() {
     init()
   }, [loadSeries])
 
+  const refreshNextEpisodeDates = useCallback(async () => {
+    const all = await getAllSeries()
+    const now = new Date()
+    const toRefresh = all.filter(s =>
+      s.tmdbId && s.id &&
+      (s.status === 'watching' || s.status === 'plantowatch') &&
+      (!s.nextEpisodeDate || new Date(s.nextEpisodeDate) <= now)
+    )
+    if (toRefresh.length === 0) return
+    for (const s of toRefresh) {
+      try {
+        const detail = await getTvDetails(s.tmdbId!)
+        if (detail?.next_episode_to_air) {
+          await updateSeries(s.id!, {
+            nextEpisodeDate: detail.next_episode_to_air.air_date,
+            nextEpisodeName: detail.next_episode_to_air.name,
+          })
+        } else {
+          await updateSeries(s.id!, { nextEpisodeDate: null, nextEpisodeName: null })
+        }
+      } catch { /* ignore */ }
+      await new Promise(r => setTimeout(r, 300))
+    }
+    // Check completed series for revival (cancelled shows that come back)
+    const completedSeries = all.filter(s => s.tmdbId && s.id && s.status === 'completed')
+    for (const s of completedSeries) {
+      try {
+        const detail = await getTvDetails(s.tmdbId!)
+        if (detail?.next_episode_to_air) {
+          await updateSeries(s.id!, {
+            status: 'plantowatch',
+            nextEpisodeDate: detail.next_episode_to_air.air_date,
+            nextEpisodeName: detail.next_episode_to_air.name,
+          })
+          toast(`${s.title} is back! New episodes are coming.`, { duration: 6000 })
+        }
+      } catch { /* ignore */ }
+      await new Promise(r => setTimeout(r, 300))
+    }
+
+    await loadSeries()
+  }, [loadSeries])
+
   useEffect(() => {
     if (loading) return
-    async function refreshNextEpisodeDates() {
-      const all = await getAllSeries()
-      const now = new Date()
-      const toRefresh = all.filter(s =>
-        s.tmdbId && s.id &&
-        (s.status === 'watching' || s.status === 'plantowatch') &&
-        (!s.nextEpisodeDate || new Date(s.nextEpisodeDate) <= now)
-      )
-      if (toRefresh.length === 0) return
-      for (const s of toRefresh) {
-        try {
-          const detail = await getTvDetails(s.tmdbId!)
-          if (detail?.next_episode_to_air) {
-            await updateSeries(s.id!, {
-              nextEpisodeDate: detail.next_episode_to_air.air_date,
-              nextEpisodeName: detail.next_episode_to_air.name,
-            })
-          } else {
-            await updateSeries(s.id!, { nextEpisodeDate: null, nextEpisodeName: null })
-          }
-        } catch { /* ignore */ }
-        await new Promise(r => setTimeout(r, 300))
-      }
-      await loadSeries()
-    }
     refreshNextEpisodeDates()
-  }, [loading, loadSeries])
+  }, [loading, refreshNextEpisodeDates])
 
   async function handleSeriesUpdated() {
     const data = await getAllSeries()
@@ -102,7 +121,7 @@ export default function App() {
       {/* Tab content */}
       <main className="flex-1 overflow-hidden min-h-0">
         {tab === 'home' && (
-          <HomeTab series={allSeries} loading={loading} onSelect={setSelected} />
+          <HomeTab series={allSeries} loading={loading} onSelect={setSelected} onRefresh={refreshNextEpisodeDates} />
         )}
         {tab === 'library' && (
           <LibraryTab

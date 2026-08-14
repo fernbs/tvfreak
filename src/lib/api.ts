@@ -7,6 +7,7 @@ function parseSeries(row: Record<string, unknown>): Series {
     ...row,
     nextEpisodeDate: (row.nextEpisodeDate as string | null) ?? null,
     nextEpisodeName: (row.nextEpisodeName as string | null) ?? null,
+    imdbRating: (row.imdbRating as string | null) ?? null,
     addedAt: new Date(row.addedAt as string),
     updatedAt: new Date(row.updatedAt as string),
   } as Series

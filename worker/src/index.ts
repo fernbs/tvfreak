@@ -5,7 +5,7 @@ interface Env {
 const ALLOWED_SERIES_FIELDS = new Set([
   'tmdbId', 'title', 'status', 'posterPath', 'overview',
   'firstAirDate', 'lastAirDate', 'numberOfSeasons', 'notes',
-  'addedAt', 'updatedAt', 'nextEpisodeDate', 'nextEpisodeName',
+  'addedAt', 'updatedAt', 'nextEpisodeDate', 'nextEpisodeName', 'imdbRating',
 ])
 
 const STATUS_PRIORITY: Record<string, number> = {

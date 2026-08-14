@@ -9,6 +9,7 @@ interface Props {
   seriesId: number
   tmdbId: number
   seasons: TmdbSeason[]
+  onAllEpisodesWatched?: () => void
 }
 
 interface SeasonState {
@@ -60,7 +61,7 @@ function Checkbox({
   )
 }
 
-export function EpisodeList({ seriesId, tmdbId, seasons }: Props) {
+export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }: Props) {
   const [watched, setWatched] = useState<Set<string>>(new Set())
   const [seasonStates, setSeasonStates] = useState<Record<number, SeasonState>>({})
   const [episodeModal, setEpisodeModal] = useState<EpisodeModal | null>(null)
@@ -73,6 +74,17 @@ export function EpisodeList({ seriesId, tmdbId, seasons }: Props) {
   async function loadWatched() {
     const eps = await getWatchedEpisodes(seriesId)
     setWatched(new Set(eps.map(e => `${e.seasonNumber}-${e.episodeNumber}`)))
+  }
+
+  function totalEpisodeCount(): number {
+    return seasons.filter(s => s.season_number > 0).reduce((sum, s) => sum + s.episode_count, 0)
+  }
+
+  function checkAllWatched(newWatched: Set<string>) {
+    const total = totalEpisodeCount()
+    if (total > 0 && newWatched.size >= total) {
+      onAllEpisodesWatched?.()
+    }
   }
 
   async function toggleSeasonOpen(season: TmdbSeason) {
@@ -124,6 +136,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons }: Props) {
       setWatched(prev => {
         const next = new Set(prev)
         for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
+        checkAllWatched(next)
         return next
       })
     }
@@ -194,7 +207,11 @@ export function EpisodeList({ seriesId, tmdbId, seasons }: Props) {
       setEpisodeModal({ seasonNumber: sn, episodeNumber: en, previousEpisodes: previous })
     } else {
       await toggleEpisodeWatched(seriesId, sn, en)
-      setWatched(prev => new Set([...prev, key]))
+      setWatched(prev => {
+        const next = new Set([...prev, key])
+        checkAllWatched(next)
+        return next
+      })
     }
   }
 
@@ -209,6 +226,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons }: Props) {
     setWatched(prev => {
       const next = new Set(prev)
       for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
+      checkAllWatched(next)
       return next
     })
   }

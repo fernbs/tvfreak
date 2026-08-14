@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Trash2, Loader2, Calendar, CheckCircle2 } from 'lucide-react'
-import { getTvDetails, posterUrl } from '../lib/tmdb'
+import { getTvDetails, getExternalIds, getImdbRating, posterUrl } from '../lib/tmdb'
 import { updateSeries, deleteSeries } from '../lib/api'
 import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode } from '../types'
 import { STATUS_CONFIG } from '../types'
@@ -31,15 +31,25 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     setNotes(series.notes ?? '')
     if (series.tmdbId && series.id) {
       setLoadingDetail(true)
-      getTvDetails(series.tmdbId).then(d => {
+      getTvDetails(series.tmdbId).then(async d => {
         setDetail(d)
+        const updates: Partial<Series> = {}
         if (d?.next_episode_to_air) {
-          updateSeries(series.id!, {
-            nextEpisodeDate: d.next_episode_to_air.air_date,
-            nextEpisodeName: d.next_episode_to_air.name,
-          })
+          updates.nextEpisodeDate = d.next_episode_to_air.air_date
+          updates.nextEpisodeName = d.next_episode_to_air.name
         } else if (series.nextEpisodeDate) {
-          updateSeries(series.id!, { nextEpisodeDate: null, nextEpisodeName: null })
+          updates.nextEpisodeDate = null
+          updates.nextEpisodeName = null
+        }
+        if (!series.imdbRating) {
+          const ext = await getExternalIds(series.tmdbId!)
+          if (ext.imdb_id) {
+            const rating = await getImdbRating(ext.imdb_id)
+            if (rating) updates.imdbRating = rating
+          }
+        }
+        if (Object.keys(updates).length > 0) {
+          await updateSeries(series.id!, updates)
         }
       }).finally(() => setLoadingDetail(false))
     }
@@ -96,6 +106,19 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   const nextEp = detail?.next_episode_to_air as TmdbNextEpisode | null | undefined
   const isComplete = series?.status === 'completed' && !nextEp
   const hasUpcoming = !!nextEp
+
+  async function handleAllEpisodesWatched() {
+    if (!series?.id) return
+    if (series.status === 'completed') return
+    if (nextEp) {
+      await updateSeries(series.id, { status: 'plantowatch' })
+      toast.success(`All caught up on ${series.title}! Next episode: ${formatAirDate(nextEp.air_date)}`)
+    } else {
+      await updateSeries(series.id, { status: 'completed' })
+      toast.success(`${series.title} marked as completed!`)
+    }
+    onUpdated()
+  }
 
   return (
     <AnimatePresence>
@@ -161,6 +184,13 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     {year ?? 'Unknown year'}
                     {series.numberOfSeasons ? ` · ${series.numberOfSeasons} season${series.numberOfSeasons === 1 ? '' : 's'}` : ''}
                   </p>
+                  {series.imdbRating && (
+                    <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
+                      <span className="text-yellow-400 text-xs">★</span>
+                      <span className="text-xs text-yellow-400 font-medium">{series.imdbRating}</span>
+                      <span className="text-xs text-yellow-400/50">IMDB</span>
+                    </div>
+                  )}
 
                   {/* Complete chip */}
                   {isComplete && (
@@ -229,6 +259,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     seriesId={series.id}
                     tmdbId={detail.id}
                     seasons={detail.seasons}
+                    onAllEpisodesWatched={handleAllEpisodesWatched}
                   />
                 </div>
               ) : !series.tmdbId ? (

@@ -14,6 +14,10 @@ export function SeriesCard({ series, onClick }: Props) {
   const now = new Date()
   const hasUpcoming = series.nextEpisodeDate && new Date(series.nextEpisodeDate) > now
   const isComplete = series.status === 'completed' && !hasUpcoming
+  const hasNewEpisode =
+    series.nextEpisodeDate &&
+    new Date(series.nextEpisodeDate) <= now &&
+    (series.status === 'watching' || series.status === 'plantowatch')
 
   return (
     <div
@@ -52,6 +56,13 @@ export function SeriesCard({ series, onClick }: Props) {
       {hasUpcoming && series.nextEpisodeDate && (
         <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#6366F1]/90 text-white leading-tight backdrop-blur-sm">
           {formatAirDate(series.nextEpisodeDate)}
+        </div>
+      )}
+
+      {/* New episode aired badge — top left (shown when upcoming date has passed) */}
+      {hasNewEpisode && !hasUpcoming && (
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#22C55E]/90 text-white leading-tight backdrop-blur-sm">
+          New
         </div>
       )}
 

@@ -1,24 +1,56 @@
-import { useState } from 'react'
-import { Tv, Calendar } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Tv, Calendar, Loader2 } from 'lucide-react'
 import type { Series } from '../types'
 import { SeriesCard } from './SeriesCard'
 import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
 
+const PULL_THRESHOLD = 64
+
 interface Props {
   series: Series[]
   loading: boolean
   onSelect: (s: Series) => void
+  onRefresh: () => Promise<void>
 }
 
-export function HomeTab({ series, loading, onSelect }: Props) {
+export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   const [view, setView] = useState<'watching' | 'upcoming'>('watching')
+  const [pullDistance, setPullDistance] = useState(0)
+  const [refreshing, setRefreshing] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const touchStartY = useRef(0)
+  const isPulling = useRef(false)
+
+  function onTouchStart(e: React.TouchEvent) {
+    if ((scrollRef.current?.scrollTop ?? 0) === 0) {
+      touchStartY.current = e.touches[0].clientY
+      isPulling.current = true
+    }
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    if (!isPulling.current || refreshing) return
+    const delta = e.touches[0].clientY - touchStartY.current
+    if (delta > 0) setPullDistance(Math.min(delta * 0.5, PULL_THRESHOLD * 1.2))
+  }
+
+  async function onTouchEnd() {
+    if (pullDistance >= PULL_THRESHOLD && !refreshing) {
+      setRefreshing(true)
+      setPullDistance(0)
+      try { await onRefresh() } finally { setRefreshing(false) }
+    } else {
+      setPullDistance(0)
+    }
+    isPulling.current = false
+  }
 
   const now = new Date()
   const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
   const watchingNow = series
-    .filter(s => s.status === 'plantowatch')
+    .filter(s => s.status === 'plantowatch' || s.status === 'watching')
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
 
   const upcoming = series
@@ -31,6 +63,17 @@ export function HomeTab({ series, loading, onSelect }: Props) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Pull-to-refresh indicator */}
+      <div
+        className="shrink-0 flex items-center justify-center overflow-hidden transition-all duration-200"
+        style={{ height: refreshing ? 36 : pullDistance > 0 ? pullDistance * 0.5 : 0 }}
+      >
+        <Loader2
+          className={`w-5 h-5 text-[#6366F1] transition-all duration-200 ${refreshing ? 'animate-spin' : ''}`}
+          style={{ opacity: refreshing ? 1 : Math.min(pullDistance / PULL_THRESHOLD, 1) }}
+        />
+      </div>
+
       {/* Sticky header */}
       <div
         className="shrink-0 px-4 pb-3 bg-[#0A0A0A]"
@@ -63,14 +106,20 @@ export function HomeTab({ series, loading, onSelect }: Props) {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 min-h-0">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 min-h-0"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         {loading ? (
           <p className="text-sm text-white/25 py-12 text-center">Loading...</p>
         ) : view === 'watching' ? (
           watchingNow.length === 0 ? (
             <div className="py-16 text-center">
               <Tv className="w-10 h-10 text-white/10 mx-auto mb-3" />
-              <p className="text-sm text-white/25">No series marked as Pending yet.</p>
+              <p className="text-sm text-white/25">No series marked as Pending or Watching.</p>
               <p className="text-xs text-white/15 mt-1">Add series from the Search tab.</p>
             </div>
           ) : (

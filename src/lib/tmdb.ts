@@ -1,4 +1,5 @@
 const BEARER = import.meta.env.VITE_TMDB_BEARER_TOKEN
+const OMDB_KEY = import.meta.env.VITE_OMDB_API_KEY
 const BASE_URL = 'https://api.themoviedb.org/3'
 export const IMG_BASE = 'https://image.tmdb.org/t/p'
 
@@ -39,4 +40,28 @@ export async function getSeasonEpisodes(
 export function posterUrl(path: string | null, size: 'w185' | 'w342' | 'w500' = 'w342'): string | null {
   if (!path) return null
   return `${IMG_BASE}/${size}${path}`
+}
+
+export async function getExternalIds(tmdbId: number): Promise<{ imdb_id: string | null }> {
+  const url = `${BASE_URL}/tv/${tmdbId}/external_ids`
+  const res = await fetch(url, { headers: headers() })
+  if (!res.ok) return { imdb_id: null }
+  const data = await res.json()
+  return { imdb_id: data.imdb_id ?? null }
+}
+
+export async function getImdbRating(imdbId: string): Promise<string | null> {
+  if (!OMDB_KEY || !imdbId) return null
+  const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_KEY}`
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const data = await res.json()
+    if (data.Response === 'True' && data.imdbRating && data.imdbRating !== 'N/A') {
+      return data.imdbRating
+    }
+    return null
+  } catch {
+    return null
+  }
 }

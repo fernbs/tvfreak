@@ -13,6 +13,7 @@ export interface Series {
   notes: string
   nextEpisodeDate: string | null
   nextEpisodeName: string | null
+  imdbRating: string | null
   addedAt: Date
   updatedAt: Date
 }
@@ -75,9 +76,9 @@ export const STATUS_CONFIG: Record<SeriesStatus, {
 }> = {
   watching: {
     label: 'Watching',
-    color: '#22C55E',
-    bgClass: 'bg-green-500/15',
-    textClass: 'text-green-400',
+    color: '#EAB308',
+    bgClass: 'bg-yellow-500/15',
+    textClass: 'text-yellow-400',
   },
   completed: {
     label: 'Completed',
@@ -93,8 +94,8 @@ export const STATUS_CONFIG: Record<SeriesStatus, {
   },
   plantowatch: {
     label: 'Pending',
-    color: '#EAB308',
-    bgClass: 'bg-yellow-500/15',
-    textClass: 'text-yellow-400',
+    color: '#22C55E',
+    bgClass: 'bg-green-500/15',
+    textClass: 'text-green-400',
   },
 }

@@ -12,7 +12,8 @@ var ALLOWED_SERIES_FIELDS = /* @__PURE__ */ new Set([
   "addedAt",
   "updatedAt",
   "nextEpisodeDate",
-  "nextEpisodeName"
+  "nextEpisodeName",
+  "imdbRating"
 ]);
 var STATUS_PRIORITY = {
   watching: 3,
