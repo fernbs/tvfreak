@@ -98,7 +98,7 @@ export default function App() {
   )
 
   const watchingNow = [...allSeries]
-    .filter(s => s.status === 'plantowatch')
+    .filter(s => s.status === 'watching' || s.status === 'plantowatch')
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
 
   const now = new Date()
@@ -176,7 +176,7 @@ export default function App() {
               {loading ? (
                 <p className="text-sm text-white/25">Loading...</p>
               ) : watchingNow.length === 0 ? (
-                <p className="text-sm text-white/25">No series marked as Pending yet.</p>
+                <p className="text-sm text-white/25">No series marked as Watching or Pending yet.</p>
               ) : (
                 <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                   {watchingNow.map(s => (
