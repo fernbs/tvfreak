@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries } from './lib/api'
+import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
 import { getTvDetails } from './lib/tmdb'
@@ -116,6 +116,50 @@ export default function App() {
       await loadSeries()
     }
     checkRevived()
+  }, [loading, loadSeries])
+
+  // Once-per-session: auto-flip "watching" series where all episodes are watched
+  useEffect(() => {
+    if (loading) return
+    if (sessionStorage.getItem('watching-status-checked')) return
+    sessionStorage.setItem('watching-status-checked', '1')
+    async function checkWatchingStatus() {
+      const all = await getAllSeries()
+      const watching = all.filter(s => s.tmdbId && s.id && s.status === 'watching')
+      if (watching.length === 0) return
+      let changed = false
+      for (const s of watching) {
+        try {
+          const [detail, watched] = await Promise.all([
+            getTvDetails(s.tmdbId!),
+            getWatchedEpisodes(s.id!),
+          ])
+          if (!detail) continue
+          const totalEpisodes = detail.seasons
+            .filter(season => season.season_number > 0)
+            .reduce((sum, season) => sum + season.episode_count, 0)
+          if (totalEpisodes === 0) continue
+          const watchedCount = watched.filter(w => w.seasonNumber > 0).length
+          if (watchedCount >= totalEpisodes) {
+            if (detail.next_episode_to_air) {
+              await updateSeries(s.id!, {
+                status: 'plantowatch',
+                nextEpisodeDate: detail.next_episode_to_air.air_date,
+                nextEpisodeName: detail.next_episode_to_air.name,
+              })
+              toast(`All caught up on ${s.title}! New episodes coming.`, { duration: 5000 })
+            } else {
+              await updateSeries(s.id!, { status: 'completed' })
+              toast.success(`${s.title} marked as completed.`, { duration: 5000 })
+            }
+            changed = true
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 400))
+      }
+      if (changed) await loadSeries()
+    }
+    checkWatchingStatus()
   }, [loading, loadSeries])
 
   async function handleSeriesUpdated() {
