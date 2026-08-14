@@ -52,14 +52,21 @@ export function SeriesCard({ series, onClick }: Props) {
         </span>
       </div>
 
-      {/* Upcoming episode badge — top left */}
-      {hasUpcoming && series.nextEpisodeDate && (
+      {/* Caught up + next episode coming: green "Airing [date]" badge */}
+      {hasUpcoming && series.nextEpisodeDate && series.status === 'plantowatch' && (
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#22C55E]/90 text-white leading-tight backdrop-blur-sm">
+          Airing {formatAirDate(series.nextEpisodeDate)}
+        </div>
+      )}
+
+      {/* Watching + next episode date: indigo date badge */}
+      {hasUpcoming && series.nextEpisodeDate && series.status !== 'plantowatch' && (
         <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#6366F1]/90 text-white leading-tight backdrop-blur-sm">
           {formatAirDate(series.nextEpisodeDate)}
         </div>
       )}
 
-      {/* New episode aired badge — top left (shown when upcoming date has passed) */}
+      {/* New episode aired badge — shown when nextEpisodeDate has passed but still active */}
       {hasNewEpisode && !hasUpcoming && (
         <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#22C55E]/90 text-white leading-tight backdrop-blur-sm">
           New

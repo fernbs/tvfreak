@@ -49,15 +49,17 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   const now = new Date()
   const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
+  // Watching Now: only series with unwatched content (yellow = actively watching)
   const watchingNow = series
-    .filter(s => s.status === 'plantowatch' || s.status === 'watching')
+    .filter(s => s.status === 'watching')
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
 
+  // Upcoming: caught-up (pending/green) series with a future next episode date
   const upcoming = series
     .filter(s => {
       if (!s.nextEpisodeDate) return false
       const d = new Date(s.nextEpisodeDate)
-      return d >= now && d <= in30Days
+      return d > now && d <= in30Days
     })
     .sort((a, b) => new Date(a.nextEpisodeDate!).getTime() - new Date(b.nextEpisodeDate!).getTime())
 
@@ -119,8 +121,8 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
           watchingNow.length === 0 ? (
             <div className="py-16 text-center">
               <Tv className="w-10 h-10 text-white/10 mx-auto mb-3" />
-              <p className="text-sm text-white/25">No series marked as Pending or Watching.</p>
-              <p className="text-xs text-white/15 mt-1">Add series from the Search tab.</p>
+              <p className="text-sm text-white/25">Nothing actively watching right now.</p>
+              <p className="text-xs text-white/15 mt-1">Series you're mid-way through will appear here.</p>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2.5 pt-2">
