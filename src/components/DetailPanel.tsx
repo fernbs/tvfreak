@@ -113,14 +113,19 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
           {/* Panel */}
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 280, mass: 0.8 }}
-            className="fixed right-0 top-0 h-full w-full max-w-[420px] bg-[#141414] border-l border-white/8 z-50 flex flex-col overflow-hidden"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 32, stiffness: 320, mass: 0.9 }}
+            className="fixed bottom-0 left-0 right-0 h-[93dvh] bg-[#141414] rounded-t-2xl z-50 flex flex-col overflow-hidden border-t border-white/8"
           >
+            {/* Drag handle */}
+            <div className="shrink-0 flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+            </div>
+
             {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0">
+            <div className="flex items-center justify-between px-5 pt-2 pb-4 shrink-0">
               <button
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/8 transition-colors"
