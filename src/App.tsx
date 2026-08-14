@@ -3,7 +3,7 @@ import { AnimatePresence } from 'framer-motion'
 import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
-import { getTvDetails } from './lib/tmdb'
+import { getTvDetails, getSeasonEpisodes } from './lib/tmdb'
 import { toast } from 'sonner'
 import type { Series } from './types'
 import { BottomNav } from './components/BottomNav'
@@ -80,24 +80,43 @@ export default function App() {
       (!s.nextEpisodeDate || new Date(s.nextEpisodeDate) <= now)
     )
     if (toRefresh.length === 0) { await loadSeries(); return }
+    const todayStr = new Date().toISOString().slice(0, 10)
     for (const s of toRefresh) {
       try {
         const detail = await getTvDetails(s.tmdbId!)
         if (!detail) continue
         const rating = (detail.vote_average ?? 0) > 0 ? detail.vote_average!.toFixed(1) : null
-        if (detail.next_episode_to_air) {
-          await updateSeries(s.id!, {
-            nextEpisodeDate: detail.next_episode_to_air.air_date,
-            nextEpisodeName: detail.next_episode_to_air.name,
-            ...(rating ? { imdbRating: rating } : {}),
-          })
-        } else {
-          await updateSeries(s.id!, {
-            nextEpisodeDate: null,
-            nextEpisodeName: null,
-            ...(rating ? { imdbRating: rating } : {}),
-          })
+
+        // Collect all known future dates: next episode + upcoming season premieres + individual episode dates
+        const futureDatesSet = new Set<string>()
+        const upcomingSeasons = detail.seasons.filter(
+          season => season.season_number > 0 && (!season.air_date || season.air_date > todayStr)
+        )
+        // Season premiere dates
+        for (const season of upcomingSeasons) {
+          if (season.air_date && season.air_date > todayStr) futureDatesSet.add(season.air_date)
         }
+        // Fetch individual episode dates for upcoming seasons (run in parallel per series)
+        const episodeLists = await Promise.all(
+          upcomingSeasons.map(season => getSeasonEpisodes(detail.id, season.season_number).catch(() => []))
+        )
+        for (const episodes of episodeLists) {
+          for (const ep of episodes) {
+            if (ep.air_date && ep.air_date > todayStr) futureDatesSet.add(ep.air_date)
+          }
+        }
+        if (detail.next_episode_to_air?.air_date && detail.next_episode_to_air.air_date > todayStr) {
+          futureDatesSet.add(detail.next_episode_to_air.air_date)
+        }
+        const futureDates = [...futureDatesSet].sort()
+
+        const updates: Parameters<typeof updateSeries>[1] = {
+          nextEpisodeDate: detail.next_episode_to_air?.air_date ?? null,
+          nextEpisodeName: detail.next_episode_to_air?.name ?? null,
+          futureDates: futureDates.length > 0 ? futureDates : null,
+          ...(rating ? { imdbRating: rating } : {}),
+        }
+        await updateSeries(s.id!, updates)
       } catch { /* ignore */ }
       await new Promise(r => setTimeout(r, 300))
     }

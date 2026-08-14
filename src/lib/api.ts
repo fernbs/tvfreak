@@ -3,11 +3,13 @@ import type { Series, WatchedEpisode } from '../types'
 const BASE = (import.meta.env.VITE_WORKER_URL ?? 'http://localhost:8787').replace(/\/$/, '')
 
 function parseSeries(row: Record<string, unknown>): Series {
+  const rawDates = row.futureDates as string | null
   return {
     ...row,
     nextEpisodeDate: (row.nextEpisodeDate as string | null) ?? null,
     nextEpisodeName: (row.nextEpisodeName as string | null) ?? null,
     imdbRating: (row.imdbRating as string | null) ?? null,
+    futureDates: rawDates ? (() => { try { return JSON.parse(rawDates) as string[] } catch { return null } })() : null,
     addedAt: new Date(row.addedAt as string),
     updatedAt: new Date(row.updatedAt as string),
   } as Series
@@ -62,6 +64,7 @@ export async function deduplicateSeries(): Promise<number> {
 export async function updateSeries(id: number, changes: Partial<Series>): Promise<void> {
   const body: Record<string, unknown> = { ...changes, updatedAt: new Date().toISOString() }
   if (body.addedAt instanceof Date) body.addedAt = (body.addedAt as Date).toISOString()
+  if (Array.isArray(body.futureDates)) body.futureDates = JSON.stringify(body.futureDates)
   await fetch(`${BASE}/api/series/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },

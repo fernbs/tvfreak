@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown, ChevronRight, Lock, Check, Minus } from 'lucide-react'
+import { ChevronDown, ChevronRight, Lock, Check, Minus, Calendar } from 'lucide-react'
 import { getSeasonEpisodes } from '../lib/tmdb'
 import { getWatchedEpisodes, toggleEpisodeWatched, bulkMarkEpisodes, unmarkSeasonEpisodes } from '../lib/api'
 import type { TmdbSeason, TmdbEpisode } from '../types'
@@ -58,6 +58,57 @@ function Checkbox({
       {checked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
       {!checked && indeterminate && <Minus className="w-2.5 h-2.5 text-[#6366F1]" strokeWidth={3} />}
     </button>
+  )
+}
+
+function SpecialsSection({ tmdbId, season }: { tmdbId: number; season: import('../types').TmdbSeason }) {
+  const [open, setOpen] = useState(false)
+  const [episodes, setEpisodes] = useState<TmdbEpisode[]>([])
+  const [loading, setLoading] = useState(false)
+
+  async function toggle() {
+    if (open) { setOpen(false); return }
+    setOpen(true)
+    if (episodes.length === 0) {
+      setLoading(true)
+      const eps = await getSeasonEpisodes(tmdbId, 0)
+      setEpisodes(eps)
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="mt-2 rounded-xl overflow-hidden border border-white/4 opacity-60">
+      <button
+        onClick={toggle}
+        className="w-full flex items-center gap-2.5 px-3 py-2.5 bg-white/2 hover:bg-white/4 transition-colors text-left"
+      >
+        <div className="flex-1 min-w-0">
+          <span className="text-sm font-medium text-white/45">Specials</span>
+          <span className="text-xs text-white/20 ml-2">{season.episode_count} episode{season.episode_count !== 1 ? 's' : ''}</span>
+        </div>
+        <div className="shrink-0 text-white/20">
+          {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+        </div>
+      </button>
+      {open && (
+        <div className="bg-[#0A0A0A] divide-y divide-white/3">
+          {loading ? (
+            <div className="px-4 py-3 text-xs text-white/20">Loading specials...</div>
+          ) : episodes.map(ep => (
+            <div key={ep.episode_number} className="flex items-center gap-3 px-3 py-2">
+              <span className="text-[11px] font-mono text-white/15 shrink-0 tabular-nums w-7">
+                S{String(ep.episode_number).padStart(2, '0')}
+              </span>
+              <span className="flex-1 text-sm text-white/35 truncate min-w-0">{ep.name}</span>
+              {ep.air_date && (
+                <span className="text-xs text-white/15 shrink-0">{formatAirDate(ep.air_date)}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -265,14 +316,18 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
     })
   }
 
-  const filteredSeasons = seasons.filter(s => s.season_number > 0)
+  const today = new Date().toISOString().slice(0, 10)
+  const regularSeasons = seasons.filter(s => s.season_number > 0)
+  const specialsSeason = seasons.find(s => s.season_number === 0)
 
   return (
     <>
       <div className="space-y-1.5">
-        {filteredSeasons.map(season => {
+        {regularSeasons.map(season => {
           const sn = season.season_number
           const state = seasonStates[sn]
+          const isFuture = !season.air_date || season.air_date > today
+          const hasNoEpisodes = season.episode_count === 0
 
           // Use released-only counts when episode data is available
           let watchedCount: number
@@ -282,50 +337,83 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
             displayTotal = releasedEps.length
             watchedCount = releasedEps.filter(ep => watched.has(`${sn}-${ep.episode_number}`)).length
           } else {
-            displayTotal = season.episode_count
-            watchedCount = watchedInSeason(sn, season.episode_count)
+            displayTotal = isFuture ? 0 : season.episode_count
+            watchedCount = isFuture ? 0 : watchedInSeason(sn, season.episode_count)
           }
 
-          const allWatched = displayTotal > 0 && watchedCount === displayTotal
-          const someWatched = watchedCount > 0 && !allWatched
+          const allWatched = !isFuture && displayTotal > 0 && watchedCount === displayTotal
+          const someWatched = !isFuture && watchedCount > 0 && !allWatched
           const pct = displayTotal > 0 ? (watchedCount / displayTotal) * 100 : 0
 
           return (
             <div key={sn} className="rounded-xl overflow-hidden border border-white/6">
               {/* Season header */}
-              <div className={`flex items-center gap-2.5 px-3 py-2.5 transition-colors ${allWatched ? 'bg-[#6366F1]/8' : 'bg-white/4 hover:bg-white/6'}`}>
+              <div className={`flex items-center gap-2.5 px-3 py-2.5 transition-colors ${
+                isFuture ? 'bg-white/2' : allWatched ? 'bg-[#6366F1]/8' : 'bg-white/4 hover:bg-white/6'
+              }`}>
+                {/* Checkbox or future indicator */}
                 <div onClick={e => e.stopPropagation()}>
-                  <Checkbox
-                    checked={allWatched}
-                    indeterminate={someWatched}
-                    onChange={() => handleSeasonCheckbox(season)}
-                  />
+                  {isFuture ? (
+                    <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
+                      <Calendar className="w-3 h-3 text-amber-500/40" />
+                    </div>
+                  ) : (
+                    <Checkbox
+                      checked={allWatched}
+                      indeterminate={someWatched}
+                      onChange={() => handleSeasonCheckbox(season)}
+                    />
+                  )}
                 </div>
 
-                <button
-                  onClick={() => toggleSeasonOpen(season)}
-                  className="flex-1 flex items-center gap-2.5 text-left min-w-0"
-                >
+                {/* Season name + progress — only clickable if expandable */}
+                {isFuture && hasNoEpisodes ? (
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className={`text-sm font-medium truncate ${allWatched ? 'text-white/50' : 'text-white/90'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-white/35 truncate">
                         {season.name || `Season ${sn}`}
                       </span>
-                      <span className="text-xs text-white/25 ml-2 shrink-0 tabular-nums">
-                        {watchedCount}/{displayTotal}
+                      <span className="text-xs text-amber-500/50 ml-2 shrink-0">
+                        {season.air_date ? `Premieres ${formatAirDate(season.air_date)}` : 'Coming soon'}
                       </span>
                     </div>
-                    <div className="h-[2px] bg-white/8 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[#6366F1] rounded-full transition-all duration-500"
-                        style={{ width: `${pct}%` }}
-                      />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => toggleSeasonOpen(season)}
+                    className="flex-1 flex items-center gap-2.5 text-left min-w-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className={`text-sm font-medium truncate ${
+                          isFuture ? 'text-white/40' : allWatched ? 'text-white/50' : 'text-white/90'
+                        }`}>
+                          {season.name || `Season ${sn}`}
+                        </span>
+                        {isFuture ? (
+                          <span className="text-xs text-amber-500/50 ml-2 shrink-0">
+                            {season.air_date ? `Premieres ${formatAirDate(season.air_date)}` : 'Coming soon'}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-white/25 ml-2 shrink-0 tabular-nums">
+                            {watchedCount}/{displayTotal}
+                          </span>
+                        )}
+                      </div>
+                      {!isFuture && (
+                        <div className="h-[2px] bg-white/8 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#6366F1] rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="shrink-0 text-white/25">
-                    {state?.open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                  </div>
-                </button>
+                    <div className="shrink-0 text-white/25">
+                      {state?.open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                    </div>
+                  </button>
+                )}
               </div>
 
               {/* Episodes */}
@@ -388,6 +476,11 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
           )
         })}
       </div>
+
+      {/* Specials section — display only, no tracking */}
+      {specialsSeason && specialsSeason.episode_count > 0 && (
+        <SpecialsSection tmdbId={tmdbId} season={specialsSeason} />
+      )}
 
       {/* Episode cascade modal */}
       {episodeModal && (

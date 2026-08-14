@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trash2, Loader2, Calendar, CheckCircle2, Plus } from 'lucide-react'
+import { X, Trash2, Loader2, Calendar, CheckCircle2, Plus, ChevronDown } from 'lucide-react'
 import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, getTvSimilar, posterUrl } from '../lib/tmdb'
 import { updateSeries, deleteSeries, addSeries } from '../lib/api'
 import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode, TmdbSearchResult } from '../types'
@@ -26,6 +26,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   const [notes, setNotes] = useState('')
   const [deleteModal, setDeleteModal] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [statusExpanded, setStatusExpanded] = useState(false)
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Dep on tmdbId (not id) so previews from search also load
@@ -103,6 +104,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
   async function changeStatus(status: SeriesStatus) {
     if (!series?.id) return
+    setStatusExpanded(false)
     await updateSeries(series.id, { status })
     toast.success(`Status updated to ${STATUS_CONFIG[status].label}`)
     onUpdated()
@@ -192,12 +194,20 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   }
 
   const poster = posterUrl(series?.posterPath ?? null, 'w500')
-  const year = series?.firstAirDate?.slice(0, 4)
   const nextEp = detail?.next_episode_to_air as TmdbNextEpisode | null | undefined
   const isComplete = series?.status === 'completed' && !nextEp
   const hasUpcoming = !!nextEp
   const inLibrary = !!series?.id
   const displayImdbRating = series?.imdbRating ?? localImdbRating
+
+  const startYear = series?.firstAirDate?.slice(0, 4)
+  const endYear = series?.lastAirDate?.slice(0, 4)
+  const isOngoing = detail?.status === 'Returning Series' || detail?.status === 'In Production' || !!nextEp
+  const dateRange = startYear
+    ? isOngoing
+      ? `${startYear}–present`
+      : (endYear && endYear !== startYear ? `${startYear}–${endYear}` : startYear)
+    : null
 
   async function handleAllEpisodesWatched() {
     if (!series?.id) return
@@ -275,14 +285,13 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                 <div className="flex-1 min-w-0">
                   <h2 className="text-base font-semibold text-white leading-snug">{series.title}</h2>
                   <p className="text-sm text-white/35 mt-0.5">
-                    {year ?? 'Unknown year'}
+                    {dateRange ?? 'Unknown year'}
                     {(detail?.number_of_seasons ?? series.numberOfSeasons) ? ` · ${detail?.number_of_seasons ?? series.numberOfSeasons} season${(detail?.number_of_seasons ?? series.numberOfSeasons) === 1 ? '' : 's'}` : ''}
                   </p>
                   {displayImdbRating && (
                     <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
                       <span className="text-yellow-400 text-xs">★</span>
                       <span className="text-xs text-yellow-400 font-medium">{displayImdbRating}</span>
-                      <span className="text-xs text-yellow-400/50">IMDB</span>
                     </div>
                   )}
 
@@ -294,25 +303,32 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     </div>
                   )}
 
-                  {/* Status buttons (library only) or Add to library */}
+                  {/* Status (library only) or Add to library */}
                   {inLibrary ? (
                     <div className="mt-3">
-                      <p className="text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">Status</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {(Object.entries(STATUS_CONFIG) as [SeriesStatus, (typeof STATUS_CONFIG)[SeriesStatus]][]).map(([status, cfg]) => (
-                          <button
-                            key={status}
-                            onClick={() => changeStatus(status)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
-                              series.status === status
-                                ? `${cfg.bgClass} ${cfg.textClass} border-transparent`
-                                : 'border-white/8 text-white/35 hover:border-white/20 hover:text-white/60'
-                            }`}
-                          >
-                            {cfg.label}
-                          </button>
-                        ))}
-                      </div>
+                      {/* Current status chip — tap to expand and change */}
+                      <button
+                        onClick={() => setStatusExpanded(prev => !prev)}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border border-transparent transition-all ${STATUS_CONFIG[series.status].bgClass} ${STATUS_CONFIG[series.status].textClass}`}
+                      >
+                        {STATUS_CONFIG[series.status].label}
+                        <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${statusExpanded ? 'rotate-180' : ''}`} />
+                      </button>
+                      {statusExpanded && (
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {(Object.entries(STATUS_CONFIG) as [SeriesStatus, (typeof STATUS_CONFIG)[SeriesStatus]][])
+                            .filter(([s]) => s !== series.status)
+                            .map(([status, cfg]) => (
+                              <button
+                                key={status}
+                                onClick={() => changeStatus(status)}
+                                className="px-2.5 py-1 rounded-lg text-xs font-medium border border-white/8 text-white/40 hover:border-white/20 hover:text-white/60 transition-all"
+                              >
+                                {cfg.label}
+                              </button>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <button

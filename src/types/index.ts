@@ -14,6 +14,7 @@ export interface Series {
   nextEpisodeDate: string | null
   nextEpisodeName: string | null
   imdbRating: string | null
+  futureDates?: string[] | null
   addedAt: Date
   updatedAt: Date
 }
@@ -33,6 +34,7 @@ export interface TmdbSearchResult {
   overview: string
   first_air_date: string
   number_of_seasons?: number
+  vote_average?: number
 }
 
 export interface TmdbSeason {
@@ -68,6 +70,7 @@ export interface TmdbShowDetail {
   seasons: TmdbSeason[]
   next_episode_to_air: TmdbNextEpisode | null
   vote_average?: number
+  status?: string
 }
 
 export const STATUS_CONFIG: Record<SeriesStatus, {

@@ -109,22 +109,28 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   const today = new Date()
   const todayStr = toDateStr(today)
 
-  // All series with a future next episode date
-  const allUpcoming = series
-    .filter(s => s.nextEpisodeDate && s.nextEpisodeDate > todayStr)
-    .sort((a, b) => a.nextEpisodeDate!.localeCompare(b.nextEpisodeDate!))
-
-  // Map date → series for calendar dots
+  // Build date → series map from futureDates (or fall back to nextEpisodeDate)
   const episodeMap = new Map<string, Series[]>()
-  for (const s of allUpcoming) {
-    const d = s.nextEpisodeDate!
-    if (!episodeMap.has(d)) episodeMap.set(d, [])
-    episodeMap.get(d)!.push(s)
+  for (const s of series) {
+    const dates = (s.futureDates && s.futureDates.length > 0)
+      ? s.futureDates.filter(d => d > todayStr)
+      : (s.nextEpisodeDate && s.nextEpisodeDate > todayStr ? [s.nextEpisodeDate] : [])
+    for (const d of dates) {
+      if (!episodeMap.has(d)) episodeMap.set(d, [])
+      if (!episodeMap.get(d)!.find(x => x.id === s.id)) episodeMap.get(d)!.push(s)
+    }
   }
 
-  // Episodes for the selected date (or all upcoming if none selected)
-  const listSeries = selectedDate
-    ? (episodeMap.get(selectedDate) ?? [])
+  // Sorted list of {date, series} for the upcoming list
+  type UpcomingItem = { date: string; series: Series }
+  const allUpcoming: UpcomingItem[] = []
+  for (const [date, seriesList] of [...episodeMap.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    for (const s of seriesList) allUpcoming.push({ date, series: s })
+  }
+
+  // Items for the selected date (or all upcoming)
+  const listItems: UpcomingItem[] = selectedDate
+    ? (episodeMap.get(selectedDate) ?? []).map(s => ({ date: selectedDate, series: s }))
     : allUpcoming
 
   // Watching Now
@@ -330,21 +336,21 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
               </div>
             )}
 
-            {listSeries.length === 0 ? (
+            {listItems.length === 0 ? (
               <div className="py-10 text-center">
                 <Calendar className="w-10 h-10 text-white/10 mx-auto mb-3" />
                 <p className="text-sm text-white/25">
                   {selectedDate ? 'No episodes airing this day.' : 'No upcoming episodes found.'}
                 </p>
                 {!selectedDate && (
-                  <p className="text-xs text-white/15 mt-1">Open a series to refresh its next episode date.</p>
+                  <p className="text-xs text-white/15 mt-1">Pull to refresh to update dates.</p>
                 )}
               </div>
             ) : (
               <div className="space-y-2">
-                {listSeries.map(s => (
+                {listItems.map(({ date, series: s }, i) => (
                   <button
-                    key={s.id}
+                    key={`${s.id}-${date}-${i}`}
                     onClick={() => onSelect(s)}
                     className="w-full flex items-center gap-3 p-3 bg-[#141414] rounded-xl border border-white/6 active:bg-white/5 transition-colors text-left"
                   >
@@ -360,13 +366,10 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">{s.title}</p>
-                      {s.nextEpisodeName && (
-                        <p className="text-xs text-white/40 mt-0.5 truncate">{s.nextEpisodeName}</p>
-                      )}
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="text-xs font-semibold text-[#6366F1]">
-                        {formatAirDate(s.nextEpisodeDate)}
+                        {formatAirDate(date)}
                       </p>
                     </div>
                   </button>
