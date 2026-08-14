@@ -129,6 +129,17 @@ export async function getDuplicates(): Promise<DuplicateGroup[]> {
   }))
 }
 
+export interface AppStats {
+  totalEpisodes: number
+  activityByDate: { date: string; count: number }[]
+  topSeries: { seriesId: number; title: string; episodeCount: number }[]
+}
+
+export async function getAppStats(): Promise<AppStats> {
+  const res = await fetch(`${BASE}/api/stats`)
+  return res.json()
+}
+
 export async function resolveDuplicate(keepId: number, removeId: number): Promise<void> {
   await fetch(`${BASE}/api/series/resolve-duplicate`, {
     method: 'POST',

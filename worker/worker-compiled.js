@@ -235,6 +235,31 @@ var index_default = {
         ).bind(id, body.seasonNumber, body.episodeNumber, (/* @__PURE__ */ new Date()).toISOString()).run();
         return json({ watched: true }, 200, cors);
       }
+      if (path === "/api/stats" && method === "GET") {
+        const [totalResult, activityResult, topResult] = await Promise.all([
+          env.DB.prepare("SELECT COUNT(*) as count FROM watchedEpisodes").first(),
+          env.DB.prepare(
+            `SELECT DATE(watchedAt) as date, COUNT(*) as count
+             FROM watchedEpisodes
+             WHERE watchedAt >= datetime('now', '-365 days')
+             GROUP BY DATE(watchedAt)
+             ORDER BY date`
+          ).all(),
+          env.DB.prepare(
+            `SELECT w.seriesId, s.title, COUNT(*) as episodeCount
+             FROM watchedEpisodes w
+             JOIN series s ON w.seriesId = s.id
+             GROUP BY w.seriesId
+             ORDER BY episodeCount DESC
+             LIMIT 5`
+          ).all()
+        ]);
+        return json({
+          totalEpisodes: totalResult?.count ?? 0,
+          activityByDate: activityResult.results,
+          topSeries: topResult.results
+        }, 200, cors);
+      }
       return json({ error: "Not found" }, 404, cors);
     } catch (err) {
       return json({ error: String(err) }, 500, cors);

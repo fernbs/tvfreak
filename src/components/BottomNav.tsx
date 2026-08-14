@@ -1,6 +1,6 @@
-import { Home, Library, Search } from 'lucide-react'
+import { Home, Library, Search, BarChart2 } from 'lucide-react'
 
-export type Tab = 'home' | 'library' | 'search'
+export type Tab = 'home' | 'library' | 'search' | 'stats'
 
 interface Props {
   active: Tab
@@ -11,6 +11,7 @@ const tabs = [
   { id: 'home' as Tab, icon: Home, label: 'Home' },
   { id: 'library' as Tab, icon: Library, label: 'Library' },
   { id: 'search' as Tab, icon: Search, label: 'Search' },
+  { id: 'stats' as Tab, icon: BarChart2, label: 'Stats' },
 ]
 
 export function BottomNav({ active, onChange }: Props) {

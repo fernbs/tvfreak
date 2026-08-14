@@ -11,6 +11,7 @@ import type { Tab } from './components/BottomNav'
 import { HomeTab } from './components/HomeTab'
 import { LibraryTab } from './components/LibraryTab'
 import { SearchTab } from './components/SearchTab'
+import { StatsTab } from './components/StatsTab'
 import { DetailPanel } from './components/DetailPanel'
 import { ImportBanner } from './components/ImportBanner'
 import { DuplicateModal } from './components/DuplicateModal'
@@ -138,6 +139,9 @@ export default function App() {
         )}
         {tab === 'search' && (
           <SearchTab onSeriesAdded={handleSeriesAdded} allSeries={allSeries} />
+        )}
+        {tab === 'stats' && (
+          <StatsTab allSeries={allSeries} />
         )}
       </main>
 
