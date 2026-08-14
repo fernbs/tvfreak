@@ -209,7 +209,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     if (!series?.id) return
     if (series.status === 'completed') return
     if (nextEp) {
-      await updateSeries(series.id, { status: 'plantowatch' })
+      await updateSeries(series.id, { status: 'watching' })
       toast.success(`All caught up on ${series.title}! Next episode: ${formatAirDate(nextEp.air_date)}`)
     } else {
       await updateSeries(series.id, { status: 'completed' })

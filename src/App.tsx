@@ -142,14 +142,13 @@ export default function App() {
           if (!detail) continue
           if (detail.next_episode_to_air) {
             await updateSeries(s.id!, {
-              status: 'plantowatch',
+              status: 'watching',
               nextEpisodeDate: detail.next_episode_to_air.air_date,
               nextEpisodeName: detail.next_episode_to_air.name,
             })
             toast(`${s.title} is back! New episodes are coming.`, { duration: 6000 })
           } else if (detail.status === 'Returning Series' || detail.status === 'In Production') {
-            // New season confirmed but no date yet — don't leave as "completed"
-            await updateSeries(s.id!, { status: 'plantowatch', nextEpisodeDate: null, nextEpisodeName: null })
+            await updateSeries(s.id!, { status: 'watching', nextEpisodeDate: null, nextEpisodeName: null })
             toast(`${s.title} has a new season confirmed.`, { duration: 5000 })
           }
         } catch { /* ignore */ }
@@ -190,13 +189,13 @@ export default function App() {
             const isReturning = detail.status === 'Returning Series' || detail.status === 'In Production'
             if (detail.next_episode_to_air) {
               await updateSeries(s.id!, {
-                status: 'plantowatch',
+                status: 'watching',
                 nextEpisodeDate: detail.next_episode_to_air.air_date,
                 nextEpisodeName: detail.next_episode_to_air.name,
               })
               toast(`All caught up on ${s.title}! New episodes coming.`, { duration: 5000 })
             } else if (isReturning) {
-              await updateSeries(s.id!, { status: 'plantowatch', nextEpisodeDate: null, nextEpisodeName: null })
+              await updateSeries(s.id!, { status: 'watching', nextEpisodeDate: null, nextEpisodeName: null })
               toast(`All caught up on ${s.title}! Waiting for new season.`, { duration: 4000 })
             } else {
               await updateSeries(s.id!, { status: 'completed' })
@@ -285,7 +284,7 @@ export default function App() {
           if (!detail) continue
           if (detail.status === 'Returning Series' || detail.status === 'In Production') {
             await updateSeries(s.id!, {
-              status: 'plantowatch',
+              status: 'watching',
               nextEpisodeDate: detail.next_episode_to_air?.air_date ?? null,
               nextEpisodeName: detail.next_episode_to_air?.name ?? null,
             })
@@ -333,6 +332,31 @@ export default function App() {
       localStorage.setItem('tvfreak-content-backfill-v1', 'true')
     }
     backfillSeriesInfo()
+  }, [loading, loadSeries])
+
+  // Once-ever: fix existing "pending" series that have started airing → set to "watching"
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-watching-fix-v1')) return
+    async function fixPendingToWatching() {
+      const all = await getAllSeries()
+      const today = new Date().toISOString().slice(0, 10)
+      const toFix = all.filter(s =>
+        s.id &&
+        s.status === 'plantowatch' &&
+        s.firstAirDate &&
+        s.firstAirDate <= today
+      )
+      if (toFix.length === 0) { localStorage.setItem('tvfreak-watching-fix-v1', 'true'); return }
+      for (const s of toFix) {
+        try {
+          await updateSeries(s.id!, { status: 'watching' })
+        } catch { /* ignore */ }
+      }
+      localStorage.setItem('tvfreak-watching-fix-v1', 'true')
+      await loadSeries()
+    }
+    fixPendingToWatching()
   }, [loading, loadSeries])
 
   // Once-ever: unmark all watched episodes in seasons that premiered in 2026
