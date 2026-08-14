@@ -1,6 +1,7 @@
 import type { Series } from '../types'
 import { STATUS_CONFIG } from '../types'
 import { posterUrl } from '../lib/tmdb'
+import { formatAirDate } from '../lib/utils'
 
 interface Props {
   series: Series
@@ -10,11 +11,14 @@ interface Props {
 export function SeriesCard({ series, onClick }: Props) {
   const config = STATUS_CONFIG[series.status]
   const poster = posterUrl(series.posterPath, 'w342')
+  const now = new Date()
+  const hasUpcoming = series.nextEpisodeDate && new Date(series.nextEpisodeDate) > now
+  const isComplete = series.status === 'completed' && !hasUpcoming
 
   return (
     <div
       onClick={() => onClick(series)}
-      className="relative aspect-[2/3] rounded-lg overflow-hidden cursor-pointer group select-none"
+      className="relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer group select-none"
       style={{ transform: 'translateZ(0)' }}
     >
       {poster ? (
@@ -34,20 +38,27 @@ export function SeriesCard({ series, onClick }: Props) {
       )}
 
       {/* Hover overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-3">
-        <p className="text-white text-sm font-semibold leading-tight line-clamp-2">{series.title}</p>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
+        <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{series.title}</p>
         <span
-          className="inline-block mt-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
+          className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full"
           style={{ backgroundColor: config.color + '25', color: config.color }}
         >
           {config.label}
         </span>
       </div>
 
-      {/* Next episode badge */}
-      {series.nextEpisodeDate && new Date(series.nextEpisodeDate) > new Date() && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#6366F1]/90 text-white leading-tight">
-          {new Date(series.nextEpisodeDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+      {/* Upcoming episode badge — top left */}
+      {hasUpcoming && series.nextEpisodeDate && (
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#6366F1]/90 text-white leading-tight backdrop-blur-sm">
+          {formatAirDate(series.nextEpisodeDate)}
+        </div>
+      )}
+
+      {/* Complete chip — top right */}
+      {isComplete && (
+        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-purple-500/80 text-white leading-tight backdrop-blur-sm">
+          Complete
         </div>
       )}
 

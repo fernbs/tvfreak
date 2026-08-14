@@ -113,3 +113,25 @@ export async function isDbEmpty(): Promise<boolean> {
   const series = await getAllSeries()
   return series.length === 0
 }
+
+export interface DuplicateGroup {
+  series: Series[]
+  reason: string
+}
+
+export async function getDuplicates(): Promise<DuplicateGroup[]> {
+  const res = await fetch(`${BASE}/api/series/duplicates`)
+  const data: { series: Record<string, unknown>[]; reason: string }[] = await res.json()
+  return data.map(g => ({
+    reason: g.reason,
+    series: g.series.map(parseSeries),
+  }))
+}
+
+export async function resolveDuplicate(keepId: number, removeId: number): Promise<void> {
+  await fetch(`${BASE}/api/series/resolve-duplicate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ keepId, removeId }),
+  })
+}

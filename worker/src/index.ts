@@ -62,6 +62,56 @@ export default {
         return json(titles, 200, cors)
       }
 
+      // GET /api/series/duplicates
+      if (path === '/api/series/duplicates' && method === 'GET') {
+        const { results } = await env.DB.prepare('SELECT * FROM series ORDER BY id ASC').all()
+
+        const byTmdbId = new Map<number, typeof results>()
+        for (const s of results) {
+          if (s.tmdbId) {
+            const id = s.tmdbId as number
+            if (!byTmdbId.has(id)) byTmdbId.set(id, [])
+            byTmdbId.get(id)!.push(s)
+          }
+        }
+
+        const byTitle = new Map<string, typeof results>()
+        for (const s of results) {
+          const key = (s.title as string).toLowerCase().replace(/[^a-z0-9]/g, '')
+          if (!byTitle.has(key)) byTitle.set(key, [])
+          byTitle.get(key)!.push(s)
+        }
+
+        const seenKeys = new Set<string>()
+        const groups: { series: unknown[]; reason: string }[] = []
+
+        for (const [, items] of byTmdbId) {
+          if (items.length < 2) continue
+          const key = items.map(i => i.id).sort().join(',')
+          if (!seenKeys.has(key)) { seenKeys.add(key); groups.push({ series: items, reason: 'Same TMDB ID' }) }
+        }
+        for (const [, items] of byTitle) {
+          if (items.length < 2) continue
+          const key = items.map(i => i.id).sort().join(',')
+          if (!seenKeys.has(key)) { seenKeys.add(key); groups.push({ series: items, reason: 'Similar title' }) }
+        }
+
+        return json(groups, 200, cors)
+      }
+
+      // POST /api/series/resolve-duplicate
+      if (path === '/api/series/resolve-duplicate' && method === 'POST') {
+        const body = await request.json() as { keepId: number; removeId: number }
+        // Transfer watched episodes from removed series to kept series before deleting
+        await env.DB.prepare(
+          `INSERT OR IGNORE INTO watchedEpisodes (seriesId, seasonNumber, episodeNumber, watchedAt)
+           SELECT ?, seasonNumber, episodeNumber, watchedAt FROM watchedEpisodes WHERE seriesId = ?`
+        ).bind(body.keepId, body.removeId).run()
+        await env.DB.prepare('DELETE FROM watchedEpisodes WHERE seriesId = ?').bind(body.removeId).run()
+        await env.DB.prepare('DELETE FROM series WHERE id = ?').bind(body.removeId).run()
+        return json({ ok: true }, 200, cors)
+      }
+
       // POST /api/series/deduplicate
       if (path === '/api/series/deduplicate' && method === 'POST') {
         const { results } = await env.DB.prepare(

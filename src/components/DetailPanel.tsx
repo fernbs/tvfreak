@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trash2, Loader2 } from 'lucide-react'
+import { X, Trash2, Loader2, Calendar, CheckCircle2 } from 'lucide-react'
 import { getTvDetails, posterUrl } from '../lib/tmdb'
 import { updateSeries, deleteSeries } from '../lib/api'
 import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode } from '../types'
 import { STATUS_CONFIG } from '../types'
 import { EpisodeList } from './EpisodeList'
+import { formatAirDate } from '../lib/utils'
 import { toast } from 'sonner'
 
 interface Props {
@@ -18,11 +19,13 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   const [detail, setDetail] = useState<TmdbShowDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [notes, setNotes] = useState('')
+  const [deleteModal, setDeleteModal] = useState(false)
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!series) {
       setDetail(null)
+      setDeleteModal(false)
       return
     }
     setNotes(series.notes ?? '')
@@ -44,11 +47,14 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        if (deleteModal) setDeleteModal(false)
+        else onClose()
+      }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, deleteModal])
 
   async function changeStatus(status: SeriesStatus) {
     if (!series?.id) return
@@ -68,17 +74,28 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     notesTimer.current = setTimeout(() => saveNotes(value), 800)
   }
 
-  async function handleDelete() {
+  async function handleMarkDropped() {
     if (!series?.id) return
-    if (!confirm(`Remove "${series.title}" from your library?`)) return
+    await updateSeries(series.id, { status: 'dropped' })
+    toast.success(`"${series.title}" marked as dropped`)
+    setDeleteModal(false)
+    onUpdated()
+  }
+
+  async function handleRemove() {
+    if (!series?.id) return
     await deleteSeries(series.id)
-    toast.success(`"${series.title}" removed`)
+    toast.success(`"${series.title}" removed from your library`)
+    setDeleteModal(false)
     onClose()
     onUpdated()
   }
 
   const poster = posterUrl(series?.posterPath ?? null, 'w500')
   const year = series?.firstAirDate?.slice(0, 4)
+  const nextEp = detail?.next_episode_to_air as TmdbNextEpisode | null | undefined
+  const isComplete = series?.status === 'completed' && !nextEp
+  const hasUpcoming = !!nextEp
 
   return (
     <AnimatePresence>
@@ -111,8 +128,8 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                 <X className="w-4 h-4 text-white/60" />
               </button>
               <button
-                onClick={handleDelete}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/15 text-white/40 hover:text-red-400 transition-colors"
+                onClick={() => setDeleteModal(true)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/15 text-white/30 hover:text-red-400 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -120,9 +137,10 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto px-5 pb-8">
+
               {/* Poster + metadata */}
               <div className="flex gap-4 mb-5">
-                <div className="w-28 shrink-0 aspect-[2/3] rounded-lg overflow-hidden bg-[#1E1E1E]">
+                <div className="w-28 shrink-0 aspect-[2/3] rounded-xl overflow-hidden bg-[#1E1E1E]">
                   {poster ? (
                     <img src={poster} alt={series.title} className="w-full h-full object-cover" />
                   ) : (
@@ -134,13 +152,22 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
                 <div className="flex-1 min-w-0">
                   <h2 className="text-base font-semibold text-white leading-snug">{series.title}</h2>
-                  <p className="text-sm text-white/40 mt-0.5">
+                  <p className="text-sm text-white/35 mt-0.5">
                     {year ?? 'Unknown year'}
                     {series.numberOfSeasons ? ` · ${series.numberOfSeasons} season${series.numberOfSeasons === 1 ? '' : 's'}` : ''}
                   </p>
 
+                  {/* Complete chip */}
+                  {isComplete && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full">
+                      <CheckCircle2 className="w-3 h-3 text-purple-400" />
+                      <span className="text-xs text-purple-400 font-medium">Series complete</span>
+                    </div>
+                  )}
+
+                  {/* Status buttons */}
                   <div className="mt-3">
-                    <p className="text-xs text-white/40 mb-1.5 uppercase tracking-wider font-medium">Status</p>
+                    <p className="text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">Status</p>
                     <div className="flex flex-wrap gap-1.5">
                       {(Object.entries(STATUS_CONFIG) as [SeriesStatus, (typeof STATUS_CONFIG)[SeriesStatus]][]).map(([status, cfg]) => (
                         <button
@@ -149,7 +176,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                           className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
                             series.status === status
                               ? `${cfg.bgClass} ${cfg.textClass} border-transparent`
-                              : 'border-white/8 text-white/40 hover:border-white/20 hover:text-white/70'
+                              : 'border-white/8 text-white/35 hover:border-white/20 hover:text-white/60'
                           }`}
                         >
                           {cfg.label}
@@ -163,38 +190,36 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
               {/* Overview */}
               {(detail?.overview || series.overview) && (
                 <div className="mb-5">
-                  <p className="text-xs text-white/40 mb-1.5 uppercase tracking-wider font-medium">About</p>
-                  <p className="text-sm text-white/60 leading-relaxed line-clamp-4">
+                  <p className="text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">About</p>
+                  <p className="text-sm text-white/55 leading-relaxed line-clamp-4">
                     {detail?.overview || series.overview}
                   </p>
                 </div>
               )}
 
               {/* Next episode */}
-              {detail?.next_episode_to_air && (() => {
-                const ep = detail.next_episode_to_air as TmdbNextEpisode
-                const date = new Date(ep.air_date + 'T00:00:00')
-                const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                return (
-                  <div className="mb-5 px-3 py-2.5 rounded-lg bg-[#6366F1]/10 border border-[#6366F1]/20">
-                    <p className="text-xs text-[#6366F1] font-medium uppercase tracking-wider mb-1">Next episode</p>
-                    <p className="text-sm text-white/80 font-medium">
-                      S{ep.season_number} E{ep.episode_number} · {ep.name}
-                    </p>
-                    <p className="text-xs text-white/40 mt-0.5">{formatted}</p>
+              {hasUpcoming && nextEp && (
+                <div className="mb-5 px-3.5 py-3 rounded-xl bg-[#6366F1]/8 border border-[#6366F1]/15">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-3.5 h-3.5 text-[#6366F1]" />
+                    <p className="text-xs text-[#6366F1] font-medium uppercase tracking-wider">Next episode</p>
                   </div>
-                )
-              })()}
+                  <p className="text-sm text-white/80 font-medium">
+                    S{String(nextEp.season_number).padStart(2, '0')} E{String(nextEp.episode_number).padStart(2, '0')} · {nextEp.name}
+                  </p>
+                  <p className="text-xs text-white/35 mt-0.5">{formatAirDate(nextEp.air_date)}</p>
+                </div>
+              )}
 
               {/* Episodes */}
               {loadingDetail ? (
-                <div className="flex items-center gap-2 text-sm text-white/30 mb-5">
+                <div className="flex items-center gap-2 text-sm text-white/25 mb-5">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Loading episodes...
                 </div>
               ) : detail?.seasons && detail.seasons.length > 0 && series.id ? (
                 <div className="mb-5">
-                  <p className="text-xs text-white/40 mb-2 uppercase tracking-wider font-medium">Episodes</p>
+                  <p className="text-xs text-white/30 mb-2.5 uppercase tracking-wider font-medium">Episodes</p>
                   <EpisodeList
                     seriesId={series.id}
                     tmdbId={detail.id}
@@ -202,22 +227,74 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   />
                 </div>
               ) : !series.tmdbId ? (
-                <p className="text-sm text-white/25 mb-5">No TMDB data available for episode tracking.</p>
+                <p className="text-sm text-white/20 mb-5">No TMDB data available for episode tracking.</p>
               ) : null}
 
               {/* Notes */}
               <div>
-                <p className="text-xs text-white/40 mb-1.5 uppercase tracking-wider font-medium">Notes</p>
+                <p className="text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">Notes</p>
                 <textarea
                   value={notes}
                   onChange={e => handleNotesChange(e.target.value)}
                   placeholder="Add notes..."
                   rows={3}
-                  className="w-full bg-[#1E1E1E] border border-white/8 rounded-lg px-3 py-2.5 text-sm text-white/80 placeholder:text-white/25 outline-none focus:border-white/20 resize-none transition-colors"
+                  className="w-full bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white/75 placeholder:text-white/20 outline-none focus:border-white/20 resize-none transition-colors"
                 />
               </div>
             </div>
           </motion.div>
+
+          {/* Delete modal */}
+          <AnimatePresence>
+            {deleteModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4"
+              >
+                <div
+                  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                  onClick={() => setDeleteModal(false)}
+                />
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 20, opacity: 0 }}
+                  transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                  className="relative bg-[#1E1E1E] rounded-2xl p-5 max-w-sm w-full border border-white/8 shadow-2xl"
+                >
+                  <h3 className="text-sm font-semibold text-white truncate mb-0.5">{series.title}</h3>
+                  <p className="text-sm text-white/40 mb-5">What do you want to do with this series?</p>
+
+                  <div className="space-y-2">
+                    <button
+                      onClick={handleMarkDropped}
+                      className="w-full px-4 py-3 bg-red-500/8 hover:bg-red-500/15 border border-red-500/15 hover:border-red-500/25 text-left rounded-xl transition-colors"
+                    >
+                      <span className="text-sm font-medium text-red-400 block">Mark as dropped</span>
+                      <span className="text-xs text-red-400/50 mt-0.5 block">Keep in library, change status to Dropped</span>
+                    </button>
+
+                    <button
+                      onClick={handleRemove}
+                      className="w-full px-4 py-3 bg-white/4 hover:bg-red-500/8 border border-white/6 hover:border-red-500/15 text-left rounded-xl transition-colors group"
+                    >
+                      <span className="text-sm font-medium text-white/60 group-hover:text-red-400 transition-colors block">Remove from library</span>
+                      <span className="text-xs text-white/25 group-hover:text-red-400/50 transition-colors mt-0.5 block">Permanently delete this series and all watch history</span>
+                    </button>
+
+                    <button
+                      onClick={() => setDeleteModal(false)}
+                      className="w-full px-4 py-2.5 text-white/40 hover:text-white/60 text-sm font-medium rounded-xl hover:bg-white/4 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
     </AnimatePresence>

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Tv, SlidersHorizontal } from 'lucide-react'
-import { getAllSeries, deduplicateSeries } from './lib/api'
+import { Tv, SlidersHorizontal, Wand2, GitMerge } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
+import { getAllSeries, deduplicateSeries, getDuplicates } from './lib/api'
+import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
 import type { Series, SeriesStatus } from './types'
 import { SeriesGrid } from './components/SeriesGrid'
@@ -9,6 +11,8 @@ import { DetailPanel } from './components/DetailPanel'
 import { SearchBar } from './components/SearchBar'
 import { StatsBar } from './components/StatsBar'
 import { ImportBanner } from './components/ImportBanner'
+import { DuplicateModal } from './components/DuplicateModal'
+import { MigrationModal, MIGRATION_KEY } from './components/MigrationModal'
 
 type SortKey = 'title' | 'added' | 'updated'
 type View = 'home' | 'library'
@@ -22,6 +26,11 @@ export default function App() {
   const [filter, setFilter] = useState<SeriesStatus | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('title')
   const [view, setView] = useState<View>('home')
+
+  const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([])
+  const [showDuplicates, setShowDuplicates] = useState(false)
+  const [showMigration, setShowMigration] = useState(false)
+  const migrationDone = localStorage.getItem(MIGRATION_KEY) === 'true'
 
   const loadSeries = useCallback(async () => {
     const data = await getAllSeries()
@@ -38,6 +47,9 @@ export default function App() {
       setImporting(false)
       await deduplicateSeries()
       await loadSeries()
+      // Check for remaining duplicates (fuzzy — not caught by exact dedup)
+      const dupes = await getDuplicates()
+      setDuplicates(dupes)
     }
     init()
   }, [loadSeries])
@@ -55,7 +67,7 @@ export default function App() {
   )
 
   const watchingNow = [...allSeries]
-    .filter(s => s.status === 'watching')
+    .filter(s => s.status === 'plantowatch')
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
 
   const now = new Date()
@@ -78,6 +90,12 @@ export default function App() {
 
   async function handleSeriesAdded() {
     await loadSeries()
+  }
+
+  async function handleDuplicateResolved() {
+    await loadSeries()
+    const dupes = await getDuplicates()
+    setDuplicates(dupes)
   }
 
   return (
@@ -127,12 +145,9 @@ export default function App() {
               {loading ? (
                 <p className="text-sm text-white/25">Loading...</p>
               ) : watchingNow.length === 0 ? (
-                <p className="text-sm text-white/25">No series marked as watching yet.</p>
+                <p className="text-sm text-white/25">No series marked as Pending yet.</p>
               ) : (
-                <div
-                  className="flex gap-3 overflow-x-auto pb-2"
-                  style={{ scrollbarWidth: 'none' }}
-                >
+                <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                   {watchingNow.map(s => (
                     <div key={s.id} className="w-[108px] shrink-0">
                       <SeriesCard series={s} onClick={setSelected} />
@@ -154,10 +169,7 @@ export default function App() {
                   Nothing airing in the next 14 days. Open a series to refresh its next episode date.
                 </p>
               ) : (
-                <div
-                  className="flex gap-3 overflow-x-auto pb-2"
-                  style={{ scrollbarWidth: 'none' }}
-                >
+                <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                   {upcomingEpisodes.map(s => (
                     <div key={s.id} className="w-[108px] shrink-0">
                       <SeriesCard series={s} onClick={setSelected} />
@@ -177,17 +189,39 @@ export default function App() {
                 onFilter={setFilter}
               />
 
-              <div className="flex items-center gap-2 shrink-0">
-                <SlidersHorizontal className="w-4 h-4 text-white/30" />
-                <select
-                  value={sort}
-                  onChange={e => setSort(e.target.value as SortKey)}
-                  className="bg-transparent text-sm text-white/50 outline-none cursor-pointer hover:text-white/80 transition-colors"
-                >
-                  <option value="title" className="bg-[#1E1E1E]">A-Z</option>
-                  <option value="added" className="bg-[#1E1E1E]">Recently Added</option>
-                  <option value="updated" className="bg-[#1E1E1E]">Last Updated</option>
-                </select>
+              <div className="flex items-center gap-3 shrink-0">
+                {/* Tools */}
+                {duplicates.length > 0 && (
+                  <button
+                    onClick={() => setShowDuplicates(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/20"
+                  >
+                    <GitMerge className="w-3.5 h-3.5" />
+                    {duplicates.length} duplicate{duplicates.length !== 1 ? 's' : ''}
+                  </button>
+                )}
+                {!migrationDone && (
+                  <button
+                    onClick={() => setShowMigration(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#6366F1]/10 text-[#6366F1] hover:bg-[#6366F1]/20 transition-colors border border-[#6366F1]/20"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    Restore history
+                  </button>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-white/30" />
+                  <select
+                    value={sort}
+                    onChange={e => setSort(e.target.value as SortKey)}
+                    className="bg-transparent text-sm text-white/50 outline-none cursor-pointer hover:text-white/80 transition-colors"
+                  >
+                    <option value="title" className="bg-[#1E1E1E]">A-Z</option>
+                    <option value="added" className="bg-[#1E1E1E]">Recently Added</option>
+                    <option value="updated" className="bg-[#1E1E1E]">Last Updated</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -212,6 +246,25 @@ export default function App() {
           total={importProgress.total}
         />
       )}
+
+      <AnimatePresence>
+        {showDuplicates && (
+          <DuplicateModal
+            groups={duplicates}
+            onClose={() => setShowDuplicates(false)}
+            onResolved={handleDuplicateResolved}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showMigration && (
+          <MigrationModal
+            onClose={() => setShowMigration(false)}
+            onDone={loadSeries}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
