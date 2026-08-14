@@ -134,10 +134,15 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
     ? (episodeMap.get(selectedDate) ?? []).map(s => ({ date: selectedDate, series: s }))
     : allUpcoming
 
-  // Watching Now
+  // Watching Now: soonest next episode first, no date last, alphabetical tiebreak
   const watchingNow = series
     .filter(s => s.status === 'watching')
-    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    .sort((a, b) => {
+      const aDate = a.nextEpisodeDate ? new Date(a.nextEpisodeDate).getTime() : Infinity
+      const bDate = b.nextEpisodeDate ? new Date(b.nextEpisodeDate).getTime() : Infinity
+      if (aDate !== bDate) return aDate - bDate
+      return a.title.localeCompare(b.title)
+    })
 
   // Calendar grid (Mon-first)
   const year = calMonth.getFullYear()

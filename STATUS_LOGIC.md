@@ -117,11 +117,13 @@ These ran once during the Simkl import migration. Their localStorage keys are pe
 
 ## Known issues and design debt
 
-**`updatedAt` used for sort order in Watching Now**
-Background jobs touch `updatedAt` when they update metadata, causing the order to shift across sessions. Should sort by `nextEpisodeDate` instead (soonest upcoming episode first, no date last).
-
-**`checkWatchingStatus` episode count accuracy**
-Uses `season.episode_count` from TMDB per aired season as the total. TMDB sometimes lists future-within-season episodes in this count. Could cause the daily check to not fire until the full season is released, even if Fernando has watched all available episodes. The manual mark path (`handleAllEpisodesWatched`) is not affected — it uses actual released episode counts.
-
 **No memory of original import status**
-The Simkl import ran once. Some shows imported as `completed` were changed to `watching` by the dead migration jobs. There is no record of original intent, so manually dropped/completed shows had to be reset by hand. Future imports should preserve source status more carefully.
+The Simkl import ran once. Some shows imported as `completed` were changed to `watching` by the dead migration jobs. There is no record of original intent, so manually dropped/completed shows had to be reset by hand. Future imports should preserve source status more carefully. This is a historical issue with no code fix available.
+
+## Fixed issues
+
+**`updatedAt` used for sort order in Watching Now** (fixed 2026-08-14)
+Background jobs touched `updatedAt` when updating metadata, causing the order to shift across sessions. Fixed: Watching Now now sorts by `nextEpisodeDate` ascending (soonest first), with no-date shows last and alphabetical tiebreak.
+
+**`checkWatchingStatus` episode count accuracy** (fixed 2026-08-14)
+Previously used `season.episode_count` from TMDB, which includes unaired episodes in the currently-airing season. Fixed: for the season matching `last_episode_to_air.season_number`, uses `last_episode_to_air.episode_number` as the released count instead. Completed seasons still use `episode_count` (which is accurate once a season is done).

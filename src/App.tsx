@@ -183,7 +183,16 @@ export default function App() {
           const airedSeasons = detail.seasons
             .filter(season => season.season_number > 0)
             .filter(season => season.air_date != null && season.air_date <= today)
-          const totalEpisodes = airedSeasons.reduce((sum, season) => sum + season.episode_count, 0)
+          // For the currently-active season, use last_episode_to_air.episode_number as the
+          // released count rather than season.episode_count (which includes unaired episodes).
+          // For all older completed seasons, episode_count is accurate.
+          const activeSeasonNumber = detail.last_episode_to_air?.season_number ?? null
+          const totalEpisodes = airedSeasons.reduce((sum, season) => {
+            if (activeSeasonNumber && season.season_number === activeSeasonNumber && detail.last_episode_to_air) {
+              return sum + detail.last_episode_to_air.episode_number
+            }
+            return sum + season.episode_count
+          }, 0)
           if (totalEpisodes === 0) continue
           const airedSeasonNumbers = new Set(airedSeasons.map(s => s.season_number))
           const watchedCount = watched.filter(w => w.seasonNumber > 0 && airedSeasonNumbers.has(w.seasonNumber)).length

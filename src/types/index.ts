@@ -69,6 +69,7 @@ export interface TmdbShowDetail {
   number_of_seasons: number
   seasons: TmdbSeason[]
   next_episode_to_air: TmdbNextEpisode | null
+  last_episode_to_air: TmdbNextEpisode | null
   vote_average?: number
   status?: string
   genres?: { id: number; name: string }[]
