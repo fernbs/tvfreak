@@ -271,7 +271,10 @@ export default function App() {
     populateRatings()
   }, [loading, loadSeries])
 
-  // Once-ever: fix completed shows that TMDB says are still returning (eg 3 Body Problem)
+  // DEAD JOB — already ran on all devices (key: tvfreak-fix-completed-v1).
+  // Do NOT change the logic or the key — it would re-run on any device that hasn't seen it.
+  // What it did: changed completed+returning shows → watching. Was too broad; caused collateral
+  // damage (Fargo, Black Mirror, etc. got bumped). checkRevived now handles this without auto-flipping status.
   useEffect(() => {
     if (loading) return
     if (localStorage.getItem('tvfreak-fix-completed-v1')) return
@@ -335,7 +338,10 @@ export default function App() {
     backfillSeriesInfo()
   }, [loading, loadSeries])
 
-  // Once-ever: fix existing "pending" series that have started airing → set to "watching"
+  // DEAD JOB — already ran on all devices (key: tvfreak-watching-fix-v1).
+  // Do NOT change the logic or the key. What it did: changed plantowatch+aired → watching.
+  // Was too broad — also caught shows imported from Simkl as plantowatch that Fernando
+  // considered dropped. v2 below catches anything this missed due to missing firstAirDate.
   useEffect(() => {
     if (loading) return
     if (localStorage.getItem('tvfreak-watching-fix-v1')) return
@@ -360,7 +366,9 @@ export default function App() {
     fixPendingToWatching()
   }, [loading, loadSeries])
 
-  // Once-ever v2: catch any plantowatch series missed by v1 (e.g. firstAirDate wasn't populated yet when v1 ran)
+  // DEAD JOB (v2) — already ran on all devices (key: tvfreak-watching-fix-v2).
+  // Do NOT change the logic or the key. Catches plantowatch series v1 missed (e.g. HotD,
+  // whose firstAirDate wasn't stored yet when v1 ran).
   useEffect(() => {
     if (loading) return
     if (localStorage.getItem('tvfreak-watching-fix-v2')) return
