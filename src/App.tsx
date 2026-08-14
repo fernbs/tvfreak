@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Tv, SlidersHorizontal, Wand2, GitMerge } from 'lucide-react'
 import { AnimatePresence } from 'framer-motion'
-import { getAllSeries, deduplicateSeries, getDuplicates } from './lib/api'
+import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
+import { getTvDetails } from './lib/tmdb'
 import type { Series, SeriesStatus } from './types'
 import { SeriesGrid } from './components/SeriesGrid'
 import { SeriesCard } from './components/SeriesCard'
@@ -53,6 +54,36 @@ export default function App() {
     }
     init()
   }, [loadSeries])
+
+  useEffect(() => {
+    if (loading) return
+    async function refreshNextEpisodeDates() {
+      const all = await getAllSeries()
+      const now = new Date()
+      const toRefresh = all.filter(s =>
+        s.tmdbId && s.id &&
+        (s.status === 'watching' || s.status === 'plantowatch') &&
+        (!s.nextEpisodeDate || new Date(s.nextEpisodeDate) <= now)
+      )
+      if (toRefresh.length === 0) return
+      for (const s of toRefresh) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if (detail?.next_episode_to_air) {
+            await updateSeries(s.id!, {
+              nextEpisodeDate: detail.next_episode_to_air.air_date,
+              nextEpisodeName: detail.next_episode_to_air.name,
+            })
+          } else {
+            await updateSeries(s.id!, { nextEpisodeDate: null, nextEpisodeName: null })
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 300))
+      }
+      await loadSeries()
+    }
+    refreshNextEpisodeDates()
+  }, [loading, loadSeries])
 
   function sorted(series: Series[]): Series[] {
     return [...series].sort((a, b) => {

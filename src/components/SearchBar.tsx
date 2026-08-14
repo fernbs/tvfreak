@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Search, X, Plus, Loader2 } from 'lucide-react'
 import { searchTv, posterUrl } from '../lib/tmdb'
 import { addSeries, getAllSeries } from '../lib/api'
-import type { TmdbSearchResult, SeriesStatus } from '../types'
-import { STATUS_CONFIG } from '../types'
+import type { TmdbSearchResult } from '../types'
 import { toast } from 'sonner'
 
 interface Props {
@@ -16,7 +15,6 @@ export function SearchBar({ onSeriesAdded }: Props) {
   const [searching, setSearching] = useState(false)
   const [open, setOpen] = useState(false)
   const [addingId, setAddingId] = useState<number | null>(null)
-  const [statusPicker, setStatusPicker] = useState<TmdbSearchResult | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -41,27 +39,24 @@ export function SearchBar({ onSeriesAdded }: Props) {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false)
-        setStatusPicker(null)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  async function handleAdd(result: TmdbSearchResult, status: SeriesStatus) {
+  async function handleAdd(result: TmdbSearchResult) {
     setAddingId(result.id)
     try {
       const existing = await getAllSeries()
       if (existing.some(s => s.tmdbId === result.id)) {
         toast.error('Already in your library')
-        setAddingId(null)
-        setStatusPicker(null)
         return
       }
       await addSeries({
         tmdbId: result.id,
         title: result.name,
-        status,
+        status: 'plantowatch',
         posterPath: result.poster_path,
         overview: result.overview,
         firstAirDate: result.first_air_date,
@@ -71,11 +66,10 @@ export function SearchBar({ onSeriesAdded }: Props) {
         addedAt: new Date(),
         updatedAt: new Date(),
       })
-      toast.success(`Added "${result.name}"`)
+      toast.success(`"${result.name}" added to library`)
       onSeriesAdded()
       setQuery('')
       setOpen(false)
-      setStatusPicker(null)
     } finally {
       setAddingId(null)
     }
@@ -94,7 +88,7 @@ export function SearchBar({ onSeriesAdded }: Props) {
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Search to add a series..."
+          placeholder="Search TMDB to add a series..."
           className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 outline-none"
         />
         {query && (
@@ -123,29 +117,17 @@ export function SearchBar({ onSeriesAdded }: Props) {
                   {r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}
                 </p>
               </div>
-
-              {statusPicker?.id === r.id ? (
-                <div className="flex gap-1 shrink-0">
-                  {(Object.entries(STATUS_CONFIG) as [SeriesStatus, (typeof STATUS_CONFIG)[SeriesStatus]][]).map(([status, cfg]) => (
-                    <button
-                      key={status}
-                      onClick={() => handleAdd(r, status)}
-                      disabled={addingId === r.id}
-                      className={`px-2 py-1 rounded text-xs font-medium transition-all ${cfg.bgClass} ${cfg.textClass} hover:opacity-80`}
-                      title={cfg.label}
-                    >
-                      {cfg.label.slice(0, 4)}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <button
-                  onClick={() => setStatusPicker(r)}
-                  className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-white/8 hover:bg-white/15 transition-colors"
-                >
+              <button
+                onClick={() => handleAdd(r)}
+                disabled={addingId === r.id}
+                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-white/8 hover:bg-[#6366F1]/30 hover:text-[#6366F1] transition-colors disabled:opacity-50"
+              >
+                {addingId === r.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white/40" />
+                ) : (
                   <Plus className="w-4 h-4 text-white/70" />
-                </button>
-              )}
+                )}
+              </button>
             </div>
           ))}
         </div>
