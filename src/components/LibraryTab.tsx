@@ -57,7 +57,7 @@ export function LibraryTab({
         style={{ paddingTop: 'max(env(safe-area-inset-top), 48px)' }}
       >
         {/* Title row */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <h1 className="text-lg font-bold text-white">
             Library
             <span className="ml-2 text-sm font-normal text-white/30">{filtered.length}</span>
@@ -81,21 +81,26 @@ export function LibraryTab({
                 Restore
               </button>
             )}
-            {/* View toggle */}
-            <div className="flex items-center gap-0.5 bg-white/6 rounded-lg p-0.5">
-              {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === mode ? 'bg-white/12 text-white' : 'text-white/30'}`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                </button>
-              ))}
-            </div>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-white/25" />
+        {/* Controls row: view toggle + sort */}
+        <div className="flex items-center justify-between mb-3">
+          {/* View toggle */}
+          <div className="flex items-center gap-0.5 bg-white/6 rounded-lg p-0.5">
+            {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === mode ? 'bg-white/12 text-white' : 'text-white/30'}`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-white/25" />
               <select
                 value={sort}
                 onChange={e => setSort(e.target.value as SortKey)}
@@ -108,7 +113,6 @@ export function LibraryTab({
               </select>
             </div>
           </div>
-        </div>
 
         {/* Filter chips */}
         <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>

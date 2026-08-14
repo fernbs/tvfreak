@@ -29,7 +29,15 @@ export default function App() {
   const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([])
   const [showDuplicates, setShowDuplicates] = useState(false)
   const [showMigration, setShowMigration] = useState(false)
-  const migrationDone = localStorage.getItem(MIGRATION_KEY) === 'true'
+  const [migrationDone, setMigrationDone] = useState(() => localStorage.getItem(MIGRATION_KEY) === 'true')
+
+  // Auto-dismiss migration banner if data already exists in the DB
+  useEffect(() => {
+    if (allSeries.length > 0 && !migrationDone) {
+      localStorage.setItem(MIGRATION_KEY, 'true')
+      setMigrationDone(true)
+    }
+  }, [allSeries.length, migrationDone])
 
   const loadSeries = useCallback(async () => {
     try {
