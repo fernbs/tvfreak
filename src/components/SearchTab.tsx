@@ -27,13 +27,17 @@ interface Props {
 
 export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const [query, setQuery] = useState('')
-  const [selectedGenres, setSelectedGenres] = useState<number[]>([])
+  const [includedGenres, setIncludedGenres] = useState<number[]>([])
+  const [excludedGenres, setExcludedGenres] = useState<number[]>([])
   const [results, setResults] = useState<TmdbSearchResult[]>([])
   const [trending, setTrending] = useState<TmdbSearchResult[]>([])
   const [searching, setSearching] = useState(false)
   const [loadingTrending, setLoadingTrending] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [addingId, setAddingId] = useState<number | null>(null)
   const [viewMode, setViewMode] = useViewMode()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -43,29 +47,62 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (query.trim()) {
-      debounceRef.current = setTimeout(async () => {
-        setSearching(true)
-        try {
-          const r = await searchTv(query)
-          setResults(r.slice(0, 20))
-        } finally { setSearching(false) }
-      }, 400)
-    } else if (selectedGenres.length > 0) {
-      debounceRef.current = setTimeout(async () => {
-        setSearching(true)
-        try {
-          const r = await getDiscoverByGenres(selectedGenres)
-          setResults(r.slice(0, 20))
-        } finally { setSearching(false) }
-      }, 200)
-    } else {
+
+    const hasQuery = query.trim().length > 0
+    const hasGenreFilter = includedGenres.length > 0 || excludedGenres.length > 0
+
+    if (!hasQuery && !hasGenreFilter) {
       setResults([])
+      setCurrentPage(1)
+      setTotalPages(1)
+      return
     }
-  }, [query, selectedGenres])
+
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true)
+      setCurrentPage(1)
+      try {
+        if (hasQuery) {
+          const { results: r, totalPages: tp } = await searchTv(query, 1)
+          setResults(r)
+          setTotalPages(tp)
+        } else {
+          const { results: r, totalPages: tp } = await getDiscoverByGenres(includedGenres, excludedGenres, 1)
+          setResults(r)
+          setTotalPages(tp)
+        }
+      } finally { setSearching(false) }
+    }, hasQuery ? 400 : 200)
+  }, [query, includedGenres, excludedGenres])
 
   function toggleGenre(id: number) {
-    setSelectedGenres(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id])
+    if (includedGenres.includes(id)) {
+      setIncludedGenres(prev => prev.filter(g => g !== id))
+      setExcludedGenres(prev => [...prev, id])
+    } else if (excludedGenres.includes(id)) {
+      setExcludedGenres(prev => prev.filter(g => g !== id))
+    } else {
+      setIncludedGenres(prev => [...prev, id])
+    }
+  }
+
+  async function handleLoadMore() {
+    if (loadingMore || currentPage >= totalPages) return
+    setLoadingMore(true)
+    const nextPage = currentPage + 1
+    try {
+      const hasQuery = query.trim().length > 0
+      if (hasQuery) {
+        const { results: r, totalPages: tp } = await searchTv(query, nextPage)
+        setResults(prev => [...prev, ...r])
+        setTotalPages(tp)
+      } else {
+        const { results: r, totalPages: tp } = await getDiscoverByGenres(includedGenres, excludedGenres, nextPage)
+        setResults(prev => [...prev, ...r])
+        setTotalPages(tp)
+      }
+      setCurrentPage(nextPage)
+    } finally { setLoadingMore(false) }
   }
 
   const libraryIds = new Set(allSeries.map(s => s.tmdbId).filter(Boolean))
@@ -119,16 +156,22 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   }
 
   const noQuery = !query.trim()
-  const noGenres = selectedGenres.length === 0
-  const displayResults = (noQuery && noGenres) ? trending : results
-  const isLoading = (noQuery && noGenres) ? loadingTrending : searching
+  const noGenreFilter = includedGenres.length === 0 && excludedGenres.length === 0
+  const showTrending = noQuery && noGenreFilter
+  const displayResults = showTrending ? trending : results
+  const isLoading = showTrending ? loadingTrending : searching
+  const hasMore = !showTrending && currentPage < totalPages
 
   let sectionLabel = ''
   let SectionIcon = TrendingUp
   if (!noQuery) {
     sectionLabel = ''
-  } else if (!noGenres) {
-    sectionLabel = 'Top rated · ' + selectedGenres.map(id => GENRES.find(g => g.id === id)?.label).join(', ')
+  } else if (!noGenreFilter) {
+    const parts = [
+      ...includedGenres.map(id => GENRES.find(g => g.id === id)?.label ?? ''),
+      ...excludedGenres.map(id => `not ${GENRES.find(g => g.id === id)?.label ?? ''}`),
+    ].filter(Boolean)
+    sectionLabel = 'Top rated · ' + parts.join(', ')
     SectionIcon = Sparkles
   } else {
     sectionLabel = 'Trending this week'
@@ -195,18 +238,24 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           )}
         </div>
 
+        {/* Genre chips — tap once to include (indigo), tap again to exclude (red), tap again to clear */}
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {GENRES.map(g => {
-            const active = selectedGenres.includes(g.id)
+            const isIncluded = includedGenres.includes(g.id)
+            const isExcluded = excludedGenres.includes(g.id)
             return (
               <button
                 key={g.id}
                 onClick={() => toggleGenre(g.id)}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  active ? 'bg-[#6366F1] text-white' : 'bg-white/6 text-white/45 active:bg-white/12'
+                  isIncluded
+                    ? 'bg-[#6366F1] text-white'
+                    : isExcluded
+                      ? 'bg-red-500/15 text-red-400 border border-red-500/25'
+                      : 'bg-white/6 text-white/45 active:bg-white/12'
                 }`}
               >
-                {g.label}
+                {isExcluded ? '× ' : ''}{g.label}
               </button>
             )
           })}
@@ -255,9 +304,21 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                 <AddButton r={r} />
               </div>
             ))}
+            {hasMore && (
+              <div className="flex justify-center py-4">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/6 text-white/50 text-sm font-medium active:bg-white/10 transition-colors disabled:opacity-50"
+                >
+                  {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {loadingMore ? 'Loading...' : `Load more`}
+                </button>
+              </div>
+            )}
           </div>
         ) : (
-          <div className={`px-4 pt-2 pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
+          <div className={`px-4 pt-2 pb-2 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
             {displayResults.map(r => {
               const inLibrary = libraryIds.has(r.id)
               return (
@@ -274,7 +335,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                         <span className="text-[10px] text-white/20 text-center">{r.name}</span>
                       </div>
                     )}
-                    {/* Add button overlay */}
                     {!inLibrary && (
                       <button
                         onClick={e => { e.stopPropagation(); handleAdd(r) }}
@@ -299,6 +359,20 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                 </button>
               )
             })}
+          </div>
+        )}
+
+        {/* Load more button (grid view) */}
+        {hasMore && viewMode !== 'list' && (
+          <div className="flex justify-center py-4 px-4">
+            <button
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/6 text-white/50 text-sm font-medium active:bg-white/10 transition-colors disabled:opacity-50"
+            >
+              {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {loadingMore ? 'Loading...' : 'Load more'}
+            </button>
           </div>
         )}
       </div>

@@ -359,6 +359,31 @@ export default function App() {
     fixPendingToWatching()
   }, [loading, loadSeries])
 
+  // Once-ever v2: catch any plantowatch series missed by v1 (e.g. firstAirDate wasn't populated yet when v1 ran)
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-watching-fix-v2')) return
+    async function fixPendingToWatchingV2() {
+      const all = await getAllSeries()
+      const today = new Date().toISOString().slice(0, 10)
+      const toFix = all.filter(s =>
+        s.id &&
+        s.status === 'plantowatch' &&
+        s.firstAirDate &&
+        s.firstAirDate <= today
+      )
+      if (toFix.length === 0) { localStorage.setItem('tvfreak-watching-fix-v2', 'true'); return }
+      for (const s of toFix) {
+        try {
+          await updateSeries(s.id!, { status: 'watching' })
+        } catch { /* ignore */ }
+      }
+      localStorage.setItem('tvfreak-watching-fix-v2', 'true')
+      await loadSeries()
+    }
+    fixPendingToWatchingV2()
+  }, [loading, loadSeries])
+
   // Once-ever: unmark all watched episodes in seasons that premiered in 2026
   useEffect(() => {
     if (loading) return

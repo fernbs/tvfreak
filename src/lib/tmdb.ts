@@ -10,13 +10,13 @@ function headers() {
   }
 }
 
-export async function searchTv(query: string): Promise<import('../types').TmdbSearchResult[]> {
-  if (!query.trim()) return []
-  const url = `${BASE_URL}/search/tv?query=${encodeURIComponent(query)}&language=en-US&page=1`
+export async function searchTv(query: string, page = 1): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
+  if (!query.trim()) return { results: [], totalPages: 0 }
+  const url = `${BASE_URL}/search/tv?query=${encodeURIComponent(query)}&language=en-US&page=${page}`
   const res = await fetch(url, { headers: headers() })
-  if (!res.ok) return []
+  if (!res.ok) return { results: [], totalPages: 0 }
   const data = await res.json()
-  return data.results ?? []
+  return { results: data.results ?? [], totalPages: data.total_pages ?? 1 }
 }
 
 export async function getTvDetails(tmdbId: number): Promise<import('../types').TmdbShowDetail | null> {
@@ -42,13 +42,24 @@ export function posterUrl(path: string | null, size: 'w185' | 'w342' | 'w500' = 
   return `${IMG_BASE}/${size}${path}`
 }
 
-export async function getDiscoverByGenres(genreIds: number[]): Promise<import('../types').TmdbSearchResult[]> {
-  const genres = genreIds.join(',')
-  const url = `${BASE_URL}/discover/tv?with_genres=${genres}&sort_by=vote_average.desc&vote_count.gte=100&language=en-US&page=1`
+export async function getDiscoverByGenres(
+  includedIds: number[],
+  excludedIds: number[] = [],
+  page = 1
+): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
+  const params = new URLSearchParams({
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': '100',
+    language: 'en-US',
+    page: String(page),
+  })
+  if (includedIds.length > 0) params.set('with_genres', includedIds.join(','))
+  if (excludedIds.length > 0) params.set('without_genres', excludedIds.join(','))
+  const url = `${BASE_URL}/discover/tv?${params}`
   const res = await fetch(url, { headers: headers() })
-  if (!res.ok) return []
+  if (!res.ok) return { results: [], totalPages: 0 }
   const data = await res.json()
-  return data.results ?? []
+  return { results: data.results ?? [], totalPages: data.total_pages ?? 1 }
 }
 
 export async function getTrending(): Promise<import('../types').TmdbSearchResult[]> {
