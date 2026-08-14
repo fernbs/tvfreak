@@ -387,6 +387,31 @@ export default function App() {
     unmark2026Seasons()
   }, [loading, loadSeries])
 
+  // Once-ever v2: re-run 2026 unmark for watching/plantowatch series (catches series whose status changed after v1 ran)
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-unmark-2026-v2')) return
+    async function unmark2026SeasonsV2() {
+      const all = await getAllSeries()
+      const eligible = all.filter(s => s.tmdbId && s.id && s.status !== 'dropped' && s.status !== 'completed')
+      for (const s of eligible) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if (!detail) continue
+          const seasons2026 = detail.seasons.filter(
+            season => season.season_number > 0 && season.air_date?.startsWith('2026')
+          )
+          for (const season of seasons2026) {
+            await unmarkSeasonEpisodes(s.id!, season.season_number)
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 400))
+      }
+      localStorage.setItem('tvfreak-unmark-2026-v2', 'true')
+    }
+    unmark2026SeasonsV2()
+  }, [loading, loadSeries])
+
   async function handleSeriesUpdated() {
     const data = await getAllSeries()
     setAllSeries(data)
