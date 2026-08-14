@@ -128,11 +128,14 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
     setWatched(new Set(eps.map(e => `${e.seasonNumber}-${e.episodeNumber}`)))
   }
 
-  // Count only released episodes; uses episode data when available, falls back to episode_count.
-  // Fallback skips seasons with a future or missing air_date to avoid inflating the total
-  // with announced-but-unaired seasons (which would prevent checkAllWatched from ever firing).
-  function releasedEpisodeCount(): number {
+  // Count only released episodes. freshSeasonEps overrides stale seasonStates for a specific
+  // season when fresh episode data was just loaded but React hasn't re-rendered yet.
+  function releasedEpisodeCount(freshSeasonEps?: Record<number, TmdbEpisode[]>): number {
     return seasons.filter(s => s.season_number > 0).reduce((sum, s) => {
+      const fresh = freshSeasonEps?.[s.season_number]
+      if (fresh) {
+        return sum + fresh.filter(ep => isReleased(ep.air_date)).length
+      }
       const state = seasonStates[s.season_number]
       if (state?.episodes && state.episodes.length > 0) {
         return sum + state.episodes.filter(ep => isReleased(ep.air_date)).length
@@ -142,8 +145,8 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
     }, 0)
   }
 
-  function checkAllWatched(newWatched: Set<string>) {
-    const total = releasedEpisodeCount()
+  function checkAllWatched(newWatched: Set<string>, freshSeasonEps?: Record<number, TmdbEpisode[]>) {
+    const total = releasedEpisodeCount(freshSeasonEps)
     if (total > 0 && newWatched.size >= total) {
       onAllEpisodesWatched?.()
     }
@@ -193,6 +196,9 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
     const sn = season.season_number
     const state = seasonStates[sn]
     let toMark: { seasonNumber: number; episodeNumber: number }[]
+    // Track fresh episodes when we load them here, so checkAllWatched can use the accurate
+    // released count instead of the stale seasonStates (React hasn't re-rendered yet).
+    let freshSeasonEps: Record<number, TmdbEpisode[]> | undefined
 
     if (state?.episodes && state.episodes.length > 0) {
       toMark = state.episodes
@@ -200,8 +206,8 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
         .filter(ep => !watched.has(`${sn}-${ep.episode_number}`))
         .map(ep => ({ seasonNumber: sn, episodeNumber: ep.episode_number }))
     } else {
-      // Load episodes first so we can filter by release date
       const episodes = await getSeasonEpisodes(tmdbId, sn)
+      freshSeasonEps = { [sn]: episodes }
       setSeasonStates(prev => ({ ...prev, [sn]: { open: prev[sn]?.open ?? false, episodes, loading: false } }))
       toMark = episodes
         .filter(ep => isReleased(ep.air_date))
@@ -214,7 +220,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       setWatched(prev => {
         const next = new Set(prev)
         for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
-        checkAllWatched(next)
+        checkAllWatched(next, freshSeasonEps)
         return next
       })
     }
