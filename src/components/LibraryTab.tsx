@@ -4,7 +4,7 @@ import type { Series, SeriesStatus } from '../types'
 import type { DuplicateGroup } from '../lib/api'
 import { SeriesGrid } from './SeriesGrid'
 
-type SortKey = 'title' | 'added' | 'updated'
+type SortKey = 'title' | 'added' | 'updated' | 'nextEpisode'
 
 interface Props {
   series: Series[]
@@ -36,6 +36,11 @@ export function LibraryTab({
     return [...list].sort((a, b) => {
       if (sort === 'title') return a.title.localeCompare(b.title)
       if (sort === 'added') return b.addedAt.getTime() - a.addedAt.getTime()
+      if (sort === 'nextEpisode') {
+        const aDate = a.nextEpisodeDate ? new Date(a.nextEpisodeDate).getTime() : Infinity
+        const bDate = b.nextEpisodeDate ? new Date(b.nextEpisodeDate).getTime() : Infinity
+        return aDate - bDate
+      }
       return b.updatedAt.getTime() - a.updatedAt.getTime()
     })
   }
@@ -84,6 +89,7 @@ export function LibraryTab({
                 <option value="title" className="bg-[#1E1E1E]">A-Z</option>
                 <option value="added" className="bg-[#1E1E1E]">Added</option>
                 <option value="updated" className="bg-[#1E1E1E]">Updated</option>
+                <option value="nextEpisode" className="bg-[#1E1E1E]">Next episode</option>
               </select>
             </div>
           </div>

@@ -80,6 +80,13 @@ export function SeriesCard({ series, onClick }: Props) {
         </div>
       )}
 
+      {/* IMDB rating — bottom right */}
+      {series.imdbRating && (
+        <div className="absolute bottom-[6px] right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/70 text-yellow-400 leading-tight backdrop-blur-sm">
+          ★ {series.imdbRating}
+        </div>
+      )}
+
       {/* Status bar */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[3px]"

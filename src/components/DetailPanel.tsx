@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Trash2, Loader2, Calendar, CheckCircle2 } from 'lucide-react'
-import { getTvDetails, getExternalIds, getImdbRating, posterUrl } from '../lib/tmdb'
+import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, posterUrl } from '../lib/tmdb'
 import { updateSeries, deleteSeries } from '../lib/api'
-import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode } from '../types'
+import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode, TmdbSearchResult } from '../types'
 import { STATUS_CONFIG } from '../types'
 import { EpisodeList } from './EpisodeList'
 import { formatAirDate } from '../lib/utils'
@@ -18,6 +18,7 @@ interface Props {
 export function DetailPanel({ series, onClose, onUpdated }: Props) {
   const [detail, setDetail] = useState<TmdbShowDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
+  const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
   const [notes, setNotes] = useState('')
   const [deleteModal, setDeleteModal] = useState(false)
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -29,6 +30,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
       return
     }
     setNotes(series.notes ?? '')
+    setRecommendations([])
     if (series.tmdbId && series.id) {
       setLoadingDetail(true)
       getTvDetails(series.tmdbId).then(async d => {
@@ -52,6 +54,8 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
           await updateSeries(series.id!, updates)
         }
       }).finally(() => setLoadingDetail(false))
+
+      getTvRecommendations(series.tmdbId).then(r => setRecommendations(r.slice(0, 12)))
     }
   }, [series?.id])
 
@@ -265,6 +269,36 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
               ) : !series.tmdbId ? (
                 <p className="text-sm text-white/20 mb-5">No TMDB data available for episode tracking.</p>
               ) : null}
+
+              {/* Recommendations */}
+              {recommendations.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-xs text-white/30 mb-2.5 uppercase tracking-wider font-medium">
+                    More like {series.title.split(' ').slice(0, 2).join(' ')}
+                  </p>
+                  <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                    {recommendations.map(r => (
+                      <div key={r.id} className="shrink-0 w-[72px]">
+                        <div className="w-[72px] h-[108px] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1.5">
+                          {r.poster_path ? (
+                            <img
+                              src={posterUrl(r.poster_path, 'w185') ?? ''}
+                              alt={r.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center p-1">
+                              <span className="text-[9px] text-white/30 text-center leading-tight">{r.name}</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-white/50 leading-tight line-clamp-2 text-center">{r.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Notes */}
               <div>
