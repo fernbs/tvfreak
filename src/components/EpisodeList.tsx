@@ -217,12 +217,10 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
 
     if (toMark.length > 0) {
       await bulkMarkEpisodes(seriesId, toMark)
-      setWatched(prev => {
-        const next = new Set(prev)
-        for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
-        checkAllWatched(next, freshSeasonEps)
-        return next
-      })
+      const next = new Set(watched)
+      for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
+      setWatched(next)
+      checkAllWatched(next, freshSeasonEps)
     }
   }
 
@@ -304,11 +302,9 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       setEpisodeModal({ seasonNumber: sn, episodeNumber: en, previousEpisodes: previous })
     } else {
       await toggleEpisodeWatched(seriesId, sn, en)
-      setWatched(prev => {
-        const next = new Set([...prev, key])
-        checkAllWatched(next)
-        return next
-      })
+      const next = new Set([...watched, key])
+      setWatched(next)
+      checkAllWatched(next)
     }
   }
 
@@ -320,12 +316,10 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       ? [...previousEpisodes, { seasonNumber, episodeNumber }]
       : [{ seasonNumber, episodeNumber }]
     await bulkMarkEpisodes(seriesId, toMark)
-    setWatched(prev => {
-      const next = new Set(prev)
-      for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
-      checkAllWatched(next)
-      return next
-    })
+    const next = new Set(watched)
+    for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
+    setWatched(next)
+    checkAllWatched(next)
   }
 
   const today = new Date().toISOString().slice(0, 10)
