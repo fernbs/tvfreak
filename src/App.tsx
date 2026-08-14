@@ -59,7 +59,7 @@ export default function App() {
       (s.status === 'watching' || s.status === 'plantowatch') &&
       (!s.nextEpisodeDate || new Date(s.nextEpisodeDate) <= now)
     )
-    if (toRefresh.length === 0) return
+    if (toRefresh.length === 0) { await loadSeries(); return }
     for (const s of toRefresh) {
       try {
         const detail = await getTvDetails(s.tmdbId!)
@@ -74,23 +74,6 @@ export default function App() {
       } catch { /* ignore */ }
       await new Promise(r => setTimeout(r, 300))
     }
-    // Check completed series for revival (cancelled shows that come back)
-    const completedSeries = all.filter(s => s.tmdbId && s.id && s.status === 'completed')
-    for (const s of completedSeries) {
-      try {
-        const detail = await getTvDetails(s.tmdbId!)
-        if (detail?.next_episode_to_air) {
-          await updateSeries(s.id!, {
-            status: 'plantowatch',
-            nextEpisodeDate: detail.next_episode_to_air.air_date,
-            nextEpisodeName: detail.next_episode_to_air.name,
-          })
-          toast(`${s.title} is back! New episodes are coming.`, { duration: 6000 })
-        }
-      } catch { /* ignore */ }
-      await new Promise(r => setTimeout(r, 300))
-    }
-
     await loadSeries()
   }, [loadSeries])
 
@@ -98,6 +81,33 @@ export default function App() {
     if (loading) return
     refreshNextEpisodeDates()
   }, [loading, refreshNextEpisodeDates])
+
+  // Once-per-session check for cancelled shows that have been revived
+  useEffect(() => {
+    if (loading) return
+    if (sessionStorage.getItem('revival-checked')) return
+    sessionStorage.setItem('revival-checked', '1')
+    async function checkRevived() {
+      const all = await getAllSeries()
+      const completedSeries = all.filter(s => s.tmdbId && s.id && s.status === 'completed')
+      for (const s of completedSeries) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if (detail?.next_episode_to_air) {
+            await updateSeries(s.id!, {
+              status: 'plantowatch',
+              nextEpisodeDate: detail.next_episode_to_air.air_date,
+              nextEpisodeName: detail.next_episode_to_air.name,
+            })
+            toast(`${s.title} is back! New episodes are coming.`, { duration: 6000 })
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 500))
+      }
+      await loadSeries()
+    }
+    checkRevived()
+  }, [loading, loadSeries])
 
   async function handleSeriesUpdated() {
     const data = await getAllSeries()

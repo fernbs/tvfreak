@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Tv, Calendar, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Series } from '../types'
 import { SeriesCard } from './SeriesCard'
@@ -39,30 +39,58 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const touchStartY = useRef(0)
   const isPulling = useRef(false)
+  const pullDistanceRef = useRef(0)
+  const refreshingRef = useRef(false)
 
-  function onTouchStart(e: React.TouchEvent) {
-    if ((scrollRef.current?.scrollTop ?? 0) === 0) {
-      touchStartY.current = e.touches[0].clientY
-      isPulling.current = true
+  // Non-passive touchmove so we can preventDefault and stop browser overscroll
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    function handleTouchStart(e: TouchEvent) {
+      if ((el!.scrollTop ?? 0) === 0) {
+        touchStartY.current = e.touches[0].clientY
+        isPulling.current = true
+      }
     }
-  }
 
-  function onTouchMove(e: React.TouchEvent) {
-    if (!isPulling.current || refreshing) return
-    const delta = e.touches[0].clientY - touchStartY.current
-    if (delta > 0) setPullDistance(Math.min(delta * 0.5, PULL_THRESHOLD * 1.2))
-  }
-
-  async function onTouchEnd() {
-    if (pullDistance >= PULL_THRESHOLD && !refreshing) {
-      setRefreshing(true)
-      setPullDistance(0)
-      try { await onRefresh() } finally { setRefreshing(false) }
-    } else {
-      setPullDistance(0)
+    function handleTouchMove(e: TouchEvent) {
+      if (!isPulling.current || refreshingRef.current) return
+      const delta = e.touches[0].clientY - touchStartY.current
+      if (delta > 0) {
+        e.preventDefault()
+        const dist = Math.min(delta * 0.5, PULL_THRESHOLD * 1.2)
+        pullDistanceRef.current = dist
+        setPullDistance(dist)
+      }
     }
-    isPulling.current = false
-  }
+
+    async function handleTouchEnd() {
+      if (pullDistanceRef.current >= PULL_THRESHOLD && !refreshingRef.current) {
+        refreshingRef.current = true
+        setRefreshing(true)
+        setPullDistance(0)
+        pullDistanceRef.current = 0
+        try { await onRefresh() } finally {
+          refreshingRef.current = false
+          setRefreshing(false)
+        }
+      } else {
+        setPullDistance(0)
+        pullDistanceRef.current = 0
+      }
+      isPulling.current = false
+    }
+
+    el.addEventListener('touchstart', handleTouchStart, { passive: true })
+    el.addEventListener('touchmove', handleTouchMove, { passive: false })
+    el.addEventListener('touchend', handleTouchEnd)
+    return () => {
+      el.removeEventListener('touchstart', handleTouchStart)
+      el.removeEventListener('touchmove', handleTouchMove)
+      el.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [onRefresh])
 
   const today = new Date()
   const todayStr = toDateStr(today)
@@ -159,9 +187,6 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 min-h-0"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
       >
         {loading ? (
           <p className="text-sm text-white/25 py-12 text-center">Loading...</p>

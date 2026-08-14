@@ -87,7 +87,7 @@ export function StatsTab({ allSeries }: Props) {
   }, [])
 
   const totalHours = Math.round((stats?.totalEpisodes ?? 0) * 45 / 60)
-  const activeDays = stats?.activityByDate.length ?? 0
+  const activeDays = stats?.activityByDate?.length ?? 0
 
   const byStatus = {
     watching: allSeries.filter(s => s.status === 'watching').length,

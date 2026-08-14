@@ -136,8 +136,18 @@ export interface AppStats {
 }
 
 export async function getAppStats(): Promise<AppStats> {
-  const res = await fetch(`${BASE}/api/stats`)
-  return res.json()
+  try {
+    const res = await fetch(`${BASE}/api/stats`)
+    if (!res.ok) return { totalEpisodes: 0, activityByDate: [], topSeries: [] }
+    const data = await res.json()
+    return {
+      totalEpisodes: data.totalEpisodes ?? 0,
+      activityByDate: Array.isArray(data.activityByDate) ? data.activityByDate : [],
+      topSeries: Array.isArray(data.topSeries) ? data.topSeries : [],
+    }
+  } catch {
+    return { totalEpisodes: 0, activityByDate: [], topSeries: [] }
+  }
 }
 
 export async function resolveDuplicate(keepId: number, removeId: number): Promise<void> {
