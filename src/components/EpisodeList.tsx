@@ -10,6 +10,7 @@ interface Props {
   tmdbId: number
   seasons: TmdbSeason[]
   onAllEpisodesWatched?: () => void
+  onSomeEpisodesUnwatched?: () => void
 }
 
 interface SeasonState {
@@ -112,7 +113,7 @@ function SpecialsSection({ tmdbId, season }: { tmdbId: number; season: import('.
   )
 }
 
-export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }: Props) {
+export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, onSomeEpisodesUnwatched }: Props) {
   const [watched, setWatched] = useState<Set<string>>(new Set())
   const [seasonStates, setSeasonStates] = useState<Record<number, SeasonState>>({})
   const [episodeModal, setEpisodeModal] = useState<EpisodeModal | null>(null)
@@ -238,6 +239,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
         for (let i = 1; i <= season.episode_count; i++) next.delete(`${sn}-${i}`)
         return next
       })
+      onSomeEpisodesUnwatched?.()
       return
     }
 
@@ -284,6 +286,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
     if (watched.has(key)) {
       await toggleEpisodeWatched(seriesId, sn, en)
       setWatched(prev => { const next = new Set(prev); next.delete(key); return next })
+      onSomeEpisodesUnwatched?.()
       return
     }
 

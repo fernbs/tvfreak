@@ -208,13 +208,23 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   async function handleAllEpisodesWatched() {
     if (!series?.id) return
     if (series.status === 'completed') return
-    if (nextEp) {
+    if (isOngoing) {
       await updateSeries(series.id, { status: 'watching' })
-      toast.success(`All caught up on ${series.title}! Next episode: ${formatAirDate(nextEp.air_date)}`)
+      const msg = nextEp
+        ? `All caught up on ${series.title}! Next episode: ${formatAirDate(nextEp.air_date)}`
+        : `All caught up on ${series.title}! Waiting for next season.`
+      toast.success(msg)
     } else {
       await updateSeries(series.id, { status: 'completed' })
       toast.success(`${series.title} marked as completed!`)
     }
+    onUpdated()
+  }
+
+  async function handleSomeEpisodesUnwatched() {
+    if (!series?.id || series.status !== 'completed') return
+    await updateSeries(series.id, { status: 'watching' })
+    toast(`${series.title} moved back to watching.`)
     onUpdated()
   }
 
@@ -380,6 +390,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     tmdbId={detail.id}
                     seasons={detail.seasons}
                     onAllEpisodesWatched={handleAllEpisodesWatched}
+                    onSomeEpisodesUnwatched={handleSomeEpisodesUnwatched}
                   />
                 </div>
               ) : !series.tmdbId ? (
