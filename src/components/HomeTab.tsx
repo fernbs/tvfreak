@@ -5,7 +5,7 @@ import { SeriesCard } from './SeriesCard'
 import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
 
-const PULL_THRESHOLD = 64
+const PULL_THRESHOLD = 72
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 interface Props {
@@ -29,6 +29,7 @@ function addMonths(date: Date, n: number): Date {
 export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   const [view, setView] = useState<'watching' | 'upcoming'>('watching')
   const [pullDistance, setPullDistance] = useState(0)
+  const [pullReady, setPullReady] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [calMonth, setCalMonth] = useState(() => {
     const d = new Date()
@@ -59,9 +60,18 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
       const delta = e.touches[0].clientY - touchStartY.current
       if (delta > 0) {
         e.preventDefault()
-        const dist = Math.min(delta * 0.5, PULL_THRESHOLD * 1.2)
+        // 0.75 multiplier up to threshold, then elastic slowdown past it
+        let dist: number
+        if (delta * 0.75 <= PULL_THRESHOLD) {
+          dist = delta * 0.75
+        } else {
+          const overshoot = delta * 0.75 - PULL_THRESHOLD
+          dist = PULL_THRESHOLD + overshoot * 0.25
+        }
+        dist = Math.min(dist, PULL_THRESHOLD * 1.6)
         pullDistanceRef.current = dist
         setPullDistance(dist)
+        setPullReady(dist >= PULL_THRESHOLD)
       }
     }
 
@@ -69,6 +79,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
       if (pullDistanceRef.current >= PULL_THRESHOLD && !refreshingRef.current) {
         refreshingRef.current = true
         setRefreshing(true)
+        setPullReady(false)
         setPullDistance(0)
         pullDistanceRef.current = 0
         try { await onRefresh() } finally {
@@ -77,6 +88,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
         }
       } else {
         setPullDistance(0)
+        setPullReady(false)
         pullDistanceRef.current = 0
       }
       isPulling.current = false
@@ -143,12 +155,21 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
     <div className="flex flex-col h-full">
       {/* Pull-to-refresh indicator */}
       <div
-        className="shrink-0 flex items-center justify-center overflow-hidden transition-all duration-200"
-        style={{ height: refreshing ? 36 : pullDistance > 0 ? pullDistance * 0.5 : 0 }}
+        className="shrink-0 flex items-center justify-center overflow-hidden"
+        style={{
+          height: refreshing ? 40 : pullDistance > 0 ? Math.min(pullDistance * 0.55, 40) : 0,
+          transition: pullDistance === 0 ? 'height 0.3s ease' : 'none',
+        }}
       >
         <Loader2
-          className={`w-5 h-5 text-[#6366F1] transition-all duration-200 ${refreshing ? 'animate-spin' : ''}`}
-          style={{ opacity: refreshing ? 1 : Math.min(pullDistance / PULL_THRESHOLD, 1) }}
+          className={`w-5 h-5 transition-colors duration-150 ${
+            refreshing ? 'animate-spin text-[#6366F1]' : pullReady ? 'text-[#6366F1]' : 'text-white/30'
+          }`}
+          style={{
+            opacity: refreshing ? 1 : Math.min(pullDistance / (PULL_THRESHOLD * 0.5), 1),
+            transform: refreshing ? undefined : `rotate(${Math.min(pullDistance / PULL_THRESHOLD, 1) * 180}deg)`,
+            transition: refreshing ? undefined : 'color 0.15s ease',
+          }}
         />
       </div>
 
