@@ -148,7 +148,7 @@ export default function App() {
           />
         )}
         {tab === 'search' && (
-          <SearchTab onSeriesAdded={handleSeriesAdded} allSeries={allSeries} />
+          <SearchTab onSeriesAdded={handleSeriesAdded} allSeries={allSeries} onSelect={setSelected} />
         )}
         {tab === 'stats' && (
           <StatsTab allSeries={allSeries} />

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trash2, Loader2, Calendar, CheckCircle2 } from 'lucide-react'
-import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, posterUrl } from '../lib/tmdb'
-import { updateSeries, deleteSeries } from '../lib/api'
+import { X, Trash2, Loader2, Calendar, CheckCircle2, Plus } from 'lucide-react'
+import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, getTvSimilar, posterUrl } from '../lib/tmdb'
+import { updateSeries, deleteSeries, addSeries } from '../lib/api'
 import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode, TmdbSearchResult } from '../types'
 import { STATUS_CONFIG } from '../types'
 import { EpisodeList } from './EpisodeList'
@@ -19,45 +19,69 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   const [detail, setDetail] = useState<TmdbShowDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
+  const [localImdbRating, setLocalImdbRating] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [deleteModal, setDeleteModal] = useState(false)
+  const [adding, setAdding] = useState(false)
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Dep on tmdbId (not id) so previews from search also load
   useEffect(() => {
     if (!series) {
       setDetail(null)
       setDeleteModal(false)
+      setRecommendations([])
+      setLocalImdbRating(null)
       return
     }
     setNotes(series.notes ?? '')
     setRecommendations([])
-    if (series.tmdbId && series.id) {
-      setLoadingDetail(true)
-      getTvDetails(series.tmdbId).then(async d => {
-        setDetail(d)
-        const updates: Partial<Series> = {}
-        if (d?.next_episode_to_air) {
-          updates.nextEpisodeDate = d.next_episode_to_air.air_date
-          updates.nextEpisodeName = d.next_episode_to_air.name
-        } else if (series.nextEpisodeDate) {
-          updates.nextEpisodeDate = null
-          updates.nextEpisodeName = null
-        }
-        if (!series.imdbRating) {
-          const ext = await getExternalIds(series.tmdbId!)
-          if (ext.imdb_id) {
-            const rating = await getImdbRating(ext.imdb_id)
-            if (rating) updates.imdbRating = rating
+    setLocalImdbRating(null)
+    if (!series.tmdbId) return
+
+    setLoadingDetail(true)
+    getTvDetails(series.tmdbId).then(async d => {
+      setDetail(d)
+      const updates: Partial<Series> = {}
+      if (d?.next_episode_to_air) {
+        updates.nextEpisodeDate = d.next_episode_to_air.air_date
+        updates.nextEpisodeName = d.next_episode_to_air.name
+      } else if (series.nextEpisodeDate) {
+        updates.nextEpisodeDate = null
+        updates.nextEpisodeName = null
+      }
+      if (!series.imdbRating) {
+        const ext = await getExternalIds(series.tmdbId!)
+        if (ext.imdb_id) {
+          const rating = await getImdbRating(ext.imdb_id)
+          if (rating) {
+            if (series.id) updates.imdbRating = rating
+            else setLocalImdbRating(rating)
           }
         }
-        if (Object.keys(updates).length > 0) {
-          await updateSeries(series.id!, updates)
-        }
-      }).finally(() => setLoadingDetail(false))
+      }
+      if (series.id && Object.keys(updates).length > 0) {
+        await updateSeries(series.id, updates)
+      }
+    }).finally(() => setLoadingDetail(false))
 
-      getTvRecommendations(series.tmdbId).then(r => setRecommendations(r.slice(0, 12)))
-    }
-  }, [series?.id])
+    // Merge recommendations + similar, deduplicate, prefer entries with a poster
+    Promise.all([
+      getTvRecommendations(series.tmdbId),
+      getTvSimilar(series.tmdbId),
+    ]).then(([recs, similar]) => {
+      const seen = new Set<number>()
+      const merged: TmdbSearchResult[] = []
+      for (const r of [...recs, ...similar]) {
+        if (r.poster_path && !seen.has(r.id)) {
+          seen.add(r.id)
+          merged.push(r)
+          if (merged.length >= 12) break
+        }
+      }
+      setRecommendations(merged)
+    })
+  }, [series?.tmdbId])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -105,11 +129,41 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     onUpdated()
   }
 
+  async function handleAddToLibrary() {
+    if (!series?.tmdbId) return
+    setAdding(true)
+    try {
+      await addSeries({
+        tmdbId: series.tmdbId,
+        title: series.title,
+        status: 'plantowatch',
+        posterPath: series.posterPath,
+        overview: detail?.overview ?? series.overview,
+        firstAirDate: series.firstAirDate,
+        lastAirDate: detail?.last_air_date ?? null,
+        numberOfSeasons: detail?.number_of_seasons ?? series.numberOfSeasons,
+        notes: '',
+        nextEpisodeDate: detail?.next_episode_to_air?.air_date ?? null,
+        nextEpisodeName: detail?.next_episode_to_air?.name ?? null,
+        imdbRating: null,
+        addedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      toast.success(`"${series.title}" added to library`)
+      onClose()
+      onUpdated()
+    } finally {
+      setAdding(false)
+    }
+  }
+
   const poster = posterUrl(series?.posterPath ?? null, 'w500')
   const year = series?.firstAirDate?.slice(0, 4)
   const nextEp = detail?.next_episode_to_air as TmdbNextEpisode | null | undefined
   const isComplete = series?.status === 'completed' && !nextEp
   const hasUpcoming = !!nextEp
+  const inLibrary = !!series?.id
+  const displayImdbRating = series?.imdbRating ?? localImdbRating
 
   async function handleAllEpisodesWatched() {
     if (!series?.id) return
@@ -159,12 +213,14 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
               >
                 <X className="w-4 h-4 text-white/60" />
               </button>
-              <button
-                onClick={() => setDeleteModal(true)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/15 text-white/30 hover:text-red-400 transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {inLibrary && (
+                <button
+                  onClick={() => setDeleteModal(true)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/15 text-white/30 hover:text-red-400 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             {/* Scrollable content */}
@@ -186,43 +242,58 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   <h2 className="text-base font-semibold text-white leading-snug">{series.title}</h2>
                   <p className="text-sm text-white/35 mt-0.5">
                     {year ?? 'Unknown year'}
-                    {series.numberOfSeasons ? ` · ${series.numberOfSeasons} season${series.numberOfSeasons === 1 ? '' : 's'}` : ''}
+                    {(detail?.number_of_seasons ?? series.numberOfSeasons) ? ` · ${detail?.number_of_seasons ?? series.numberOfSeasons} season${(detail?.number_of_seasons ?? series.numberOfSeasons) === 1 ? '' : 's'}` : ''}
                   </p>
-                  {series.imdbRating && (
+                  {displayImdbRating && (
                     <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
                       <span className="text-yellow-400 text-xs">★</span>
-                      <span className="text-xs text-yellow-400 font-medium">{series.imdbRating}</span>
+                      <span className="text-xs text-yellow-400 font-medium">{displayImdbRating}</span>
                       <span className="text-xs text-yellow-400/50">IMDB</span>
                     </div>
                   )}
 
                   {/* Complete chip */}
-                  {isComplete && (
+                  {isComplete && inLibrary && (
                     <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full">
                       <CheckCircle2 className="w-3 h-3 text-purple-400" />
                       <span className="text-xs text-purple-400 font-medium">Series complete</span>
                     </div>
                   )}
 
-                  {/* Status buttons */}
-                  <div className="mt-3">
-                    <p className="text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">Status</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(Object.entries(STATUS_CONFIG) as [SeriesStatus, (typeof STATUS_CONFIG)[SeriesStatus]][]).map(([status, cfg]) => (
-                        <button
-                          key={status}
-                          onClick={() => changeStatus(status)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
-                            series.status === status
-                              ? `${cfg.bgClass} ${cfg.textClass} border-transparent`
-                              : 'border-white/8 text-white/35 hover:border-white/20 hover:text-white/60'
-                          }`}
-                        >
-                          {cfg.label}
-                        </button>
-                      ))}
+                  {/* Status buttons (library only) or Add to library */}
+                  {inLibrary ? (
+                    <div className="mt-3">
+                      <p className="text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">Status</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(Object.entries(STATUS_CONFIG) as [SeriesStatus, (typeof STATUS_CONFIG)[SeriesStatus]][]).map(([status, cfg]) => (
+                          <button
+                            key={status}
+                            onClick={() => changeStatus(status)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
+                              series.status === status
+                                ? `${cfg.bgClass} ${cfg.textClass} border-transparent`
+                                : 'border-white/8 text-white/35 hover:border-white/20 hover:text-white/60'
+                            }`}
+                          >
+                            {cfg.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <button
+                      onClick={handleAddToLibrary}
+                      disabled={adding}
+                      className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-[#6366F1]/15 border border-[#6366F1]/30 rounded-xl text-xs font-medium text-[#6366F1] active:bg-[#6366F1]/25 transition-colors disabled:opacity-50"
+                    >
+                      {adding ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Plus className="w-3.5 h-3.5" />
+                      )}
+                      Add to library
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -250,11 +321,11 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                 </div>
               )}
 
-              {/* Episodes */}
+              {/* Episodes (library only) */}
               {loadingDetail ? (
                 <div className="flex items-center gap-2 text-sm text-white/25 mb-5">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading episodes...
+                  Loading...
                 </div>
               ) : detail?.seasons && detail.seasons.length > 0 && series.id ? (
                 <div className="mb-5">
@@ -280,18 +351,12 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     {recommendations.map(r => (
                       <div key={r.id} className="shrink-0 w-[72px]">
                         <div className="w-[72px] h-[108px] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1.5">
-                          {r.poster_path ? (
-                            <img
-                              src={posterUrl(r.poster_path, 'w185') ?? ''}
-                              alt={r.name}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center p-1">
-                              <span className="text-[9px] text-white/30 text-center leading-tight">{r.name}</span>
-                            </div>
-                          )}
+                          <img
+                            src={posterUrl(r.poster_path, 'w185') ?? ''}
+                            alt={r.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
                         </div>
                         <p className="text-[10px] text-white/50 leading-tight line-clamp-2 text-center">{r.name}</p>
                       </div>
@@ -300,23 +365,25 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                 </div>
               )}
 
-              {/* Notes */}
-              <div>
-                <p className="text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">Notes</p>
-                <textarea
-                  value={notes}
-                  onChange={e => handleNotesChange(e.target.value)}
-                  placeholder="Add notes..."
-                  rows={3}
-                  className="w-full bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white/75 placeholder:text-white/20 outline-none focus:border-white/20 resize-none transition-colors"
-                />
-              </div>
+              {/* Notes (library only) */}
+              {inLibrary && (
+                <div>
+                  <p className="text-xs text-white/30 mb-1.5 uppercase tracking-wider font-medium">Notes</p>
+                  <textarea
+                    value={notes}
+                    onChange={e => handleNotesChange(e.target.value)}
+                    placeholder="Add notes..."
+                    rows={3}
+                    className="w-full bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white/75 placeholder:text-white/20 outline-none focus:border-white/20 resize-none transition-colors"
+                  />
+                </div>
+              )}
             </div>
           </motion.div>
 
-          {/* Delete modal */}
+          {/* Delete modal (library only) */}
           <AnimatePresence>
-            {deleteModal && (
+            {deleteModal && inLibrary && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

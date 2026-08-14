@@ -67,6 +67,14 @@ export async function getTvRecommendations(tmdbId: number): Promise<import('../t
   return data.results ?? []
 }
 
+export async function getTvSimilar(tmdbId: number): Promise<import('../types').TmdbSearchResult[]> {
+  const url = `${BASE_URL}/tv/${tmdbId}/similar?language=en-US&page=1`
+  const res = await fetch(url, { headers: headers() })
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.results ?? []
+}
+
 export async function getExternalIds(tmdbId: number): Promise<{ imdb_id: string | null }> {
   const url = `${BASE_URL}/tv/${tmdbId}/external_ids`
   const res = await fetch(url, { headers: headers() })

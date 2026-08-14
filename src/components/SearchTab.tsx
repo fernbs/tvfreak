@@ -21,9 +21,10 @@ const GENRES: { id: number; label: string }[] = [
 interface Props {
   onSeriesAdded: () => void
   allSeries: Series[]
+  onSelect: (series: Series) => void
 }
 
-export function SearchTab({ onSeriesAdded, allSeries }: Props) {
+export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const [query, setQuery] = useState('')
   const [selectedGenres, setSelectedGenres] = useState<number[]>([])
   const [results, setResults] = useState<TmdbSearchResult[]>([])
@@ -79,6 +80,27 @@ export function SearchTab({ onSeriesAdded, allSeries }: Props) {
 
   const libraryIds = new Set(allSeries.map(s => s.tmdbId).filter(Boolean))
 
+  function seriesForPreview(result: TmdbSearchResult): Series {
+    const existing = allSeries.find(s => s.tmdbId === result.id)
+    if (existing) return existing
+    return {
+      tmdbId: result.id,
+      title: result.name,
+      status: 'plantowatch',
+      posterPath: result.poster_path,
+      overview: result.overview,
+      firstAirDate: result.first_air_date,
+      lastAirDate: null,
+      numberOfSeasons: result.number_of_seasons ?? null,
+      notes: '',
+      nextEpisodeDate: null,
+      nextEpisodeName: null,
+      imdbRating: null,
+      addedAt: new Date(),
+      updatedAt: new Date(),
+    }
+  }
+
   async function handleAdd(result: TmdbSearchResult) {
     if (libraryIds.has(result.id)) {
       toast.error('Already in your library')
@@ -131,23 +153,30 @@ export function SearchTab({ onSeriesAdded, allSeries }: Props) {
   function ResultRow({ r }: { r: TmdbSearchResult }) {
     const inLibrary = libraryIds.has(r.id)
     return (
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/4 active:bg-white/3 transition-colors">
-        <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#2A2A2A]">
-          {r.poster_path && (
-            <img
-              src={posterUrl(r.poster_path, 'w185') ?? ''}
-              alt={r.name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white leading-snug truncate">{r.name}</p>
-          <p className="text-xs text-white/35 mt-0.5">
-            {r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}
-          </p>
-        </div>
+      <div className="flex items-center gap-3 px-4 border-b border-white/4">
+        {/* Tappable left area opens detail panel */}
+        <button
+          onClick={() => onSelect(seriesForPreview(r))}
+          className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
+        >
+          <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#2A2A2A]">
+            {r.poster_path && (
+              <img
+                src={posterUrl(r.poster_path, 'w185') ?? ''}
+                alt={r.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white leading-snug truncate">{r.name}</p>
+            <p className="text-xs text-white/35 mt-0.5">
+              {r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}
+            </p>
+          </div>
+        </button>
+        {/* Add button stays separate */}
         {inLibrary ? (
           <span className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium text-white/30 bg-white/5">
             In library
