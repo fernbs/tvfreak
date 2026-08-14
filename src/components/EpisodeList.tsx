@@ -128,13 +128,16 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
     setWatched(new Set(eps.map(e => `${e.seasonNumber}-${e.episodeNumber}`)))
   }
 
-  // Count only released episodes; uses episode data when available, falls back to episode_count
+  // Count only released episodes; uses episode data when available, falls back to episode_count.
+  // Fallback skips seasons with a future or missing air_date to avoid inflating the total
+  // with announced-but-unaired seasons (which would prevent checkAllWatched from ever firing).
   function releasedEpisodeCount(): number {
     return seasons.filter(s => s.season_number > 0).reduce((sum, s) => {
       const state = seasonStates[s.season_number]
       if (state?.episodes && state.episodes.length > 0) {
         return sum + state.episodes.filter(ep => isReleased(ep.air_date)).length
       }
+      if (!s.air_date || s.air_date > today) return sum
       return sum + s.episode_count
     }, 0)
   }
