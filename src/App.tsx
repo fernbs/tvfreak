@@ -128,7 +128,7 @@ export default function App() {
     refreshNextEpisodeDates()
   }, [loading, refreshNextEpisodeDates])
 
-  // Once-per-session check for cancelled shows that have been revived
+  // Once-per-session: notify when a completed show has new episodes coming — status stays 'completed' so Fernando decides
   useEffect(() => {
     if (loading) return
     if (sessionStorage.getItem('revival-checked')) return
@@ -136,25 +136,26 @@ export default function App() {
     async function checkRevived() {
       const all = await getAllSeries()
       const completedSeries = all.filter(s => s.tmdbId && s.id && s.status === 'completed')
+      let changed = false
       for (const s of completedSeries) {
         try {
           const detail = await getTvDetails(s.tmdbId!)
           if (!detail) continue
           if (detail.next_episode_to_air) {
+            // Update the date so it shows in Upcoming, but keep status as 'completed'
             await updateSeries(s.id!, {
-              status: 'watching',
               nextEpisodeDate: detail.next_episode_to_air.air_date,
               nextEpisodeName: detail.next_episode_to_air.name,
             })
-            toast(`${s.title} is back! New episodes are coming.`, { duration: 6000 })
+            toast(`${s.title} is back — new episodes coming. Change status if you want to track it.`, { duration: 7000 })
+            changed = true
           } else if (detail.status === 'Returning Series' || detail.status === 'In Production') {
-            await updateSeries(s.id!, { status: 'watching', nextEpisodeDate: null, nextEpisodeName: null })
             toast(`${s.title} has a new season confirmed.`, { duration: 5000 })
           }
         } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 500))
       }
-      await loadSeries()
+      if (changed) await loadSeries()
     }
     checkRevived()
   }, [loading, loadSeries])
