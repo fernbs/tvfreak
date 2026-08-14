@@ -395,13 +395,18 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                     {recommendations.map(r => (
                       <div key={r.id} className="shrink-0 w-[72px]">
-                        <div className="w-[72px] h-[108px] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1.5">
+                        <div className="w-[72px] h-[108px] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1.5 relative">
                           <img
                             src={posterUrl(r.poster_path, 'w185') ?? ''}
                             alt={r.name}
                             className="w-full h-full object-cover"
                             loading="lazy"
                           />
+                          {(r.vote_average ?? 0) > 0 && (
+                            <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-black/60">
+                              <span className="text-[9px] text-yellow-400 font-medium">★ {r.vote_average!.toFixed(1)}</span>
+                            </div>
+                          )}
                         </div>
                         <p className="text-[10px] text-white/50 leading-tight line-clamp-2 text-center">{r.name}</p>
                       </div>
