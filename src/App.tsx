@@ -128,11 +128,12 @@ export default function App() {
     refreshNextEpisodeDates()
   }, [loading, refreshNextEpisodeDates])
 
-  // Once-per-session: notify when a completed show has new episodes coming — status stays 'completed' so Fernando decides
+  // Daily: notify when a completed show has new episodes coming — status stays 'completed' so Fernando decides
   useEffect(() => {
     if (loading) return
-    if (sessionStorage.getItem('revival-checked')) return
-    sessionStorage.setItem('revival-checked', '1')
+    const lastCheck = parseInt(localStorage.getItem('tvfreak-revival-checked-ts') ?? '0')
+    if (Date.now() - lastCheck < 24 * 60 * 60 * 1000) return
+    localStorage.setItem('tvfreak-revival-checked-ts', String(Date.now()))
     async function checkRevived() {
       const all = await getAllSeries()
       const completedSeries = all.filter(s => s.tmdbId && s.id && s.status === 'completed')
