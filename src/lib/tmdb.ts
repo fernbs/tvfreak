@@ -42,6 +42,15 @@ export function posterUrl(path: string | null, size: 'w185' | 'w342' | 'w500' = 
   return `${IMG_BASE}/${size}${path}`
 }
 
+export async function getDiscoverByGenres(genreIds: number[]): Promise<import('../types').TmdbSearchResult[]> {
+  const genres = genreIds.join(',')
+  const url = `${BASE_URL}/discover/tv?with_genres=${genres}&sort_by=vote_average.desc&vote_count.gte=100&language=en-US&page=1`
+  const res = await fetch(url, { headers: headers() })
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.results ?? []
+}
+
 export async function getTrending(): Promise<import('../types').TmdbSearchResult[]> {
   const url = `${BASE_URL}/trending/tv/week?language=en-US`
   const res = await fetch(url, { headers: headers() })

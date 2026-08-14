@@ -1,9 +1,22 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, X, Plus, Loader2, TrendingUp } from 'lucide-react'
-import { searchTv, getTrending, posterUrl } from '../lib/tmdb'
+import { Search, X, Plus, Loader2, TrendingUp, Sparkles } from 'lucide-react'
+import { searchTv, getTrending, getDiscoverByGenres, posterUrl } from '../lib/tmdb'
 import { addSeries } from '../lib/api'
 import type { TmdbSearchResult, Series } from '../types'
 import { toast } from 'sonner'
+
+const GENRES: { id: number; label: string }[] = [
+  { id: 10759, label: 'Action & Adventure' },
+  { id: 18,    label: 'Drama' },
+  { id: 80,    label: 'Crime' },
+  { id: 10765, label: 'Sci-Fi & Fantasy' },
+  { id: 9648,  label: 'Mystery' },
+  { id: 35,    label: 'Comedy' },
+  { id: 99,    label: 'Documentary' },
+  { id: 16,    label: 'Animation' },
+  { id: 10768, label: 'War & Politics' },
+  { id: 37,    label: 'Western' },
+]
 
 interface Props {
   onSeriesAdded: () => void
@@ -12,6 +25,7 @@ interface Props {
 
 export function SearchTab({ onSeriesAdded, allSeries }: Props) {
   const [query, setQuery] = useState('')
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([])
   const [results, setResults] = useState<TmdbSearchResult[]>([])
   const [trending, setTrending] = useState<TmdbSearchResult[]>([])
   const [searching, setSearching] = useState(false)
@@ -20,24 +34,48 @@ export function SearchTab({ onSeriesAdded, allSeries }: Props) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Load trending on mount
   useEffect(() => {
     setLoadingTrending(true)
     getTrending().then(r => setTrending(r.slice(0, 20))).finally(() => setLoadingTrending(false))
   }, [])
 
+  // Fetch results when query or genres change
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!query.trim()) { setResults([]); return }
-    debounceRef.current = setTimeout(async () => {
-      setSearching(true)
-      try {
-        const r = await searchTv(query)
-        setResults(r.slice(0, 20))
-      } finally {
-        setSearching(false)
-      }
-    }, 400)
-  }, [query])
+
+    if (query.trim()) {
+      // Text search — genres don't apply
+      debounceRef.current = setTimeout(async () => {
+        setSearching(true)
+        try {
+          const r = await searchTv(query)
+          setResults(r.slice(0, 20))
+        } finally {
+          setSearching(false)
+        }
+      }, 400)
+    } else if (selectedGenres.length > 0) {
+      // Genre discover
+      debounceRef.current = setTimeout(async () => {
+        setSearching(true)
+        try {
+          const r = await getDiscoverByGenres(selectedGenres)
+          setResults(r.slice(0, 20))
+        } finally {
+          setSearching(false)
+        }
+      }, 200)
+    } else {
+      setResults([])
+    }
+  }, [query, selectedGenres])
+
+  function toggleGenre(id: number) {
+    setSelectedGenres(prev =>
+      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
+    )
+  }
 
   const libraryIds = new Set(allSeries.map(s => s.tmdbId).filter(Boolean))
 
@@ -71,8 +109,24 @@ export function SearchTab({ onSeriesAdded, allSeries }: Props) {
     }
   }
 
-  const displayResults = query.trim() ? results : trending
-  const isSearching = query.trim() ? searching : loadingTrending
+  // What to display
+  const noQuery = !query.trim()
+  const noGenres = selectedGenres.length === 0
+  const displayResults = (noQuery && noGenres) ? trending : results
+  const isLoading = (noQuery && noGenres) ? loadingTrending : searching
+
+  // Section label
+  let sectionLabel = ''
+  let SectionIcon = TrendingUp
+  if (!noQuery) {
+    sectionLabel = ''
+  } else if (!noGenres) {
+    sectionLabel = 'Top rated · ' + selectedGenres.map(id => GENRES.find(g => g.id === id)?.label).join(', ')
+    SectionIcon = Sparkles
+  } else {
+    sectionLabel = 'Trending this week'
+    SectionIcon = TrendingUp
+  }
 
   function ResultRow({ r }: { r: TmdbSearchResult }) {
     const inLibrary = libraryIds.has(r.id)
@@ -117,14 +171,16 @@ export function SearchTab({ onSeriesAdded, allSeries }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Sticky search header */}
+      {/* Sticky header */}
       <div
         className="shrink-0 bg-[#0A0A0A] px-4 pb-3 z-10"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 48px)' }}
       >
         <h1 className="text-lg font-bold text-white mb-3">Search</h1>
-        <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl bg-[#1E1E1E] border border-white/8 focus-within:border-white/20 transition-colors">
-          {isSearching ? (
+
+        {/* Search input — font-size 16px prevents iOS zoom on focus */}
+        <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl bg-[#1E1E1E] border border-white/8 focus-within:border-white/20 transition-colors mb-3">
+          {searching && query.trim() ? (
             <Loader2 className="w-4 h-4 text-white/40 shrink-0 animate-spin" />
           ) : (
             <Search className="w-4 h-4 text-white/40 shrink-0" />
@@ -135,7 +191,8 @@ export function SearchTab({ onSeriesAdded, allSeries }: Props) {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search TMDB for a series..."
-            className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 outline-none"
+            style={{ fontSize: 16 }}
+            className="flex-1 bg-transparent text-white placeholder:text-white/30 outline-none"
           />
           {query && (
             <button onClick={() => setQuery('')} className="shrink-0">
@@ -143,19 +200,39 @@ export function SearchTab({ onSeriesAdded, allSeries }: Props) {
             </button>
           )}
         </div>
+
+        {/* Genre chips */}
+        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          {GENRES.map(g => {
+            const active = selectedGenres.includes(g.id)
+            return (
+              <button
+                key={g.id}
+                onClick={() => toggleGenre(g.id)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  active
+                    ? 'bg-[#6366F1] text-white'
+                    : 'bg-white/6 text-white/45 active:bg-white/12'
+                }`}
+              >
+                {g.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Results */}
       <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
-        {/* Section label */}
-        {!query.trim() && (
+        {sectionLabel && (
           <div className="flex items-center gap-1.5 px-4 pt-3 pb-1">
-            <TrendingUp className="w-3.5 h-3.5 text-white/30" />
-            <span className="text-xs font-medium text-white/30 uppercase tracking-wider">Trending this week</span>
+            <SectionIcon className="w-3.5 h-3.5 text-white/30" />
+            <span className="text-xs font-medium text-white/30 uppercase tracking-wider truncate">{sectionLabel}</span>
+            {isLoading && <Loader2 className="w-3 h-3 text-white/20 animate-spin shrink-0" />}
           </div>
         )}
 
-        {displayResults.length === 0 && !isSearching ? (
+        {displayResults.length === 0 && !isLoading ? (
           query.trim() ? (
             <div className="flex flex-col items-center justify-center h-40 text-center px-6">
               <p className="text-sm text-white/25">No results for "{query}"</p>
