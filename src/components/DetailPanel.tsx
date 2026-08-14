@@ -135,7 +135,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
       await addSeries({
         tmdbId: series.tmdbId,
         title: series.title,
-        status: 'plantowatch',
+        status: 'watching',
         posterPath: series.posterPath,
         overview: detail?.overview ?? series.overview,
         firstAirDate: series.firstAirDate,

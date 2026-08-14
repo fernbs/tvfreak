@@ -335,6 +335,34 @@ export default function App() {
     backfillSeriesInfo()
   }, [loading, loadSeries])
 
+  // Once-ever: unmark all watched episodes in seasons that premiered in 2026
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-unmark-2026-v1')) return
+    async function unmark2026Seasons() {
+      const all = await getAllSeries()
+      const eligible = all.filter(s => s.tmdbId && s.id)
+      let changed = false
+      for (const s of eligible) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if (!detail) continue
+          const seasons2026 = detail.seasons.filter(
+            season => season.season_number > 0 && season.air_date?.startsWith('2026')
+          )
+          for (const season of seasons2026) {
+            await unmarkSeasonEpisodes(s.id!, season.season_number)
+            changed = true
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 400))
+      }
+      localStorage.setItem('tvfreak-unmark-2026-v1', 'true')
+      if (changed) await loadSeries()
+    }
+    unmark2026Seasons()
+  }, [loading, loadSeries])
+
   async function handleSeriesUpdated() {
     const data = await getAllSeries()
     setAllSeries(data)

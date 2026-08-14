@@ -99,7 +99,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       await addSeries({
         tmdbId: result.id,
         title: result.name,
-        status: 'plantowatch',
+        status: 'watching',
         posterPath: result.poster_path,
         overview: result.overview,
         firstAirDate: result.first_air_date,
