@@ -21,6 +21,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('home')
   const [allSeries, setAllSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(true)
+  const [workerError, setWorkerError] = useState(false)
   const [importing, setImporting] = useState(false)
   const [importProgress, setImportProgress] = useState({ done: 0, total: 0 })
   const [selected, setSelected] = useState<Series | null>(null)
@@ -34,8 +35,12 @@ export default function App() {
     try {
       const data = await getAllSeries()
       setAllSeries(data)
-    } catch { /* worker unreachable, keep empty state */ }
-    finally { setLoading(false) }
+      setWorkerError(false)
+    } catch {
+      setWorkerError(true)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -135,6 +140,20 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-full bg-[#0A0A0A] overflow-hidden">
+      {/* Worker unreachable banner */}
+      {workerError && !loading && (
+        <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border-b border-red-500/20">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+          <p className="text-xs text-red-400 flex-1">Can't reach the server. Your data is safe — check your Cloudflare Worker is running.</p>
+          <button
+            onClick={loadSeries}
+            className="text-xs text-red-400/70 underline shrink-0"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Tab content */}
       <main className="flex-1 overflow-hidden min-h-0">
         {tab === 'home' && (
