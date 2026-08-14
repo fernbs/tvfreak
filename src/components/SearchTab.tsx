@@ -29,6 +29,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const [query, setQuery] = useState('')
   const [includedGenres, setIncludedGenres] = useState<number[]>([])
   const [excludedGenres, setExcludedGenres] = useState<number[]>([])
+  const [sortBy, setSortBy] = useState('vote_average.desc')
+  const [yearFilter, setYearFilter] = useState('')
   const [results, setResults] = useState<TmdbSearchResult[]>([])
   const [trending, setTrending] = useState<TmdbSearchResult[]>([])
   const [searching, setSearching] = useState(false)
@@ -61,19 +63,20 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     debounceRef.current = setTimeout(async () => {
       setSearching(true)
       setCurrentPage(1)
+      const year = yearFilter.length === 4 ? yearFilter : undefined
       try {
         if (hasQuery) {
-          const { results: r, totalPages: tp } = await searchTv(query, 1)
+          const { results: r, totalPages: tp } = await searchTv(query, 1, year)
           setResults(r)
           setTotalPages(tp)
         } else {
-          const { results: r, totalPages: tp } = await getDiscoverByGenres(includedGenres, excludedGenres, 1)
+          const { results: r, totalPages: tp } = await getDiscoverByGenres(includedGenres, excludedGenres, 1, sortBy, year)
           setResults(r)
           setTotalPages(tp)
         }
       } finally { setSearching(false) }
     }, hasQuery ? 400 : 200)
-  }, [query, includedGenres, excludedGenres])
+  }, [query, includedGenres, excludedGenres, sortBy, yearFilter])
 
   function toggleGenre(id: number) {
     if (includedGenres.includes(id)) {
@@ -90,14 +93,15 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     if (loadingMore || currentPage >= totalPages) return
     setLoadingMore(true)
     const nextPage = currentPage + 1
+    const year = yearFilter.length === 4 ? yearFilter : undefined
     try {
       const hasQuery = query.trim().length > 0
       if (hasQuery) {
-        const { results: r, totalPages: tp } = await searchTv(query, nextPage)
+        const { results: r, totalPages: tp } = await searchTv(query, nextPage, year)
         setResults(prev => [...prev, ...r])
         setTotalPages(tp)
       } else {
-        const { results: r, totalPages: tp } = await getDiscoverByGenres(includedGenres, excludedGenres, nextPage)
+        const { results: r, totalPages: tp } = await getDiscoverByGenres(includedGenres, excludedGenres, nextPage, sortBy, year)
         setResults(prev => [...prev, ...r])
         setTotalPages(tp)
       }
@@ -259,6 +263,35 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
               </button>
             )
           })}
+        </div>
+
+        {/* Sort + year row */}
+        <div className="flex items-center gap-2 mt-2">
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            className="flex-1 bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-white/70 outline-none appearance-none"
+          >
+            <option value="vote_average.desc">Top Rated</option>
+            <option value="popularity.desc">Most Popular</option>
+            <option value="first_air_date.desc">Newest First</option>
+            <option value="first_air_date.asc">Oldest First</option>
+          </select>
+          <input
+            type="number"
+            min="1900"
+            max="2030"
+            value={yearFilter}
+            onChange={e => setYearFilter(e.target.value.slice(0, 4))}
+            placeholder="Year"
+            className="w-20 bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-white/70 placeholder:text-white/25 outline-none"
+            style={{ appearance: 'textfield' }}
+          />
+          {yearFilter && (
+            <button onClick={() => setYearFilter('')} className="shrink-0 text-white/30 active:text-white/60">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

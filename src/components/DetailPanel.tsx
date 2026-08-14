@@ -209,7 +209,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     if (!series?.id) return
     if (series.status === 'completed' || series.status === 'dropped' || series.status === 'plantowatch') return
     if (isOngoing) {
-      await updateSeries(series.id, { status: 'watching' })
+      await updateSeries(series.id, { status: 'plantowatch' })
       const msg = nextEp
         ? `All caught up on ${series.title}! Next episode: ${formatAirDate(nextEp.air_date)}`
         : `All caught up on ${series.title}! Waiting for next season.`
@@ -222,7 +222,8 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   }
 
   async function handleSomeEpisodesUnwatched() {
-    if (!series?.id || series.status !== 'completed') return
+    if (!series?.id) return
+    if (series.status !== 'completed' && series.status !== 'plantowatch') return
     await updateSeries(series.id, { status: 'watching' })
     toast(`${series.title} moved back to watching.`)
     onUpdated()

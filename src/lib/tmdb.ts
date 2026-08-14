@@ -10,9 +10,11 @@ function headers() {
   }
 }
 
-export async function searchTv(query: string, page = 1): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
+export async function searchTv(query: string, page = 1, year?: string): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
   if (!query.trim()) return { results: [], totalPages: 0 }
-  const url = `${BASE_URL}/search/tv?query=${encodeURIComponent(query)}&language=en-US&page=${page}`
+  const params = new URLSearchParams({ query, language: 'en-US', page: String(page) })
+  if (year) params.set('first_air_date_year', year)
+  const url = `${BASE_URL}/search/tv?${params}`
   const res = await fetch(url, { headers: headers() })
   if (!res.ok) return { results: [], totalPages: 0 }
   const data = await res.json()
@@ -45,16 +47,20 @@ export function posterUrl(path: string | null, size: 'w185' | 'w342' | 'w500' = 
 export async function getDiscoverByGenres(
   includedIds: number[],
   excludedIds: number[] = [],
-  page = 1
+  page = 1,
+  sortBy = 'vote_average.desc',
+  year?: string
 ): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
   const params = new URLSearchParams({
-    sort_by: 'vote_average.desc',
-    'vote_count.gte': '100',
+    sort_by: sortBy,
     language: 'en-US',
     page: String(page),
   })
+  // vote_count floor only for rating-sorted results to avoid noise
+  if (sortBy === 'vote_average.desc') params.set('vote_count.gte', '100')
   if (includedIds.length > 0) params.set('with_genres', includedIds.join(','))
   if (excludedIds.length > 0) params.set('without_genres', excludedIds.join(','))
+  if (year) params.set('first_air_date_year', year)
   const url = `${BASE_URL}/discover/tv?${params}`
   const res = await fetch(url, { headers: headers() })
   if (!res.ok) return { results: [], totalPages: 0 }

@@ -200,13 +200,13 @@ export default function App() {
             const isReturning = detail.status === 'Returning Series' || detail.status === 'In Production'
             if (detail.next_episode_to_air) {
               await updateSeries(s.id!, {
-                status: 'watching',
+                status: 'plantowatch',
                 nextEpisodeDate: detail.next_episode_to_air.air_date,
                 nextEpisodeName: detail.next_episode_to_air.name,
               })
               toast(`All caught up on ${s.title}! New episodes coming.`, { duration: 5000 })
             } else if (isReturning) {
-              await updateSeries(s.id!, { status: 'watching', nextEpisodeDate: null, nextEpisodeName: null })
+              await updateSeries(s.id!, { status: 'plantowatch', nextEpisodeDate: null, nextEpisodeName: null })
               toast(`All caught up on ${s.title}! Waiting for new season.`, { duration: 4000 })
             } else {
               await updateSeries(s.id!, { status: 'completed' })
