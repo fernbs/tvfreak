@@ -256,7 +256,33 @@ export default function App() {
     cleanupUnreleasedWatched()
   }, [loading, loadSeries])
 
-  // Once-ever: populate TMDB ratings for completed/dropped series (refreshNextEpisodeDates covers watching/plantowatch)
+  // Once-ever: backfill ratings for watching/plantowatch series that were missed because
+  // refreshNextEpisodeDates skips them when nextEpisodeDate is still valid (no stale date = no TMDB call).
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-ratings-watching-v1')) return
+    async function populateWatchingRatings() {
+      const all = await getAllSeries()
+      const toRate = all.filter(s =>
+        s.tmdbId && s.id && !s.imdbRating &&
+        (s.status === 'watching' || s.status === 'plantowatch')
+      )
+      for (const s of toRate) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if ((detail?.vote_average ?? 0) > 0) {
+            await updateSeries(s.id!, { imdbRating: detail!.vote_average!.toFixed(1) })
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 250))
+      }
+      localStorage.setItem('tvfreak-ratings-watching-v1', 'true')
+      if (toRate.length > 0) await loadSeries()
+    }
+    populateWatchingRatings()
+  }, [loading, loadSeries])
+
+  // Once-ever: populate TMDB ratings for completed/dropped series
   useEffect(() => {
     if (loading) return
     if (localStorage.getItem('tvfreak-ratings-populated-v1')) return
