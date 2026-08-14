@@ -32,6 +32,7 @@ export async function importFromCsv(
   const base = import.meta.env.VITE_BASE_URL || '/'
   const csvPath = base.endsWith('/') ? `${base}series_simkl.csv` : `${base}/series_simkl.csv`
   const response = await fetch(csvPath)
+  if (!response.ok) return
   const text = await response.text()
 
   const parsed = Papa.parse<CsvRow>(text, {

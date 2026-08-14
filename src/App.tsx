@@ -37,9 +37,11 @@ export default function App() {
 
   useEffect(() => {
     async function init() {
-      setImporting(true)
-      await importFromCsv((done, total) => setImportProgress({ done, total }))
-      setImporting(false)
+      try {
+        setImporting(true)
+        await importFromCsv((done, total) => setImportProgress({ done, total }))
+      } catch { /* import file not found or failed, skip silently */ }
+      finally { setImporting(false) }
       await deduplicateSeries()
       await loadSeries()
       const dupes = await getDuplicates()
