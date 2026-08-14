@@ -139,13 +139,18 @@ export default function App() {
       for (const s of completedSeries) {
         try {
           const detail = await getTvDetails(s.tmdbId!)
-          if (detail?.next_episode_to_air) {
+          if (!detail) continue
+          if (detail.next_episode_to_air) {
             await updateSeries(s.id!, {
               status: 'plantowatch',
               nextEpisodeDate: detail.next_episode_to_air.air_date,
               nextEpisodeName: detail.next_episode_to_air.name,
             })
             toast(`${s.title} is back! New episodes are coming.`, { duration: 6000 })
+          } else if (detail.status === 'Returning Series' || detail.status === 'In Production') {
+            // New season confirmed but no date yet — don't leave as "completed"
+            await updateSeries(s.id!, { status: 'plantowatch', nextEpisodeDate: null, nextEpisodeName: null })
+            toast(`${s.title} has a new season confirmed.`, { duration: 5000 })
           }
         } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 500))
@@ -158,9 +163,9 @@ export default function App() {
   // Daily: auto-flip "watching" series where all episodes are watched
   useEffect(() => {
     if (loading) return
-    const lastCheck = parseInt(localStorage.getItem('tvfreak-status-check-ts') ?? '0')
+    const lastCheck = parseInt(localStorage.getItem('tvfreak-status-check-ts-v2') ?? '0')
     if (Date.now() - lastCheck < 24 * 60 * 60 * 1000) return
-    localStorage.setItem('tvfreak-status-check-ts', String(Date.now()))
+    localStorage.setItem('tvfreak-status-check-ts-v2', String(Date.now()))
     async function checkWatchingStatus() {
       const all = await getAllSeries()
       const watching = all.filter(s => s.tmdbId && s.id && s.status === 'watching')
@@ -182,6 +187,7 @@ export default function App() {
           const airedSeasonNumbers = new Set(airedSeasons.map(s => s.season_number))
           const watchedCount = watched.filter(w => w.seasonNumber > 0 && airedSeasonNumbers.has(w.seasonNumber)).length
           if (watchedCount >= totalEpisodes) {
+            const isReturning = detail.status === 'Returning Series' || detail.status === 'In Production'
             if (detail.next_episode_to_air) {
               await updateSeries(s.id!, {
                 status: 'plantowatch',
@@ -189,6 +195,9 @@ export default function App() {
                 nextEpisodeName: detail.next_episode_to_air.name,
               })
               toast(`All caught up on ${s.title}! New episodes coming.`, { duration: 5000 })
+            } else if (isReturning) {
+              await updateSeries(s.id!, { status: 'plantowatch', nextEpisodeDate: null, nextEpisodeName: null })
+              toast(`All caught up on ${s.title}! Waiting for new season.`, { duration: 4000 })
             } else {
               await updateSeries(s.id!, { status: 'completed' })
               toast.success(`${s.title} marked as completed.`, { duration: 5000 })
@@ -260,6 +269,56 @@ export default function App() {
       if (toRate.length > 0) await loadSeries()
     }
     populateRatings()
+  }, [loading, loadSeries])
+
+  // Once-ever: fix completed shows that TMDB says are still returning (eg 3 Body Problem)
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-fix-completed-v1')) return
+    async function fixCompletedReturning() {
+      const all = await getAllSeries()
+      const completed = all.filter(s => s.tmdbId && s.id && s.status === 'completed')
+      let changed = false
+      for (const s of completed) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if (!detail) continue
+          if (detail.status === 'Returning Series' || detail.status === 'In Production') {
+            await updateSeries(s.id!, {
+              status: 'plantowatch',
+              nextEpisodeDate: detail.next_episode_to_air?.air_date ?? null,
+              nextEpisodeName: detail.next_episode_to_air?.name ?? null,
+            })
+            changed = true
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 300))
+      }
+      localStorage.setItem('tvfreak-fix-completed-v1', 'true')
+      if (changed) await loadSeries()
+    }
+    fixCompletedReturning()
+  }, [loading, loadSeries])
+
+  // Once-ever: backfill posterPath for series imported without a poster
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-posters-backfill-v1')) return
+    async function backfillPosters() {
+      const all = await getAllSeries()
+      const noPoster = all.filter(s => s.tmdbId && s.id && !s.posterPath)
+      for (const s of noPoster) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if (detail?.poster_path) {
+            await updateSeries(s.id!, { posterPath: detail.poster_path })
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 250))
+      }
+      localStorage.setItem('tvfreak-posters-backfill-v1', 'true')
+    }
+    backfillPosters()
   }, [loading, loadSeries])
 
   async function handleSeriesUpdated() {

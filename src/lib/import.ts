@@ -72,6 +72,10 @@ export async function importFromCsv(
           lastAirDate: null,
           numberOfSeasons: tmdbData?.number_of_seasons ?? null,
           notes: '',
+          nextEpisodeDate: null,
+          nextEpisodeName: null,
+          imdbRating: null,
+          futureDates: null,
           addedAt: new Date(),
           updatedAt: new Date(),
         })
