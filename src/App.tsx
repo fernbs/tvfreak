@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes } from './lib/api'
+import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
 import { getTvDetails } from './lib/tmdb'
@@ -135,11 +135,14 @@ export default function App() {
             getWatchedEpisodes(s.id!),
           ])
           if (!detail) continue
-          const totalEpisodes = detail.seasons
+          const today = new Date().toISOString().slice(0, 10)
+          const airedSeasons = detail.seasons
             .filter(season => season.season_number > 0)
-            .reduce((sum, season) => sum + season.episode_count, 0)
+            .filter(season => season.air_date != null && season.air_date <= today)
+          const totalEpisodes = airedSeasons.reduce((sum, season) => sum + season.episode_count, 0)
           if (totalEpisodes === 0) continue
-          const watchedCount = watched.filter(w => w.seasonNumber > 0).length
+          const airedSeasonNumbers = new Set(airedSeasons.map(s => s.season_number))
+          const watchedCount = watched.filter(w => w.seasonNumber > 0 && airedSeasonNumbers.has(w.seasonNumber)).length
           if (watchedCount >= totalEpisodes) {
             if (detail.next_episode_to_air) {
               await updateSeries(s.id!, {
@@ -160,6 +163,40 @@ export default function App() {
       if (changed) await loadSeries()
     }
     checkWatchingStatus()
+  }, [loading, loadSeries])
+
+  // Once-per-session: remove watched episodes that are in seasons that haven't aired yet
+  useEffect(() => {
+    if (loading) return
+    if (sessionStorage.getItem('unreleased-cleanup-done')) return
+    sessionStorage.setItem('unreleased-cleanup-done', '1')
+    async function cleanupUnreleasedWatched() {
+      const all = await getAllSeries()
+      const eligible = all.filter(s => s.tmdbId && s.id)
+      let changed = false
+      const today = new Date().toISOString().slice(0, 10)
+      for (const s of eligible) {
+        try {
+          const watched = await getWatchedEpisodes(s.id!)
+          if (watched.length === 0) continue
+          const detail = await getTvDetails(s.tmdbId!)
+          if (!detail) continue
+          const watchedSeasons = new Set(watched.filter(w => w.seasonNumber > 0).map(w => w.seasonNumber))
+          for (const season of detail.seasons) {
+            const sn = season.season_number
+            if (sn <= 0 || !watchedSeasons.has(sn)) continue
+            // Season hasn't started airing: all watched entries in it are wrong
+            if (season.air_date && season.air_date > today) {
+              await unmarkSeasonEpisodes(s.id!, sn)
+              changed = true
+            }
+          }
+        } catch { /* ignore per-series errors */ }
+        await new Promise(r => setTimeout(r, 400))
+      }
+      if (changed) await loadSeries()
+    }
+    cleanupUnreleasedWatched()
   }, [loading, loadSeries])
 
   async function handleSeriesUpdated() {

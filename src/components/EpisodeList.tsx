@@ -76,12 +76,19 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
     setWatched(new Set(eps.map(e => `${e.seasonNumber}-${e.episodeNumber}`)))
   }
 
-  function totalEpisodeCount(): number {
-    return seasons.filter(s => s.season_number > 0).reduce((sum, s) => sum + s.episode_count, 0)
+  // Count only released episodes; uses episode data when available, falls back to episode_count
+  function releasedEpisodeCount(): number {
+    return seasons.filter(s => s.season_number > 0).reduce((sum, s) => {
+      const state = seasonStates[s.season_number]
+      if (state?.episodes && state.episodes.length > 0) {
+        return sum + state.episodes.filter(ep => isReleased(ep.air_date)).length
+      }
+      return sum + s.episode_count
+    }, 0)
   }
 
   function checkAllWatched(newWatched: Set<string>) {
-    const total = totalEpisodeCount()
+    const total = releasedEpisodeCount()
     if (total > 0 && newWatched.size >= total) {
       onAllEpisodesWatched?.()
     }
@@ -104,6 +111,19 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
     setSeasonStates(prev => ({ ...prev, [sn]: { open: true, episodes: [], loading: true } }))
     const episodes = await getSeasonEpisodes(tmdbId, sn)
     setSeasonStates(prev => ({ ...prev, [sn]: { open: true, episodes, loading: false } }))
+
+    // Clean up any unreleased episodes that are incorrectly marked as watched
+    const badEpisodes = episodes.filter(ep => !isReleased(ep.air_date) && watched.has(`${sn}-${ep.episode_number}`))
+    if (badEpisodes.length > 0) {
+      setWatched(prev => {
+        const next = new Set(prev)
+        for (const ep of badEpisodes) next.delete(`${sn}-${ep.episode_number}`)
+        return next
+      })
+      for (const ep of badEpisodes) {
+        try { await toggleEpisodeWatched(seriesId, sn, ep.episode_number) } catch { /* ignore */ }
+      }
+    }
   }
 
   function watchedInSeason(sn: number, total: number): number {
@@ -125,10 +145,13 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
         .filter(ep => !watched.has(`${sn}-${ep.episode_number}`))
         .map(ep => ({ seasonNumber: sn, episodeNumber: ep.episode_number }))
     } else {
-      toMark = []
-      for (let i = 1; i <= season.episode_count; i++) {
-        if (!watched.has(`${sn}-${i}`)) toMark.push({ seasonNumber: sn, episodeNumber: i })
-      }
+      // Load episodes first so we can filter by release date
+      const episodes = await getSeasonEpisodes(tmdbId, sn)
+      setSeasonStates(prev => ({ ...prev, [sn]: { open: prev[sn]?.open ?? false, episodes, loading: false } }))
+      toMark = episodes
+        .filter(ep => isReleased(ep.air_date))
+        .filter(ep => !watched.has(`${sn}-${ep.episode_number}`))
+        .map(ep => ({ seasonNumber: sn, episodeNumber: ep.episode_number }))
     }
 
     if (toMark.length > 0) {
@@ -144,8 +167,18 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
 
   async function handleSeasonCheckbox(season: TmdbSeason) {
     const sn = season.season_number
-    const watchedCount = watchedInSeason(sn, season.episode_count)
-    const allWatched = season.episode_count > 0 && watchedCount === season.episode_count
+    const state = seasonStates[sn]
+
+    // Determine allWatched using released-only counts when episode data is available
+    let allWatched: boolean
+    if (state?.episodes && state.episodes.length > 0) {
+      const releasedEps = state.episodes.filter(ep => isReleased(ep.air_date))
+      const watchedCount = releasedEps.filter(ep => watched.has(`${sn}-${ep.episode_number}`)).length
+      allWatched = releasedEps.length > 0 && watchedCount === releasedEps.length
+    } else {
+      const watchedCount = watchedInSeason(sn, season.episode_count)
+      allWatched = season.episode_count > 0 && watchedCount === season.episode_count
+    }
 
     if (allWatched) {
       await unmarkSeasonEpisodes(seriesId, sn)
@@ -186,6 +219,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
       const state = seasonStates[sn]
       if (!state?.episodes) continue
       for (const ep of state.episodes) {
+        if (!isReleased(ep.air_date)) continue // skip unreleased episodes
         const en = ep.episode_number
         if (sn === targetSeason && en >= targetEpisode) break
         if (!watched.has(`${sn}-${en}`)) result.push({ seasonNumber: sn, episodeNumber: en })
@@ -239,10 +273,22 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
         {filteredSeasons.map(season => {
           const sn = season.season_number
           const state = seasonStates[sn]
-          const watchedCount = watchedInSeason(sn, season.episode_count)
-          const allWatched = season.episode_count > 0 && watchedCount === season.episode_count
+
+          // Use released-only counts when episode data is available
+          let watchedCount: number
+          let displayTotal: number
+          if (state?.episodes && state.episodes.length > 0) {
+            const releasedEps = state.episodes.filter(ep => isReleased(ep.air_date))
+            displayTotal = releasedEps.length
+            watchedCount = releasedEps.filter(ep => watched.has(`${sn}-${ep.episode_number}`)).length
+          } else {
+            displayTotal = season.episode_count
+            watchedCount = watchedInSeason(sn, season.episode_count)
+          }
+
+          const allWatched = displayTotal > 0 && watchedCount === displayTotal
           const someWatched = watchedCount > 0 && !allWatched
-          const pct = season.episode_count > 0 ? (watchedCount / season.episode_count) * 100 : 0
+          const pct = displayTotal > 0 ? (watchedCount / displayTotal) * 100 : 0
 
           return (
             <div key={sn} className="rounded-xl overflow-hidden border border-white/6">
@@ -266,7 +312,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
                         {season.name || `Season ${sn}`}
                       </span>
                       <span className="text-xs text-white/25 ml-2 shrink-0 tabular-nums">
-                        {watchedCount}/{season.episode_count}
+                        {watchedCount}/{displayTotal}
                       </span>
                     </div>
                     <div className="h-[2px] bg-white/8 rounded-full overflow-hidden">
@@ -325,11 +371,13 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched }:
                             {ep.name}
                           </span>
 
-                          {ep.air_date && (
+                          {ep.air_date ? (
                             <span className={`text-xs shrink-0 ${released ? 'text-white/20' : 'text-amber-500/50'}`}>
                               {released ? formatAirDate(ep.air_date) : `Airs ${formatAirDate(ep.air_date)}`}
                             </span>
-                          )}
+                          ) : !released ? (
+                            <span className="text-xs shrink-0 text-amber-500/40">TBA</span>
+                          ) : null}
                         </div>
                       )
                     })

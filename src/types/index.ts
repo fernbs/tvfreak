@@ -39,6 +39,7 @@ export interface TmdbSeason {
   season_number: number
   name: string
   episode_count: number
+  air_date?: string | null
   episodes?: TmdbEpisode[]
 }
 

@@ -1,6 +1,6 @@
 import type { Series, WatchedEpisode } from '../types'
 
-const BASE = import.meta.env.VITE_WORKER_URL ?? 'http://localhost:8787'
+const BASE = (import.meta.env.VITE_WORKER_URL ?? 'http://localhost:8787').replace(/\/$/, '')
 
 function parseSeries(row: Record<string, unknown>): Series {
   return {

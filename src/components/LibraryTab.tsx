@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { SlidersHorizontal, GitMerge, Wand2 } from 'lucide-react'
+import { SlidersHorizontal, GitMerge, Wand2, Grid2X2, Grid3X3, List } from 'lucide-react'
 import type { Series, SeriesStatus } from '../types'
 import type { DuplicateGroup } from '../lib/api'
 import { SeriesGrid } from './SeriesGrid'
+import { useViewMode } from '../lib/useViewMode'
 
 type SortKey = 'title' | 'added' | 'updated' | 'nextEpisode'
 
@@ -31,6 +32,7 @@ export function LibraryTab({
 }: Props) {
   const [filter, setFilter] = useState<SeriesStatus | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('title')
+  const [viewMode, setViewMode] = useViewMode()
 
   function sorted(list: Series[]): Series[] {
     return [...list].sort((a, b) => {
@@ -79,6 +81,19 @@ export function LibraryTab({
                 Restore
               </button>
             )}
+            {/* View toggle */}
+            <div className="flex items-center gap-0.5 bg-white/6 rounded-lg p-0.5">
+              {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === mode ? 'bg-white/12 text-white' : 'text-white/30'}`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                </button>
+              ))}
+            </div>
+
             <div className="flex items-center gap-1.5">
               <SlidersHorizontal className="w-3.5 h-3.5 text-white/25" />
               <select
@@ -115,7 +130,7 @@ export function LibraryTab({
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 min-h-0">
-        <SeriesGrid series={filtered} loading={loading} onSelect={onSelect} />
+        <SeriesGrid series={filtered} loading={loading} onSelect={onSelect} viewMode={viewMode} />
       </div>
     </div>
   )

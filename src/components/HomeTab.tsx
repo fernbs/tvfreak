@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { Tv, Calendar, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Tv, Calendar, Loader2, ChevronLeft, ChevronRight, Grid2X2, Grid3X3, List } from 'lucide-react'
 import type { Series } from '../types'
-import { SeriesCard } from './SeriesCard'
+import { SeriesGrid } from './SeriesGrid'
 import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
+import { useViewMode } from '../lib/useViewMode'
 
 const PULL_THRESHOLD = 72
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -28,6 +29,7 @@ function addMonths(date: Date, n: number): Date {
 
 export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   const [view, setView] = useState<'watching' | 'upcoming'>('watching')
+  const [viewMode, setViewMode] = useViewMode()
   const [pullDistance, setPullDistance] = useState(0)
   const [pullReady, setPullReady] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -219,11 +221,23 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
               <p className="text-xs text-white/15 mt-1">Series you're mid-way through will appear here.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2.5 pt-2">
-              {watchingNow.map(s => (
-                <SeriesCard key={s.id} series={s} onClick={onSelect} />
-              ))}
-            </div>
+            <>
+              {/* View toggle */}
+              <div className="flex justify-end pt-2 pb-1">
+                <div className="flex items-center gap-0.5 bg-white/6 rounded-lg p-0.5">
+                  {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
+                    <button
+                      key={mode}
+                      onClick={() => setViewMode(mode)}
+                      className={`p-1.5 rounded-md transition-colors ${viewMode === mode ? 'bg-white/12 text-white' : 'text-white/30'}`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <SeriesGrid series={watchingNow} loading={false} onSelect={onSelect} viewMode={viewMode} />
+            </>
           )
         ) : (
           <div>
