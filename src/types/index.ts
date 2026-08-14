@@ -71,6 +71,7 @@ export interface TmdbShowDetail {
   next_episode_to_air: TmdbNextEpisode | null
   vote_average?: number
   status?: string
+  genres?: { id: number; name: string }[]
 }
 
 export const STATUS_CONFIG: Record<SeriesStatus, {

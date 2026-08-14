@@ -300,25 +300,39 @@ export default function App() {
     fixCompletedReturning()
   }, [loading, loadSeries])
 
-  // Once-ever: backfill posterPath for series imported without a poster
+  // Once-ever: for series imported without a poster, backfill ALL available TMDB info
   useEffect(() => {
     if (loading) return
-    if (localStorage.getItem('tvfreak-posters-backfill-v1')) return
-    async function backfillPosters() {
+    if (localStorage.getItem('tvfreak-content-backfill-v1')) return
+    async function backfillSeriesInfo() {
       const all = await getAllSeries()
-      const noPoster = all.filter(s => s.tmdbId && s.id && !s.posterPath)
-      for (const s of noPoster) {
+      const incomplete = all.filter(s => s.tmdbId && s.id && !s.posterPath)
+      for (const s of incomplete) {
         try {
           const detail = await getTvDetails(s.tmdbId!)
-          if (detail?.poster_path) {
-            await updateSeries(s.id!, { posterPath: detail.poster_path })
+          if (!detail) continue
+          const updates: Parameters<typeof updateSeries>[1] = {}
+          if (detail.poster_path) updates.posterPath = detail.poster_path
+          if (detail.overview) updates.overview = detail.overview
+          if (detail.first_air_date) updates.firstAirDate = detail.first_air_date
+          if (detail.last_air_date) updates.lastAirDate = detail.last_air_date
+          if (detail.number_of_seasons) updates.numberOfSeasons = detail.number_of_seasons
+          if (!s.imdbRating && (detail.vote_average ?? 0) > 0) {
+            updates.imdbRating = detail.vote_average!.toFixed(1)
+          }
+          if (!s.nextEpisodeDate && detail.next_episode_to_air) {
+            updates.nextEpisodeDate = detail.next_episode_to_air.air_date
+            updates.nextEpisodeName = detail.next_episode_to_air.name
+          }
+          if (Object.keys(updates).length > 0) {
+            await updateSeries(s.id!, updates)
           }
         } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 250))
       }
-      localStorage.setItem('tvfreak-posters-backfill-v1', 'true')
+      localStorage.setItem('tvfreak-content-backfill-v1', 'true')
     }
-    backfillPosters()
+    backfillSeriesInfo()
   }, [loading, loadSeries])
 
   async function handleSeriesUpdated() {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trash2, Loader2, Calendar, CheckCircle2, Plus, ChevronDown } from 'lucide-react'
+import { X, MoreHorizontal, Loader2, Calendar, CheckCircle2, Plus } from 'lucide-react'
 import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, getTvSimilar, posterUrl } from '../lib/tmdb'
 import { updateSeries, deleteSeries, addSeries } from '../lib/api'
 import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode, TmdbSearchResult } from '../types'
@@ -24,16 +24,15 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   const [hasMoreRecs, setHasMoreRecs] = useState(false)
   const [localImdbRating, setLocalImdbRating] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
-  const [deleteModal, setDeleteModal] = useState(false)
+  const [moreModal, setMoreModal] = useState(false)
   const [adding, setAdding] = useState(false)
-  const [statusExpanded, setStatusExpanded] = useState(false)
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Dep on tmdbId (not id) so previews from search also load
   useEffect(() => {
     if (!series) {
       setDetail(null)
-      setDeleteModal(false)
+      setMoreModal(false)
       setRecommendations([])
       setLocalImdbRating(null)
       return
@@ -94,17 +93,16 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
-        if (deleteModal) setDeleteModal(false)
+        if (moreModal) setMoreModal(false)
         else onClose()
       }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose, deleteModal])
+  }, [onClose, moreModal])
 
   async function changeStatus(status: SeriesStatus) {
     if (!series?.id) return
-    setStatusExpanded(false)
     await updateSeries(series.id, { status })
     toast.success(`Status updated to ${STATUS_CONFIG[status].label}`)
     onUpdated()
@@ -121,19 +119,11 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     notesTimer.current = setTimeout(() => saveNotes(value), 800)
   }
 
-  async function handleMarkDropped() {
-    if (!series?.id) return
-    await updateSeries(series.id, { status: 'dropped' })
-    toast.success(`"${series.title}" marked as dropped`)
-    setDeleteModal(false)
-    onUpdated()
-  }
-
   async function handleRemove() {
     if (!series?.id) return
     await deleteSeries(series.id)
     toast.success(`"${series.title}" removed from your library`)
-    setDeleteModal(false)
+    setMoreModal(false)
     onClose()
     onUpdated()
   }
@@ -155,6 +145,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
         nextEpisodeDate: detail?.next_episode_to_air?.air_date ?? null,
         nextEpisodeName: detail?.next_episode_to_air?.name ?? null,
         imdbRating: null,
+        futureDates: null,
         addedAt: new Date(),
         updatedAt: new Date(),
       })
@@ -195,6 +186,11 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
   const poster = posterUrl(series?.posterPath ?? null, 'w500')
   const nextEp = detail?.next_episode_to_air as TmdbNextEpisode | null | undefined
+  const nextEpDate = nextEp?.air_date ?? (
+    series?.nextEpisodeDate && new Date(series.nextEpisodeDate) > new Date()
+      ? series.nextEpisodeDate
+      : null
+  )
   const isComplete = series?.status === 'completed' && !nextEp
   const hasUpcoming = !!nextEp
   const inLibrary = !!series?.id
@@ -259,10 +255,10 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
               </button>
               {inLibrary && (
                 <button
-                  onClick={() => setDeleteModal(true)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/15 text-white/30 hover:text-red-400 transition-colors"
+                  onClick={() => setMoreModal(true)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/8 text-white/30 hover:text-white/60 transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <MoreHorizontal className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -295,6 +291,17 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     </div>
                   )}
 
+                  {/* Genre chips */}
+                  {detail?.genres && detail.genres.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {detail.genres.slice(0, 3).map(g => (
+                        <span key={g.id} className="px-1.5 py-0.5 rounded-full text-[10px] text-white/35 bg-white/6 border border-white/6">
+                          {g.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Complete chip */}
                   {isComplete && inLibrary && (
                     <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full">
@@ -305,28 +312,16 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
                   {/* Status (library only) or Add to library */}
                   {inLibrary ? (
-                    <div className="mt-3">
-                      {/* Current status chip — tap to expand and change */}
-                      <button
-                        onClick={() => setStatusExpanded(prev => !prev)}
-                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border border-transparent transition-all ${STATUS_CONFIG[series.status].bgClass} ${STATUS_CONFIG[series.status].textClass}`}
-                      >
+                    <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+                      {/* Status chip — read-only, change via ⋯ menu */}
+                      <div className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border border-transparent ${STATUS_CONFIG[series.status].bgClass} ${STATUS_CONFIG[series.status].textClass}`}>
                         {STATUS_CONFIG[series.status].label}
-                        <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${statusExpanded ? 'rotate-180' : ''}`} />
-                      </button>
-                      {statusExpanded && (
-                        <div className="flex flex-wrap gap-1.5 mt-1.5">
-                          {(Object.entries(STATUS_CONFIG) as [SeriesStatus, (typeof STATUS_CONFIG)[SeriesStatus]][])
-                            .filter(([s]) => s !== series.status)
-                            .map(([status, cfg]) => (
-                              <button
-                                key={status}
-                                onClick={() => changeStatus(status)}
-                                className="px-2.5 py-1 rounded-lg text-xs font-medium border border-white/8 text-white/40 hover:border-white/20 hover:text-white/60 transition-all"
-                              >
-                                {cfg.label}
-                              </button>
-                            ))}
+                      </div>
+                      {/* Next episode date chip */}
+                      {nextEpDate && (
+                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-[#6366F1]/10 text-[#6366F1]">
+                          <Calendar className="w-3 h-3" />
+                          {formatAirDate(nextEpDate)}
                         </div>
                       )}
                     </div>
@@ -450,9 +445,9 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
             </div>
           </motion.div>
 
-          {/* Delete modal (library only) */}
+          {/* More options modal (library only) */}
           <AnimatePresence>
-            {deleteModal && inLibrary && (
+            {moreModal && inLibrary && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -461,7 +456,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
               >
                 <div
                   className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                  onClick={() => setDeleteModal(false)}
+                  onClick={() => setMoreModal(false)}
                 />
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
@@ -470,33 +465,41 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   transition={{ type: 'spring', damping: 30, stiffness: 300 }}
                   className="relative bg-[#1E1E1E] rounded-2xl p-5 max-w-sm w-full border border-white/8 shadow-2xl"
                 >
-                  <h3 className="text-sm font-semibold text-white truncate mb-0.5">{series.title}</h3>
-                  <p className="text-sm text-white/40 mb-5">What do you want to do with this series?</p>
+                  <h3 className="text-sm font-semibold text-white truncate mb-4">{series.title}</h3>
 
-                  <div className="space-y-2">
-                    <button
-                      onClick={handleMarkDropped}
-                      className="w-full px-4 py-3 bg-red-500/8 hover:bg-red-500/15 border border-red-500/15 hover:border-red-500/25 text-left rounded-xl transition-colors"
-                    >
-                      <span className="text-sm font-medium text-red-400 block">Mark as dropped</span>
-                      <span className="text-xs text-red-400/50 mt-0.5 block">Keep in library, change status to Dropped</span>
-                    </button>
-
-                    <button
-                      onClick={handleRemove}
-                      className="w-full px-4 py-3 bg-white/4 hover:bg-red-500/8 border border-white/6 hover:border-red-500/15 text-left rounded-xl transition-colors group"
-                    >
-                      <span className="text-sm font-medium text-white/60 group-hover:text-red-400 transition-colors block">Remove from library</span>
-                      <span className="text-xs text-white/25 group-hover:text-red-400/50 transition-colors mt-0.5 block">Permanently delete this series and all watch history</span>
-                    </button>
-
-                    <button
-                      onClick={() => setDeleteModal(false)}
-                      className="w-full px-4 py-2.5 text-white/40 hover:text-white/60 text-sm font-medium rounded-xl hover:bg-white/4 transition-colors"
-                    >
-                      Cancel
-                    </button>
+                  <p className="text-[10px] text-white/25 uppercase tracking-wider mb-2">Change status</p>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {(Object.entries(STATUS_CONFIG) as [SeriesStatus, (typeof STATUS_CONFIG)[SeriesStatus]][]).map(([status, cfg]) => (
+                      <button
+                        key={status}
+                        onClick={async () => { await changeStatus(status); setMoreModal(false) }}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
+                          series.status === status
+                            ? `${cfg.bgClass} ${cfg.textClass} border-transparent`
+                            : 'border-white/8 text-white/40 hover:border-white/20 hover:text-white/60'
+                        }`}
+                      >
+                        {cfg.label}
+                      </button>
+                    ))}
                   </div>
+
+                  <div className="border-t border-white/6 mb-3" />
+
+                  <button
+                    onClick={handleRemove}
+                    className="w-full px-4 py-3 bg-white/4 hover:bg-red-500/8 border border-white/6 hover:border-red-500/15 text-left rounded-xl transition-colors group"
+                  >
+                    <span className="text-sm font-medium text-white/60 group-hover:text-red-400 transition-colors block">Remove from library</span>
+                    <span className="text-xs text-white/25 group-hover:text-red-400/50 transition-colors mt-0.5 block">Permanently delete this series and all watch history</span>
+                  </button>
+
+                  <button
+                    onClick={() => setMoreModal(false)}
+                    className="w-full px-4 py-2.5 text-white/40 hover:text-white/60 text-sm font-medium rounded-xl hover:bg-white/4 transition-colors mt-2"
+                  >
+                    Cancel
+                  </button>
                 </motion.div>
               </motion.div>
             )}
