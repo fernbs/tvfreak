@@ -207,7 +207,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
   async function handleAllEpisodesWatched() {
     if (!series?.id) return
-    if (series.status === 'completed') return
+    if (series.status === 'completed' || series.status === 'dropped' || series.status === 'plantowatch') return
     if (isOngoing) {
       await updateSeries(series.id, { status: 'watching' })
       const msg = nextEp
