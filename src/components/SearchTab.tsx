@@ -84,7 +84,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           setTotalPages(tp)
         } else {
           const { results: r, totalPages: tp } = await getDiscoverByGenres(
-            includedGenres, excludedGenres, 1, sortBy, year, selectedProviders
+            includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()
           )
           setResults(r)
           setTotalPages(tp)
@@ -128,7 +128,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           setTotalPages(tp)
         } else {
           const { results: r, totalPages: tp } = await getDiscoverByGenres(
-            includedGenres, excludedGenres, nextPage, sortBy, year, selectedProviders
+            includedGenres, excludedGenres, nextPage, sortBy, year, selectedProviders, getCountry()
           )
           setResults(prev => [...prev, ...r])
           setTotalPages(tp)

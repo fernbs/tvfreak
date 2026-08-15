@@ -50,7 +50,8 @@ export async function getDiscoverByGenres(
   page = 1,
   sortBy = 'vote_average.desc',
   year?: string,
-  providerIds: number[] = []
+  providerIds: number[] = [],
+  region?: string
 ): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
   const params = new URLSearchParams({
     sort_by: sortBy,
@@ -63,8 +64,10 @@ export async function getDiscoverByGenres(
   if (excludedIds.length > 0) params.set('without_genres', excludedIds.join(','))
   if (year) params.set('first_air_date_year', year)
   if (providerIds.length > 0) {
+    // watch_region is required by TMDB — without it, with_watch_providers is silently ignored
     params.set('with_watch_providers', providerIds.join('|'))
     params.set('watch_monetization_types', 'flatrate|free')
+    if (region) params.set('watch_region', region)
   }
   const url = `${BASE_URL}/discover/tv?${params}`
   const res = await fetch(url, { headers: headers() })
