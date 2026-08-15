@@ -183,7 +183,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
       >
         <Loader2
           className={`w-5 h-5 transition-colors duration-150 ${
-            refreshing ? 'animate-spin text-[#6366F1]' : pullReady ? 'text-[#6366F1]' : 'text-white/30'
+            refreshing ? 'animate-spin text-[#06B6D4]' : pullReady ? 'text-[#06B6D4]' : 'text-white/30'
           }`}
           style={{
             opacity: refreshing ? 1 : Math.min(pullDistance / (PULL_THRESHOLD * 0.5), 1),
@@ -326,18 +326,18 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                           onClick={() => !isPast && handleDayClick(day)}
                           disabled={isPast && !hasEpisode}
                           className="flex flex-col items-center py-1 rounded-lg transition-colors"
-                          style={{ backgroundColor: isSelected ? 'rgba(99,102,241,0.2)' : undefined }}
+                          style={{ backgroundColor: isSelected ? 'rgba(6,182,212,0.2)' : undefined }}
                         >
                           <span
                             className={`text-sm leading-none font-medium ${
-                              isSelected ? 'text-[#6366F1]' : isToday ? 'text-[#6366F1]' : isPast ? 'text-white/15' : 'text-white/70'
+                              isSelected ? 'text-[#06B6D4]' : isToday ? 'text-[#06B6D4]' : isPast ? 'text-white/15' : 'text-white/70'
                             }`}
                             style={isToday && !isSelected ? { textDecoration: 'underline', textUnderlineOffset: 3 } : undefined}
                           >
                             {day}
                           </span>
                           <div className="h-1.5 mt-0.5 flex items-center justify-center">
-                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#6366F1]" />}
+                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#06B6D4]" />}
                           </div>
                         </button>
                       )
@@ -401,7 +401,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                       <p className="text-sm font-medium text-white truncate">{s.title}</p>
                     </div>
                     <div className="shrink-0">
-                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#6366F1]/15 text-[#6366F1] leading-tight">
+                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#06B6D4]/15 text-[#06B6D4] leading-tight">
                         {formatAirDate(date)}
                       </span>
                     </div>
@@ -433,7 +433,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                             <span className="text-[10px] text-white/20 text-center">{s.title}</span>
                           </div>
                         )}
-                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#6366F1]/90 text-white leading-tight backdrop-blur-sm">
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#06B6D4]/90 text-white leading-tight backdrop-blur-sm">
                           {formatAirDate(date)}
                         </div>
                       </div>

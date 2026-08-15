@@ -129,7 +129,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/6">
-          <Wand2 className="w-4 h-4 text-[#6366F1] shrink-0" />
+          <Wand2 className="w-4 h-4 text-[#06B6D4] shrink-0" />
           <h2 className="text-sm font-semibold text-white flex-1">Restore watch history from colours</h2>
           {step !== 'running' && (
             <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/8 text-white/40 transition-colors">
@@ -168,7 +168,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
               </p>
               <button
                 onClick={runMigration}
-                className="w-full py-2.5 bg-[#6366F1] hover:bg-[#5558E3] text-white text-sm font-medium rounded-xl transition-colors"
+                className="w-full py-2.5 bg-[#06B6D4] hover:bg-[#0891B2] text-white text-sm font-medium rounded-xl transition-colors"
               >
                 Start migration
               </button>
@@ -183,7 +183,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
               </div>
               <div className="w-full h-2 bg-white/8 rounded-full overflow-hidden mb-4">
                 <div
-                  className="h-full bg-[#6366F1] rounded-full transition-all duration-300"
+                  className="h-full bg-[#06B6D4] rounded-full transition-all duration-300"
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -217,7 +217,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
               <p className="text-xs text-white/40 mb-5">{errorMsg}</p>
               <button
                 onClick={() => setStep('confirm')}
-                className="px-4 py-2 bg-[#6366F1] hover:bg-[#5558E3] text-white text-sm font-medium rounded-xl transition-colors"
+                className="px-4 py-2 bg-[#06B6D4] hover:bg-[#0891B2] text-white text-sm font-medium rounded-xl transition-colors"
               >
                 Try again
               </button>

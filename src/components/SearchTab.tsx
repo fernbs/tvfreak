@@ -293,7 +293,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       <button
         onClick={e => { e.stopPropagation(); handleAdd(r) }}
         disabled={addingId === r.id}
-        className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-[#6366F1]/15 text-[#6366F1] active:bg-[#6366F1]/30 transition-colors disabled:opacity-50"
+        className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-[#06B6D4]/15 text-[#06B6D4] active:bg-[#06B6D4]/30 transition-colors disabled:opacity-50"
       >
         {addingId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
       </button>
@@ -347,7 +347,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           )}
         </div>
 
-        {/* Genre chips — tap once to include (indigo), tap again to exclude (red), tap again to clear */}
+        {/* Genre chips — tap once to include (teal), tap again to exclude (red), tap again to clear */}
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {GENRES.map(g => {
             const isIncluded = includedGenres.includes(g.id)
@@ -358,7 +358,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                 onClick={() => toggleGenre(g.id)}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   isIncluded
-                    ? 'bg-[#6366F1] text-white'
+                    ? 'bg-[#06B6D4] text-white'
                     : isExcluded
                       ? 'bg-red-500/15 text-red-400 border border-red-500/25'
                       : 'bg-white/6 text-white/45 active:bg-white/12'
@@ -382,7 +382,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                   title={p.provider_name}
                   className={`shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
                     isSelected
-                      ? 'bg-[#6366F1]/20 border-[#6366F1]/60 text-white'
+                      ? 'bg-[#06B6D4]/20 border-[#06B6D4]/60 text-white'
                       : 'bg-white/5 border-white/8 text-white/40 active:bg-white/10'
                   }`}
                 >
@@ -430,7 +430,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             title={hideInLibrary ? 'Showing new only — tap to show all' : 'Tap to hide series already in your library'}
             className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-xl border transition-colors ${
               hideInLibrary
-                ? 'bg-[#6366F1]/15 border-[#6366F1]/40 text-[#6366F1]'
+                ? 'bg-[#06B6D4]/15 border-[#06B6D4]/40 text-[#06B6D4]'
                 : 'bg-white/5 border-white/8 text-white/30 active:bg-white/10'
             }`}
           >
@@ -515,7 +515,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                       </button>
                     )}
                     {inLibrary && (
-                      <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#6366F1]/80">
+                      <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#06B6D4]/80">
                         <span className="text-[9px] text-white font-bold">✓</span>
                       </div>
                     )}

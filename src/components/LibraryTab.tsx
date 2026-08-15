@@ -79,7 +79,7 @@ export function LibraryTab({
             {!migrationDone && (
               <button
                 onClick={onShowMigration}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20 active:bg-[#6366F1]/20 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#06B6D4]/10 text-[#06B6D4] border border-[#06B6D4]/20 active:bg-[#06B6D4]/20 transition-colors"
               >
                 <Wand2 className="w-3.5 h-3.5" />
                 Restore
@@ -126,7 +126,7 @@ export function LibraryTab({
               onClick={() => setFilter(f.value)}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                 filter === f.value
-                  ? 'bg-[#6366F1] text-white'
+                  ? 'bg-[#06B6D4] text-white'
                   : 'bg-white/6 text-white/45 active:bg-white/12'
               }`}
             >

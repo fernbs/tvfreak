@@ -5,13 +5,13 @@
   --color-surface: #141414;
   --color-surface-elevated: #1E1E1E;
   --color-border: rgba(255, 255, 255, 0.08);
-  --color-accent: #6366F1;
-  --color-accent-hover: #4F46E5;
+  --color-accent: #06B6D4;
+  --color-accent-hover: #0891B2;
 
-  --color-watching: #22C55E;
-  --color-completed: #A855F7;
-  --color-dropped: #EF4444;
-  --color-pending: #EAB308;
+  --color-watching: #38BDF8;
+  --color-completed: #34D399;
+  --color-dropped: #FB7185;
+  --color-pending: #FBBF24;
 
   --color-text-primary: #F5F5F5;
   --color-text-secondary: #A0A0A0;

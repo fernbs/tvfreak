@@ -14,7 +14,7 @@ export function ImportBanner({ done, total }: Props) {
       </div>
       <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
         <div
-          className="h-full bg-[#6366F1] rounded-full transition-all duration-300"
+          className="h-full bg-[#06B6D4] rounded-full transition-all duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>

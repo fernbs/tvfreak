@@ -68,10 +68,7 @@ export function SeriesGrid({ series, loading, onSelect, viewMode = 'small' }: Pr
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">{s.title}</p>
                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  <span
-                    className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0"
-                    style={{ backgroundColor: config.color + '20', color: config.color }}
-                  >
+                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ${config.bgClass} ${config.textClass}`}>
                     {config.label}
                   </span>
                   {hasUpcoming && s.nextEpisodeDate && (

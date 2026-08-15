@@ -120,7 +120,7 @@ export function SearchBar({ onSeriesAdded }: Props) {
               <button
                 onClick={() => handleAdd(r)}
                 disabled={addingId === r.id}
-                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-white/8 hover:bg-[#6366F1]/30 hover:text-[#6366F1] transition-colors disabled:opacity-50"
+                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-white/8 hover:bg-[#06B6D4]/30 hover:text-[#06B6D4] transition-colors disabled:opacity-50"
               >
                 {addingId === r.id ? (
                   <Loader2 className="w-4 h-4 animate-spin text-white/40" />

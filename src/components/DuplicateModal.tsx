@@ -57,7 +57,7 @@ export function DuplicateModal({ groups, onClose, onResolved }: Props) {
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/6">
-          <GitMerge className="w-4 h-4 text-[#6366F1] shrink-0" />
+          <GitMerge className="w-4 h-4 text-[#06B6D4] shrink-0" />
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-semibold text-white">Resolve duplicates</h2>
             <p className="text-xs text-white/40 mt-0.5">
@@ -126,7 +126,7 @@ export function DuplicateModal({ groups, onClose, onResolved }: Props) {
                         <button
                           onClick={() => handleKeep(s.id!, otherIds[0], originalGroupIndex)}
                           disabled={resolving !== null}
-                          className="w-full py-1.5 bg-[#6366F1] hover:bg-[#5558E3] disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors"
+                          className="w-full py-1.5 bg-[#06B6D4] hover:bg-[#0891B2] disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors"
                         >
                           {resolving === s.id ? 'Keeping...' : 'Keep this'}
                         </button>

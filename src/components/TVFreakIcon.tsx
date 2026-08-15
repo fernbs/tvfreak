@@ -12,14 +12,11 @@ export function TVFreakIcon({ size = 24, className }: Props) {
       viewBox="0 0 100 100"
       className={className}
     >
-      <defs>
-        <linearGradient id="tvfi-bg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#818CF8" />
-          <stop offset="100%" stopColor="#4338CA" />
-        </linearGradient>
-      </defs>
-      <rect width="100" height="100" rx="22" fill="url(#tvfi-bg)" />
-      <path d="M 61 5 L 78 48 L 56 48 L 39 95 L 22 52 L 44 52 Z" fill="white" />
+      <rect width="100" height="100" rx="22" fill="#06B6D4" />
+      <rect x="13" y="22" width="74" height="48" rx="9" fill="white" fillOpacity="0.9" />
+      <rect x="21" y="30" width="58" height="32" rx="5" fill="#0891B2" />
+      <rect x="43" y="70" width="14" height="9" rx="2" fill="white" fillOpacity="0.9" />
+      <rect x="32" y="77" width="36" height="6" rx="3" fill="white" fillOpacity="0.9" />
     </svg>
   )
 }

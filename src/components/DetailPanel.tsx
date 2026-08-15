@@ -363,9 +363,9 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
                   {/* Complete chip */}
                   {isComplete && inLibrary && (
-                    <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full">
-                      <CheckCircle2 className="w-3 h-3 text-purple-400" />
-                      <span className="text-xs text-purple-400 font-medium">Series complete</span>
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-400/10 border border-emerald-400/20 rounded-full">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span className="text-xs text-emerald-400 font-medium">Series complete</span>
                     </div>
                   )}
 
@@ -378,7 +378,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                       </div>
                       {/* Next episode date chip */}
                       {nextEpDate && (
-                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-[#6366F1]/10 text-[#6366F1]">
+                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-[#06B6D4]/10 text-[#06B6D4]">
                           <Calendar className="w-3 h-3" />
                           {formatAirDate(nextEpDate)}
                         </div>
@@ -388,7 +388,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     <button
                       onClick={handleAddToLibrary}
                       disabled={adding}
-                      className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-[#6366F1]/15 border border-[#6366F1]/30 rounded-xl text-xs font-medium text-[#6366F1] active:bg-[#6366F1]/25 transition-colors disabled:opacity-50"
+                      className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-[#06B6D4]/15 border border-[#06B6D4]/30 rounded-xl text-xs font-medium text-[#06B6D4] active:bg-[#06B6D4]/25 transition-colors disabled:opacity-50"
                     >
                       {adding ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -440,10 +440,10 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
               {/* Next episode */}
               {hasUpcoming && nextEp && (
-                <div className="mb-5 px-3.5 py-3 rounded-xl bg-[#6366F1]/8 border border-[#6366F1]/15">
+                <div className="mb-5 px-3.5 py-3 rounded-xl bg-[#06B6D4]/8 border border-[#06B6D4]/15">
                   <div className="flex items-center gap-2 mb-1">
-                    <Calendar className="w-3.5 h-3.5 text-[#6366F1]" />
-                    <p className="text-xs text-[#6366F1] font-medium uppercase tracking-wider">Next episode</p>
+                    <Calendar className="w-3.5 h-3.5 text-[#06B6D4]" />
+                    <p className="text-xs text-[#06B6D4] font-medium uppercase tracking-wider">Next episode</p>
                   </div>
                   <p className="text-sm text-white/80 font-medium">
                     S{String(nextEp.season_number).padStart(2, '0')} E{String(nextEp.episode_number).padStart(2, '0')} · {nextEp.name}

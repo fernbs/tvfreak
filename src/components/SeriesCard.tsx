@@ -41,27 +41,23 @@ export function SeriesCard({ series, onClick }: Props) {
         </div>
       )}
 
+      {/* Status radial gradient — top-left */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(circle at 0% 0%, ${config.color}3D 0%, transparent 65%)` }}
+      />
+
       {/* Hover overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
         <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{series.title}</p>
-        <span
-          className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-          style={{ backgroundColor: config.color + '25', color: config.color }}
-        >
+        <span className={`inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${config.bgClass} ${config.textClass}`}>
           {config.label}
         </span>
       </div>
 
-      {/* Caught up + next episode coming: green date badge */}
-      {hasUpcoming && series.nextEpisodeDate && series.status === 'plantowatch' && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#22C55E]/90 text-white leading-tight backdrop-blur-sm">
-          {formatAirDate(series.nextEpisodeDate)}
-        </div>
-      )}
-
-      {/* Watching/other + next episode coming: indigo date badge */}
-      {hasUpcoming && series.nextEpisodeDate && series.status !== 'plantowatch' && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#6366F1]/90 text-white leading-tight backdrop-blur-sm">
+      {/* Upcoming episode date badge */}
+      {hasUpcoming && series.nextEpisodeDate && (
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#06B6D4]/90 text-white leading-tight backdrop-blur-sm">
           {formatAirDate(series.nextEpisodeDate)}
         </div>
       )}
@@ -73,32 +69,26 @@ export function SeriesCard({ series, onClick }: Props) {
         </div>
       )}
 
-      {/* New episode aired badge — shown when nextEpisodeDate has passed but still active */}
+      {/* New episode aired badge */}
       {hasNewEpisode && !hasUpcoming && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#22C55E]/90 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#06B6D4]/90 text-white leading-tight backdrop-blur-sm">
           New
         </div>
       )}
 
       {/* Complete chip — top right */}
       {isComplete && (
-        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-purple-500/80 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-400/80 text-zinc-900 leading-tight backdrop-blur-sm">
           Complete
         </div>
       )}
 
       {/* IMDB rating — bottom right */}
       {series.imdbRating && (
-        <div className="absolute bottom-[6px] right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/70 text-yellow-400 leading-tight backdrop-blur-sm">
+        <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/70 text-yellow-400 leading-tight backdrop-blur-sm">
           ★ {series.imdbRating}
         </div>
       )}
-
-      {/* Status bar */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-[3px]"
-        style={{ backgroundColor: config.color }}
-      />
     </div>
   )
 }

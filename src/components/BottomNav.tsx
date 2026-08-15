@@ -100,7 +100,7 @@ export function BottomNav({ active, onChange }: Props) {
           key={id}
           onClick={() => onChange(id)}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors ${
-            active === id ? 'text-[#6366F1]' : 'text-white/30 active:text-white/60'
+            active === id ? 'text-[#06B6D4]' : 'text-white/30 active:text-white/60'
           }`}
         >
           <Icon className="w-5 h-5" strokeWidth={active === id ? 2.5 : 1.8} />
