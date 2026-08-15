@@ -191,7 +191,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
       {/* Sticky header */}
       <div
         className="shrink-0 px-4 pb-3 bg-[#0A0A0A]"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 48px)' }}
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="flex items-center gap-2 mb-5">
           <Tv className="w-5 h-5 text-[#6366F1]" />

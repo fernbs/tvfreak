@@ -105,7 +105,7 @@ export function StatsTab({ allSeries }: Props) {
       {/* Header */}
       <div
         className="shrink-0 bg-[#0A0A0A] px-4 pb-3"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 48px)' }}
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <h1 className="text-lg font-bold text-white">Stats</h1>
       </div>

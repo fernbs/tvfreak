@@ -203,7 +203,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       {/* Sticky header */}
       <div
         className="shrink-0 bg-[#0A0A0A] px-4 pb-3 z-10"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 48px)' }}
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-lg font-bold text-white">Search</h1>
