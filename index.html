@@ -30,7 +30,16 @@
   </head>
   <body>
     <script>
-      (function(){var s=localStorage.getItem('tvfreak-sab');if(s)document.documentElement.style.setProperty('--sab',s);})();
+      (function(){
+        var s=localStorage.getItem('tvfreak-sab');
+        if(s){document.documentElement.style.setProperty('--sab',s);}
+        else if(navigator.standalone){
+          // All home-indicator iPhones (X and newer) are >=812px — safe area is always 34px portrait.
+          // Older iPhones (SE, 8) are <=736px and have a home button so safe area is 0.
+          var h=Math.max(screen.width,screen.height);
+          if(h>=812)document.documentElement.style.setProperty('--sab','34px');
+        }
+      })();
     </script>
     <div id="root"></div>
   </body>
