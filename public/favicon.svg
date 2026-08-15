@@ -1,16 +1,3 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- TV body (indigo) -->
-  <rect x="0" y="0" width="100" height="70" rx="10" fill="#6366F1"/>
-
-  <!-- TV screen (dark) -->
-  <rect x="8" y="8" width="84" height="52" rx="6" fill="#0f172a"/>
-
-  <!-- TV stand neck -->
-  <rect x="42" y="70" width="16" height="9" rx="2" fill="#4F46E5"/>
-
-  <!-- TV stand base -->
-  <rect x="28" y="79" width="44" height="8" rx="4" fill="#4F46E5"/>
-
-  <!-- Lightning bolt (amber) -->
-  <path d="M 58 11 L 37 40 L 53 40 L 42 62 L 63 33 L 47 33 Z" fill="#FBBF24"/>
+  <path d="M 63 6 L 35 52 L 54 52 L 37 94 L 65 48 L 46 48 Z" fill="#6366F1"/>
 </svg>

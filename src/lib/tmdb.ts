@@ -68,12 +68,12 @@ export async function getDiscoverByGenres(
   return { results: data.results ?? [], totalPages: data.total_pages ?? 1 }
 }
 
-export async function getTrending(): Promise<import('../types').TmdbSearchResult[]> {
-  const url = `${BASE_URL}/trending/tv/week?language=en-US`
+export async function getTrending(page = 1): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
+  const url = `${BASE_URL}/trending/tv/week?language=en-US&page=${page}`
   const res = await fetch(url, { headers: headers() })
-  if (!res.ok) return []
+  if (!res.ok) return { results: [], totalPages: 1 }
   const data = await res.json()
-  return data.results ?? []
+  return { results: data.results ?? [], totalPages: data.total_pages ?? 1 }
 }
 
 export async function getTvRecommendations(tmdbId: number, page = 1): Promise<import('../types').TmdbSearchResult[]> {
