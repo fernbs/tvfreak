@@ -41,16 +41,19 @@ export function SeriesCard({ series, onClick }: Props) {
         </div>
       )}
 
-      {/* Status radial gradient — top-left */}
+      {/* Status radial gradient — top-left corner */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: `radial-gradient(circle at 0% 0%, ${config.color}3D 0%, transparent 65%)` }}
+        style={{ background: `radial-gradient(circle at 0% 0%, ${config.color}80 0%, ${config.color}30 40%, transparent 65%)` }}
       />
 
       {/* Hover overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
         <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{series.title}</p>
-        <span className={`inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${config.bgClass} ${config.textClass}`}>
+        <span
+          className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+          style={{ backgroundColor: config.color + '33', color: config.color }}
+        >
           {config.label}
         </span>
       </div>

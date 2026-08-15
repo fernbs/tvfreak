@@ -92,17 +92,23 @@ export function BottomNav({ active, onChange }: Props) {
 
   return (
     <nav
-      className="fixed left-0 right-0 flex bg-[#0D0D0D] border-t border-white/8 z-10"
+      className="fixed left-0 right-0 flex bg-[#0D0D0D]/95 backdrop-blur-md border-t border-white/8 z-10"
       style={{ bottom: `-${sab}px`, paddingBottom: `${sab}px` }}
     >
       {tabs.map(({ id, icon: Icon, label }) => (
         <button
           key={id}
           onClick={() => onChange(id)}
-          className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors ${
+          className={`relative flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors ${
             active === id ? 'text-[#06B6D4]' : 'text-white/30 active:text-white/60'
           }`}
         >
+          {active === id && (
+            <span
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
+              style={{ backgroundColor: '#06B6D4', boxShadow: '0 0 10px 3px rgba(6,182,212,0.55)' }}
+            />
+          )}
           <Icon className="w-5 h-5" strokeWidth={active === id ? 2.5 : 1.8} />
           <span className="text-[10px] font-medium tracking-wide">{label}</span>
         </button>

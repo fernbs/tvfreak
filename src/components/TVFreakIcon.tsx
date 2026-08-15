@@ -13,10 +13,18 @@ export function TVFreakIcon({ size = 24, className }: Props) {
       className={className}
     >
       <rect width="100" height="100" rx="22" fill="#06B6D4" />
-      <rect x="13" y="22" width="74" height="48" rx="9" fill="white" fillOpacity="0.9" />
-      <rect x="21" y="30" width="58" height="32" rx="5" fill="#0891B2" />
-      <rect x="43" y="70" width="14" height="9" rx="2" fill="white" fillOpacity="0.9" />
-      <rect x="32" y="77" width="36" height="6" rx="3" fill="white" fillOpacity="0.9" />
+      {/* TV body */}
+      <rect x="8" y="15" width="84" height="57" rx="11" fill="white" fillOpacity="0.95" />
+      {/* Screen */}
+      <rect x="15" y="22" width="70" height="43" rx="7" fill="#082530" />
+      {/* Glow behind play */}
+      <circle cx="50" cy="43.5" r="18" fill="#06B6D4" fillOpacity="0.22" />
+      {/* Play triangle */}
+      <path d="M43 33 L43 54 L63 43.5 Z" fill="white" fillOpacity="0.92" />
+      {/* Stand */}
+      <rect x="43" y="72" width="14" height="8" rx="2" fill="white" fillOpacity="0.75" />
+      {/* Base */}
+      <rect x="30" y="78" width="40" height="7" rx="3.5" fill="white" fillOpacity="0.75" />
     </svg>
   )
 }
