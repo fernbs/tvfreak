@@ -35,6 +35,7 @@ export interface TmdbSearchResult {
   first_air_date: string
   number_of_seasons?: number
   vote_average?: number
+  popularity?: number
 }
 
 export interface TmdbSeason {

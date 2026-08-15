@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List } from 'lucide-react'
+import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown } from 'lucide-react'
 import { searchTv, getTrending, getDiscoverByGenres, posterUrl } from '../lib/tmdb'
 import { addSeries } from '../lib/api'
 import type { TmdbSearchResult, Series } from '../types'
@@ -159,10 +159,20 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     } finally { setAddingId(null) }
   }
 
+  function applySort(items: TmdbSearchResult[]): TmdbSearchResult[] {
+    return [...items].sort((a, b) => {
+      if (sortBy === 'vote_average.desc') return (b.vote_average ?? 0) - (a.vote_average ?? 0)
+      if (sortBy === 'popularity.desc') return (b.popularity ?? 0) - (a.popularity ?? 0)
+      if (sortBy === 'first_air_date.desc') return (b.first_air_date ?? '').localeCompare(a.first_air_date ?? '')
+      if (sortBy === 'first_air_date.asc') return (a.first_air_date ?? '').localeCompare(b.first_air_date ?? '')
+      return 0
+    })
+  }
+
   const noQuery = !query.trim()
   const noGenreFilter = includedGenres.length === 0 && excludedGenres.length === 0
   const showTrending = noQuery && noGenreFilter
-  const displayResults = showTrending ? trending : results
+  const displayResults = applySort(showTrending ? trending : results)
   const isLoading = showTrending ? loadingTrending : searching
   const hasMore = !showTrending && currentPage < totalPages
 
@@ -267,16 +277,19 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
 
         {/* Sort + year row */}
         <div className="flex items-center gap-2 mt-2">
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            className="flex-1 bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-white/70 outline-none appearance-none"
-          >
-            <option value="vote_average.desc">Top Rated</option>
-            <option value="popularity.desc">Most Popular</option>
-            <option value="first_air_date.desc">Newest First</option>
-            <option value="first_air_date.asc">Oldest First</option>
-          </select>
+          <div className="relative flex-1">
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              className="w-full bg-[#1E1E1E] border border-white/8 rounded-xl px-3 pr-7 py-1.5 text-xs text-white/70 outline-none appearance-none"
+            >
+              <option value="vote_average.desc">Top Rated</option>
+              <option value="popularity.desc">Most Popular</option>
+              <option value="first_air_date.desc">Newest First</option>
+              <option value="first_air_date.asc">Oldest First</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30 pointer-events-none" />
+          </div>
           <select
             value={yearFilter}
             onChange={e => setYearFilter(e.target.value)}
