@@ -458,7 +458,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
             ))}
           </div>
           {/* Search input */}
-          <div className="flex-1 flex items-center bg-[#1C1C1E] rounded-xl border border-white/8 focus-within:border-white/20 transition-colors pl-3 pr-2 gap-2" style={{ minHeight: 38 }}>
+          <div className="flex-1 flex items-center bg-[#1C1C1E] rounded-xl border border-white/8 focus-within:border-white/20 transition-colors pl-3 pr-2 gap-2">
             {searching && query.trim() ? (
               <Loader2 className="w-4 h-4 text-[#48484A] shrink-0 animate-spin" />
             ) : (
@@ -470,7 +470,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               onChange={e => setQuery(e.target.value)}
               placeholder={mediaMode === 'tv' ? 'Search TV shows...' : 'Search films...'}
               style={{ fontSize: 15 }}
-              className="flex-1 bg-transparent text-[#F5F5F7] placeholder:text-[#48484A] outline-none py-2 min-w-0"
+              className="flex-1 bg-transparent text-[#F5F5F7] placeholder:text-[#48484A] outline-none py-[5px] min-w-0"
             />
             {query && (
               <button onClick={() => setQuery('')} className="shrink-0 p-1">
@@ -484,7 +484,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
         <div className="flex items-center gap-2 px-4 pb-3">
           <button
             onClick={() => setShowFilterSheet(true)}
-            className={`flex-1 flex items-center gap-2 border rounded-xl px-3 py-2 text-[12px] font-medium transition-colors ${
+            className={`flex-1 flex items-center gap-2 border rounded-xl px-3 py-[5px] text-[12px] font-medium transition-colors ${
               activeFilterCount > 0
                 ? 'bg-[rgba(255,159,10,0.08)] border-[rgba(255,159,10,0.35)] text-[#FF9F0A]'
                 : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
