@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown } from 'lucide-react'
 import { TVFreakIcon } from './TVFreakIcon'
-import { searchTv, getTrending, getDiscoverByGenres, posterUrl } from '../lib/tmdb'
+import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { addSeries } from '../lib/api'
-import type { TmdbSearchResult, Series } from '../types'
+import type { TmdbSearchResult, Series, WatchProvider } from '../types'
 import { useViewMode } from '../lib/useViewMode'
+import { getCountry } from '../lib/settings'
 import { toast } from 'sonner'
 
 const GENRES: { id: number; label: string }[] = [
@@ -43,6 +44,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const [totalPages, setTotalPages] = useState(1)
   const [trendingPage, setTrendingPage] = useState(1)
   const [trendingTotalPages, setTrendingTotalPages] = useState(1)
+  const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
+  const [selectedProviders, setSelectedProviders] = useState<number[]>([])
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -51,6 +54,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       setTrending(r)
       setTrendingTotalPages(tp)
     }).finally(() => setLoadingTrending(false))
+    getStreamingProviders(getCountry()).then(setAvailableProviders)
   }, [])
 
   useEffect(() => {
@@ -58,8 +62,9 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
 
     const hasQuery = query.trim().length > 0
     const hasGenreFilter = includedGenres.length > 0 || excludedGenres.length > 0
+    const hasProviderFilter = selectedProviders.length > 0
 
-    if (!hasQuery && !hasGenreFilter) {
+    if (!hasQuery && !hasGenreFilter && !hasProviderFilter) {
       setResults([])
       setCurrentPage(1)
       setTotalPages(1)
@@ -76,13 +81,16 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           setResults(r)
           setTotalPages(tp)
         } else {
-          const { results: r, totalPages: tp } = await getDiscoverByGenres(includedGenres, excludedGenres, 1, sortBy, year)
+          const { results: r, totalPages: tp } = await getDiscoverByGenres(
+            includedGenres, excludedGenres, 1, sortBy, year,
+            selectedProviders, selectedProviders.length > 0 ? getCountry() : undefined
+          )
           setResults(r)
           setTotalPages(tp)
         }
       } finally { setSearching(false) }
     }, hasQuery ? 400 : 200)
-  }, [query, includedGenres, excludedGenres, sortBy, yearFilter])
+  }, [query, includedGenres, excludedGenres, sortBy, yearFilter, selectedProviders])
 
   function toggleGenre(id: number) {
     if (includedGenres.includes(id)) {
@@ -93,6 +101,10 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     } else {
       setIncludedGenres(prev => [...prev, id])
     }
+  }
+
+  function toggleProvider(id: number) {
+    setSelectedProviders(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id])
   }
 
   async function handleLoadMore() {
@@ -114,7 +126,10 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           setResults(prev => [...prev, ...r])
           setTotalPages(tp)
         } else {
-          const { results: r, totalPages: tp } = await getDiscoverByGenres(includedGenres, excludedGenres, nextPage, sortBy, year)
+          const { results: r, totalPages: tp } = await getDiscoverByGenres(
+            includedGenres, excludedGenres, nextPage, sortBy, year,
+            selectedProviders, selectedProviders.length > 0 ? getCountry() : undefined
+          )
           setResults(prev => [...prev, ...r])
           setTotalPages(tp)
         }
@@ -185,7 +200,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
 
   const noQuery = !query.trim()
   const noGenreFilter = includedGenres.length === 0 && excludedGenres.length === 0
-  const showTrending = noQuery && noGenreFilter
+  const noProviderFilter = selectedProviders.length === 0
+  const showTrending = noQuery && noGenreFilter && noProviderFilter
   const displayResults = applySort(showTrending ? trending : results)
   const isLoading = showTrending ? loadingTrending : searching
   const hasMore = showTrending ? trendingPage < trendingTotalPages : currentPage < totalPages
@@ -194,12 +210,18 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   let SectionIcon = TrendingUp
   if (!noQuery) {
     sectionLabel = ''
-  } else if (!noGenreFilter) {
-    const parts = [
+  } else if (!noGenreFilter || !noProviderFilter) {
+    const genreParts = [
       ...includedGenres.map(id => GENRES.find(g => g.id === id)?.label ?? ''),
       ...excludedGenres.map(id => `not ${GENRES.find(g => g.id === id)?.label ?? ''}`),
     ].filter(Boolean)
-    sectionLabel = 'Top rated · ' + parts.join(', ')
+    const providerParts = selectedProviders
+      .map(id => availableProviders.find(p => p.provider_id === id)?.provider_name ?? '')
+      .filter(Boolean)
+    let label = 'Top rated'
+    if (genreParts.length > 0) label += ' · ' + genreParts.join(', ')
+    if (providerParts.length > 0) label += ' on ' + providerParts.join(', ')
+    sectionLabel = label
     SectionIcon = Sparkles
   } else {
     sectionLabel = 'Trending this week'
@@ -291,6 +313,34 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             )
           })}
         </div>
+
+        {/* Platform chips */}
+        {availableProviders.length > 0 && (
+          <div className="flex gap-1.5 overflow-x-auto pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
+            {availableProviders.map(p => {
+              const isSelected = selectedProviders.includes(p.provider_id)
+              return (
+                <button
+                  key={p.provider_id}
+                  onClick={() => toggleProvider(p.provider_id)}
+                  title={p.provider_name}
+                  className={`shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
+                    isSelected
+                      ? 'bg-[#6366F1]/20 border-[#6366F1]/60 text-white'
+                      : 'bg-white/5 border-white/8 text-white/40 active:bg-white/10'
+                  }`}
+                >
+                  <img
+                    src={`${IMG_BASE}/w45${p.logo_path}`}
+                    alt={p.provider_name}
+                    className="w-5 h-5 rounded-sm object-cover shrink-0"
+                  />
+                  <span className="text-[11px] font-medium whitespace-nowrap">{p.provider_name}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {/* Sort + year row */}
         <div className="flex items-center gap-2 mt-2">

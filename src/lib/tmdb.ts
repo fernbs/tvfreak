@@ -49,7 +49,9 @@ export async function getDiscoverByGenres(
   excludedIds: number[] = [],
   page = 1,
   sortBy = 'vote_average.desc',
-  year?: string
+  year?: string,
+  providerIds: number[] = [],
+  watchRegion?: string
 ): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
   const params = new URLSearchParams({
     sort_by: sortBy,
@@ -61,11 +63,31 @@ export async function getDiscoverByGenres(
   if (includedIds.length > 0) params.set('with_genres', includedIds.join(','))
   if (excludedIds.length > 0) params.set('without_genres', excludedIds.join(','))
   if (year) params.set('first_air_date_year', year)
+  if (providerIds.length > 0 && watchRegion) {
+    params.set('with_watch_providers', providerIds.join('|'))
+    params.set('watch_region', watchRegion)
+    params.set('watch_monetization_types', 'flatrate|free')
+  }
   const url = `${BASE_URL}/discover/tv?${params}`
   const res = await fetch(url, { headers: headers() })
   if (!res.ok) return { results: [], totalPages: 0 }
   const data = await res.json()
   return { results: data.results ?? [], totalPages: data.total_pages ?? 1 }
+}
+
+export async function getStreamingProviders(countryCode: string): Promise<import('../types').WatchProvider[]> {
+  const url = `${BASE_URL}/watch/providers/tv?language=en-US&watch_region=${countryCode}`
+  const res = await fetch(url, { headers: headers() })
+  if (!res.ok) return []
+  const data = await res.json()
+  const results: (import('../types').WatchProvider & { display_priorities?: Record<string, number> })[] = data.results ?? []
+  return results
+    .sort((a, b) => {
+      const pa = a.display_priorities?.[countryCode] ?? 999
+      const pb = b.display_priorities?.[countryCode] ?? 999
+      return pa - pb
+    })
+    .slice(0, 25)
 }
 
 export async function getTrending(page = 1): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
