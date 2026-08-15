@@ -445,15 +445,15 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#060C16] overflow-hidden">
+    <div className="flex flex-col h-full bg-[#0C0A14] overflow-hidden">
       {/* Worker unreachable banner */}
       {workerError && !loading && (
-        <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border-b border-red-500/20">
-          <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-          <p className="text-xs text-red-400 flex-1">Can't reach the server. Your data is safe — check your Cloudflare Worker is running.</p>
+        <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-rose-500/8 border-b border-rose-500/15">
+          <div className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
+          <p className="text-xs text-rose-400/90 flex-1">Can't reach the server. Your data is safe — check your Cloudflare Worker is running.</p>
           <button
             onClick={loadSeries}
-            className="text-xs text-red-400/70 underline shrink-0"
+            className="text-xs text-rose-400/60 underline shrink-0"
           >
             Retry
           </button>

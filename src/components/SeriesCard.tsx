@@ -30,29 +30,29 @@ export function SeriesCard({ series, onClick }: Props) {
           src={poster}
           alt={series.title}
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
           draggable={false}
         />
       ) : (
-        <div className="w-full h-full bg-[#152337] flex items-center justify-center p-3 transition-transform duration-300 group-hover:scale-[1.03]">
-          <span className="text-xs text-white/40 text-center leading-snug font-medium">
+        <div className="w-full h-full bg-[#1C1830] flex items-center justify-center p-3 transition-transform duration-300 group-hover:scale-[1.04]">
+          <span className="text-xs text-[#4A3F6E] text-center leading-snug font-medium">
             {series.title}
           </span>
         </div>
       )}
 
-      {/* Status top strip */}
+      {/* Status colour strip at top */}
       <div
-        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-        style={{ backgroundColor: config.color, boxShadow: `0 0 8px 2px ${config.color}60` }}
+        className="absolute top-0 left-0 right-0 h-[2px] pointer-events-none"
+        style={{ backgroundColor: config.color, boxShadow: `0 0 10px 2px ${config.color}55` }}
       />
 
       {/* Hover overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
         <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{series.title}</p>
         <span
           className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-          style={{ backgroundColor: config.color + '33', color: config.color }}
+          style={{ backgroundColor: config.color + '30', color: config.color }}
         >
           {config.label}
         </span>
@@ -60,35 +60,35 @@ export function SeriesCard({ series, onClick }: Props) {
 
       {/* Upcoming episode date badge */}
       {hasUpcoming && series.nextEpisodeDate && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#3B82F6]/90 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#7C3AED]/90 text-white leading-tight backdrop-blur-sm">
           {formatAirDate(series.nextEpisodeDate)}
         </div>
       )}
 
       {/* Pending + no known date: TBA badge */}
       {!hasUpcoming && !hasNewEpisode && series.status === 'plantowatch' && !series.nextEpisodeDate && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-white/10 text-white/50 leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(167,139,250,0.1)] text-[#9B8EC4] leading-tight backdrop-blur-sm border border-[rgba(167,139,250,0.12)]">
           TBA
         </div>
       )}
 
       {/* New episode aired badge */}
       {hasNewEpisode && !hasUpcoming && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#3B82F6]/90 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#7C3AED]/90 text-white leading-tight backdrop-blur-sm">
           New
         </div>
       )}
 
-      {/* Complete chip — top right */}
+      {/* Complete chip */}
       {isComplete && (
-        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-400/80 text-zinc-900 leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/80 text-white leading-tight backdrop-blur-sm">
           Complete
         </div>
       )}
 
-      {/* IMDB rating — bottom right */}
+      {/* Rating — bottom right */}
       {series.imdbRating && (
-        <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/70 text-yellow-400 leading-tight backdrop-blur-sm">
+        <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 text-[#F0C060] leading-tight backdrop-blur-sm">
           ★ {series.imdbRating}
         </div>
       )}

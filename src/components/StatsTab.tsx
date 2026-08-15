@@ -11,10 +11,10 @@ interface Props {
 }
 
 function heatColor(count: number): string {
-  if (count === 0) return '#0D1926'
-  if (count <= 2) return '#1E3A6E'
-  if (count <= 5) return '#2563EB'
-  return '#3B82F6'
+  if (count === 0) return '#1C1830'
+  if (count <= 2) return '#3B1F72'
+  if (count <= 5) return '#6B21A8'
+  return '#9333EA'
 }
 
 function buildWeeks(activityByDate: { date: string; count: number }[]) {
@@ -22,7 +22,7 @@ function buildWeeks(activityByDate: { date: string; count: number }[]) {
   const today = new Date()
   const start = new Date(today)
   start.setDate(today.getDate() - 181)
-  start.setDate(start.getDate() - start.getDay()) // align to Sunday
+  start.setDate(start.getDate() - start.getDay())
 
   const weeks: { date: string; count: number; future: boolean }[][] = []
   const cur = new Date(start)
@@ -105,22 +105,22 @@ export function StatsTab({ allSeries }: Props) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div
-        className="shrink-0 bg-[#0A0A0A] px-4 pb-3"
+        className="shrink-0 bg-[#0C0A14] px-4 pb-3"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="flex items-center gap-2">
           <TVFreakIcon size={22} />
-          <h1 className="text-lg font-bold text-white">Stats</h1>
+          <h1 className="text-lg font-bold text-[#F0ECFF]">Stats</h1>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8 min-h-0">
         {loading ? (
           <div className="flex items-center justify-center h-40">
-            <Loader2 className="w-6 h-6 text-white/20 animate-spin" />
+            <Loader2 className="w-6 h-6 text-[#4A3F6E] animate-spin" />
           </div>
         ) : (
-          <div className="space-y-5 pt-1">
+          <div className="space-y-4 pt-1">
 
             {/* Big numbers */}
             <div className="grid grid-cols-3 gap-3">
@@ -129,9 +129,9 @@ export function StatsTab({ allSeries }: Props) {
                 { value: `${totalHours.toLocaleString()}h`, label: 'Watched' },
                 { value: activeDays.toString(), label: 'Active days' },
               ].map(({ value, label }) => (
-                <div key={label} className="bg-[#141414] rounded-2xl p-3.5 text-center border border-white/5">
-                  <p className="text-xl font-bold text-white tabular-nums">{value}</p>
-                  <p className="text-[10px] text-white/30 mt-0.5 uppercase tracking-wider">{label}</p>
+                <div key={label} className="bg-[#13101E] rounded-2xl p-3.5 text-center border border-[rgba(167,139,250,0.07)]">
+                  <p className="text-xl font-bold text-[#F0ECFF] tabular-nums">{value}</p>
+                  <p className="text-[10px] text-[#4A3F6E] mt-0.5 uppercase tracking-wider">{label}</p>
                 </div>
               ))}
             </div>
@@ -142,24 +142,28 @@ export function StatsTab({ allSeries }: Props) {
                 { value: streak.current, label: 'Current streak', unit: streak.current === 1 ? 'day' : 'days' },
                 { value: streak.longest, label: 'Longest streak', unit: streak.longest === 1 ? 'day' : 'days' },
               ].map(({ value, label, unit }) => (
-                <div key={label} className="bg-[#141414] rounded-2xl p-3.5 border border-white/5">
-                  <p className="text-xl font-bold text-[#3B82F6] tabular-nums">{value} <span className="text-sm font-normal text-white/40">{unit}</span></p>
-                  <p className="text-[10px] text-white/30 mt-0.5 uppercase tracking-wider">{label}</p>
+                <div key={label} className="bg-[#13101E] rounded-2xl p-3.5 border border-[rgba(167,139,250,0.07)]">
+                  <p className="text-xl font-bold text-[#B39DFF] tabular-nums">
+                    {value} <span className="text-sm font-normal text-[#4A3F6E]">{unit}</span>
+                  </p>
+                  <p className="text-[10px] text-[#4A3F6E] mt-0.5 uppercase tracking-wider">{label}</p>
                 </div>
               ))}
             </div>
 
             {/* Library breakdown */}
-            <div className="bg-[#141414] rounded-2xl p-4 border border-white/5">
-              <p className="text-xs text-white/30 uppercase tracking-wider font-medium mb-3">Library · {allSeries.length} series</p>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="bg-[#13101E] rounded-2xl p-4 border border-[rgba(167,139,250,0.07)]">
+              <p className="text-[10px] text-[#4A3F6E] uppercase tracking-wider font-semibold mb-3">
+                Library · {allSeries.length} series
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
                 {(Object.entries(byStatus) as [keyof typeof byStatus, number][]).map(([status, count]) => {
                   const cfg = STATUS_CONFIG[status]
                   return (
                     <div key={status} className="flex items-center gap-2.5">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cfg.color }} />
-                      <span className="text-sm text-white/70 flex-1">{cfg.label}</span>
-                      <span className="text-sm font-semibold text-white tabular-nums">{count}</span>
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cfg.color }} />
+                      <span className="text-sm text-[#9B8EC4] flex-1">{cfg.label}</span>
+                      <span className="text-sm font-semibold text-[#F0ECFF] tabular-nums">{count}</span>
                     </div>
                   )
                 })}
@@ -168,8 +172,10 @@ export function StatsTab({ allSeries }: Props) {
 
             {/* Activity heatmap */}
             {weeks.length > 0 && (
-              <div className="bg-[#141414] rounded-2xl p-4 border border-white/5">
-                <p className="text-xs text-white/30 uppercase tracking-wider font-medium mb-3">Activity · last 6 months</p>
+              <div className="bg-[#13101E] rounded-2xl p-4 border border-[rgba(167,139,250,0.07)]">
+                <p className="text-[10px] text-[#4A3F6E] uppercase tracking-wider font-semibold mb-3">
+                  Activity · last 6 months
+                </p>
                 <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
                   <div style={{ minWidth: `${weeks.length * 12}px` }}>
                     {/* Month labels */}
@@ -179,7 +185,7 @@ export function StatsTab({ allSeries }: Props) {
                         return (
                           <div key={i} style={{ width: 10, flexShrink: 0 }}>
                             {label && (
-                              <span className="text-[8px] text-white/25 whitespace-nowrap">{label.label}</span>
+                              <span className="text-[8px] text-[#4A3F6E] whitespace-nowrap">{label.label}</span>
                             )}
                           </div>
                         )
@@ -208,19 +214,19 @@ export function StatsTab({ allSeries }: Props) {
                 </div>
                 {/* Legend */}
                 <div className="flex items-center gap-1.5 mt-3 justify-end">
-                  <span className="text-[9px] text-white/20">Less</span>
-                  {['#0D1926', '#1E3A6E', '#2563EB', '#3B82F6'].map(c => (
+                  <span className="text-[9px] text-[#4A3F6E]">Less</span>
+                  {['#1C1830', '#3B1F72', '#6B21A8', '#9333EA'].map(c => (
                     <div key={c} style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: c }} />
                   ))}
-                  <span className="text-[9px] text-white/20">More</span>
+                  <span className="text-[9px] text-[#4A3F6E]">More</span>
                 </div>
               </div>
             )}
 
             {/* Top shows */}
             {stats && stats.topSeries.length > 0 && (
-              <div className="bg-[#141414] rounded-2xl p-4 border border-white/5">
-                <p className="text-xs text-white/30 uppercase tracking-wider font-medium mb-3">Most watched</p>
+              <div className="bg-[#13101E] rounded-2xl p-4 border border-[rgba(167,139,250,0.07)]">
+                <p className="text-[10px] text-[#4A3F6E] uppercase tracking-wider font-semibold mb-3">Most watched</p>
                 <div className="space-y-3">
                   {stats.topSeries.map((s, i) => {
                     const pct = stats.topSeries[0].episodeCount > 0
@@ -228,18 +234,18 @@ export function StatsTab({ allSeries }: Props) {
                       : 0
                     return (
                       <div key={s.seriesId}>
-                        <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xs text-white/20 tabular-nums w-4 shrink-0">{i + 1}</span>
-                            <span className="text-sm text-white/80 truncate">{s.title}</span>
+                            <span className="text-xs text-[#251E3A] tabular-nums w-4 shrink-0">{i + 1}</span>
+                            <span className="text-sm text-[#F0ECFF] truncate">{s.title}</span>
                           </div>
-                          <span className="text-xs text-white/40 tabular-nums shrink-0 ml-2">
+                          <span className="text-xs text-[#4A3F6E] tabular-nums shrink-0 ml-2">
                             {s.episodeCount} ep{s.episodeCount !== 1 ? 's' : ''}
                           </span>
                         </div>
-                        <div className="h-[2px] bg-white/6 rounded-full overflow-hidden">
+                        <div className="h-[3px] bg-[rgba(167,139,250,0.08)] rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#3B82F6] rounded-full transition-all duration-500"
+                            className="h-full bg-[#7C3AED] rounded-full transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

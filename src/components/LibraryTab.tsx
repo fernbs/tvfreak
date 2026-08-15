@@ -50,27 +50,33 @@ export function LibraryTab({
 
   const filtered = sorted(filter === 'all' ? series : series.filter(s => s.status === filter))
 
+  const viewToggleClasses = (mode: string) =>
+    `p-1.5 rounded-md transition-colors ${viewMode === mode
+      ? 'bg-[rgba(124,58,237,0.15)] text-[#B39DFF]'
+      : 'text-[#4A3F6E] active:text-[#9B8EC4]'
+    }`
+
   return (
     <div className="flex flex-col h-full">
       {/* Sticky header */}
       <div
-        className="shrink-0 bg-[#060C16] px-4 pb-3 z-10"
+        className="shrink-0 bg-[#0C0A14] px-4 pb-3 z-10"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         {/* Title row */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <TVFreakIcon size={22} />
-            <h1 className="text-lg font-bold text-white">
+            <h1 className="text-lg font-bold text-[#F0ECFF]">
               Library
-              <span className="ml-2 text-sm font-normal text-white/30">{filtered.length}</span>
+              <span className="ml-2 text-sm font-normal text-[#4A3F6E]">{filtered.length}</span>
             </h1>
           </div>
           <div className="flex items-center gap-2">
             {duplicates.length > 0 && (
               <button
                 onClick={onShowDuplicates}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 active:bg-amber-500/20 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-500/8 text-amber-400/80 border border-amber-500/15 active:bg-amber-500/15 transition-colors"
               >
                 <GitMerge className="w-3.5 h-3.5" />
                 {duplicates.length}
@@ -79,7 +85,7 @@ export function LibraryTab({
             {!migrationDone && (
               <button
                 onClick={onShowMigration}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20 active:bg-[#3B82F6]/20 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[rgba(124,58,237,0.1)] text-[#B39DFF] border border-[rgba(124,58,237,0.2)] active:bg-[rgba(124,58,237,0.18)] transition-colors"
               >
                 <Wand2 className="w-3.5 h-3.5" />
                 Restore
@@ -88,46 +94,41 @@ export function LibraryTab({
           </div>
         </div>
 
-        {/* Controls row: sort + view toggle */}
+        {/* Controls row */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-white/25" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#4A3F6E]" />
             <select
               value={sort}
               onChange={e => setSort(e.target.value as SortKey)}
-              className="bg-transparent text-xs text-white/40 outline-none"
+              className="bg-transparent text-xs text-[#9B8EC4] outline-none"
             >
-              <option value="title" className="bg-[#152337]">A-Z</option>
-              <option value="added" className="bg-[#152337]">Added</option>
-              <option value="updated" className="bg-[#152337]">Updated</option>
-              <option value="nextEpisode" className="bg-[#152337]">Next episode</option>
+              <option value="title" className="bg-[#1C1830]">A-Z</option>
+              <option value="added" className="bg-[#1C1830]">Added</option>
+              <option value="updated" className="bg-[#1C1830]">Updated</option>
+              <option value="nextEpisode" className="bg-[#1C1830]">Next episode</option>
             </select>
           </div>
 
-          {/* View toggle */}
-          <div className="flex items-center gap-0.5 bg-white/6 rounded-lg p-0.5">
+          <div className="flex items-center gap-0.5 bg-[#13101E] border border-[rgba(167,139,250,0.07)] rounded-xl p-0.5">
             {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`p-1.5 rounded-md transition-colors ${viewMode === mode ? 'bg-white/12 text-white' : 'text-white/30'}`}
-              >
+              <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
                 <Icon className="w-3.5 h-3.5" />
               </button>
             ))}
           </div>
         </div>
 
-        {/* Filter chips */}
+        {/* Filter pills */}
         <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {FILTERS.map(f => (
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                 filter === f.value
-                  ? 'bg-[#3B82F6] text-white'
-                  : 'bg-white/6 text-white/45 active:bg-white/12'
+                  ? 'bg-[rgba(124,58,237,0.18)] text-[#B39DFF] border-[rgba(124,58,237,0.3)]'
+                  : 'bg-[#13101E] text-[#4A3F6E] border-[rgba(167,139,250,0.07)] active:border-[rgba(167,139,250,0.15)]'
               }`}
             >
               {f.label}

@@ -1,21 +1,36 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #060C16;
-  --color-surface: #0D1926;
-  --color-surface-elevated: #152337;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-accent: #3B82F6;
-  --color-accent-hover: #2563EB;
+  /* Backgrounds - violet-black luxe */
+  --color-bg: #0C0A14;
+  --color-surface: #13101E;
+  --color-surface-elevated: #1C1830;
+  --color-surface-hover: #251E3A;
 
+  /* Borders - violet-tinted */
+  --color-border: rgba(167, 139, 250, 0.08);
+  --color-border-strong: rgba(167, 139, 250, 0.18);
+
+  /* Accent - luminous violet */
+  --color-accent: #B39DFF;
+  --color-accent-fill: #7C3AED;
+  --color-accent-hover: #6D28D9;
+  --color-accent-subtle: rgba(124, 58, 237, 0.12);
+  --color-accent-glow: rgba(179, 157, 255, 0.25);
+
+  /* Gold - ratings, premium elements */
+  --color-gold: #F0C060;
+
+  /* Status */
   --color-watching: #38BDF8;
   --color-completed: #34D399;
   --color-dropped: #FB7185;
   --color-pending: #FBBF24;
 
-  --color-text-primary: #F5F5F5;
-  --color-text-secondary: #A0A0A0;
-  --color-text-muted: #525252;
+  /* Text - very slight violet tint */
+  --color-text-primary: #F0ECFF;
+  --color-text-secondary: #9B8EC4;
+  --color-text-muted: #4A3F6E;
 
   --font-sans: 'Inter', system-ui, sans-serif;
 }
@@ -25,7 +40,7 @@
 }
 
 html {
-  background-color: #060C16;
+  background-color: #0C0A14;
 }
 
 html, #root {
@@ -43,8 +58,8 @@ body {
   margin: 0;
   padding: 0;
   overscroll-behavior: none;
-  background-color: #060C16;
-  color: #F5F5F5;
+  background-color: #0C0A14;
+  color: #F0ECFF;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -73,11 +88,11 @@ body {
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(167, 139, 250, 0.12);
     border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(167, 139, 250, 0.22);
   }
 }
 

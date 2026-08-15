@@ -19,7 +19,7 @@ export function SeriesGrid({ series, loading, onSelect, viewMode = 'small' }: Pr
       return (
         <div className="space-y-2 pt-2">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="h-[72px] bg-white/4 rounded-xl animate-pulse" />
+            <div key={i} className="h-[72px] bg-[#13101E] rounded-xl animate-pulse border border-[rgba(167,139,250,0.06)]" />
           ))}
         </div>
       )
@@ -34,8 +34,8 @@ export function SeriesGrid({ series, loading, onSelect, viewMode = 'small' }: Pr
   if (series.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center">
-        <p className="text-white/40 text-lg font-medium">Nothing here yet</p>
-        <p className="text-white/25 text-sm mt-1">Use the search bar to add your first series</p>
+        <p className="text-[#9B8EC4] text-base font-medium">Nothing here yet</p>
+        <p className="text-[#4A3F6E] text-sm mt-1">Use the search tab to add your first series</p>
       </div>
     )
   }
@@ -52,13 +52,13 @@ export function SeriesGrid({ series, loading, onSelect, viewMode = 'small' }: Pr
             <button
               key={s.id ?? s.tmdbId}
               onClick={() => onSelect(s)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 bg-[#0D1926] rounded-xl border border-white/5 active:bg-white/5 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-3 py-2.5 bg-[#13101E] rounded-xl border border-[rgba(167,139,250,0.07)] active:bg-[#1C1830] transition-colors text-left"
             >
               {/* Status bar */}
               <div className="w-[3px] self-stretch rounded-full shrink-0" style={{ backgroundColor: config.color }} />
 
               {/* Poster */}
-              <div className="w-9 h-[52px] rounded-lg overflow-hidden bg-[#152337] shrink-0">
+              <div className="w-9 h-[52px] rounded-lg overflow-hidden bg-[#1C1830] shrink-0">
                 {poster && (
                   <img src={poster} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                 )}
@@ -66,28 +66,28 @@ export function SeriesGrid({ series, loading, onSelect, viewMode = 'small' }: Pr
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{s.title}</p>
+                <p className="text-sm font-medium text-[#F0ECFF] truncate">{s.title}</p>
                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                   <span
                     className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0"
-                    style={{ backgroundColor: config.color + '33', color: config.color }}
+                    style={{ backgroundColor: config.color + '25', color: config.color }}
                   >
                     {config.label}
                   </span>
                   {hasUpcoming && s.nextEpisodeDate && (
-                    <span className="text-[10px] text-white/30 truncate">
+                    <span className="text-[10px] text-[#4A3F6E] truncate">
                       {formatAirDate(s.nextEpisodeDate)}
                     </span>
                   )}
                   {!hasUpcoming && s.status === 'plantowatch' && !s.nextEpisodeDate && (
-                    <span className="text-[10px] text-white/20">TBA</span>
+                    <span className="text-[10px] text-[#4A3F6E]">TBA</span>
                   )}
                 </div>
               </div>
 
               {/* Rating */}
               {s.imdbRating && (
-                <span className="text-xs text-yellow-400 shrink-0">★ {s.imdbRating}</span>
+                <span className="text-xs text-[#F0C060] shrink-0">★ {s.imdbRating}</span>
               )}
             </button>
           )

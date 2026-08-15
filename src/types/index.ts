@@ -91,25 +91,25 @@ export const STATUS_CONFIG: Record<SeriesStatus, {
   watching: {
     label: 'Watching',
     color: '#38BDF8',
-    bgClass: 'bg-sky-400/15',
-    textClass: 'text-sky-400',
+    bgClass: 'bg-sky-400/12',
+    textClass: 'text-sky-300',
   },
   completed: {
     label: 'Completed',
     color: '#34D399',
-    bgClass: 'bg-emerald-400/15',
-    textClass: 'text-emerald-400',
+    bgClass: 'bg-emerald-400/12',
+    textClass: 'text-emerald-300',
   },
   dropped: {
     label: 'Dropped',
     color: '#FB7185',
-    bgClass: 'bg-rose-400/15',
-    textClass: 'text-rose-400',
+    bgClass: 'bg-rose-400/12',
+    textClass: 'text-rose-300',
   },
   plantowatch: {
     label: 'Pending',
     color: '#FBBF24',
-    bgClass: 'bg-amber-400/15',
-    textClass: 'text-amber-400',
+    bgClass: 'bg-amber-400/12',
+    textClass: 'text-amber-300',
   },
 }
