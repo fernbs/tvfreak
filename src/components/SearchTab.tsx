@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown, BookmarkCheck } from 'lucide-react'
+import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown } from 'lucide-react'
 import { TVFreakIcon } from './TVFreakIcon'
 import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE, searchMovie, getTrendingMovies, discoverMovies, getMovieStreamingProviders } from '../lib/tmdb'
 import { addSeries, addMovie } from '../lib/api'
@@ -70,6 +70,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   const [hideInLibrary, setHideInLibrary] = useState(false)
   const [newItemIds, setNewItemIds] = useState<Set<number>>(new Set())
   const [mediaMode, setMediaMode] = useState<'tv' | 'movie'>('tv')
+  const [showPlatformPicker, setShowPlatformPicker] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -409,149 +410,155 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   return (
     <div className="flex flex-col h-full bg-black">
 
-      {/* Sticky header */}
-      <div
-        className="shrink-0 bg-black px-4 pb-3 z-10"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
-      >
-        {/* Top row: icon + title + hide-library pill + view toggle */}
-        <div className="flex items-center gap-2 mb-3">
-          <TVFreakIcon size={24} />
-          <h1 className="text-xl font-bold text-[#F5F5F7] flex-1">Search</h1>
+      {/* Sticky header — 2 rows */}
+      <div className="shrink-0 bg-black z-10">
+
+        {/* Row 1: Icon + TV/Films + Search */}
+        <div
+          className="flex items-center gap-2 px-4 pb-2"
+          style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
+        >
+          <TVFreakIcon size={22} className="shrink-0" />
+          {/* TV / Films segment */}
+          <div className="flex bg-[#1C1C1E] rounded-lg p-0.5 shrink-0">
+            {(['tv', 'movie'] as const).map(mode => (
+              <button
+                key={mode}
+                onClick={() => switchMediaMode(mode)}
+                className={`px-3 py-[5px] rounded-[6px] text-[11px] font-semibold transition-colors ${
+                  mediaMode === mode ? 'bg-[#2C2C2E] text-[#F5F5F7]' : 'text-[#48484A]'
+                }`}
+              >
+                {mode === 'tv' ? 'TV' : 'Films'}
+              </button>
+            ))}
+          </div>
+          {/* Search input */}
+          <div className="flex-1 flex items-center bg-[#1C1C1E] rounded-xl border border-white/8 focus-within:border-white/20 transition-colors pl-3 pr-2 gap-2" style={{ minHeight: 38 }}>
+            {searching && query.trim() ? (
+              <Loader2 className="w-4 h-4 text-[#48484A] shrink-0 animate-spin" />
+            ) : (
+              <Search className="w-4 h-4 text-[#48484A] shrink-0" />
+            )}
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={mediaMode === 'tv' ? 'Search TV shows...' : 'Search films...'}
+              style={{ fontSize: 15 }}
+              className="flex-1 bg-transparent text-[#F5F5F7] placeholder:text-[#48484A] outline-none py-2 min-w-0"
+            />
+            {query && (
+              <button onClick={() => setQuery('')} className="shrink-0 p-1">
+                <X className="w-3.5 h-3.5 text-[#48484A]" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2: Filters */}
+        <div className="flex items-center gap-1.5 px-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+
+          {/* Genre select */}
+          <div className="relative shrink-0">
+            <select
+              value={includedGenres[0]?.toString() ?? ''}
+              onChange={e => {
+                const val = e.target.value
+                setIncludedGenres(val ? [parseInt(val)] : [])
+                setExcludedGenres([])
+              }}
+              style={{ fontSize: 13 }}
+              className={`appearance-none bg-[#1C1C1E] border rounded-lg pl-2.5 pr-6 py-[7px] text-[12px] font-medium outline-none transition-colors ${
+                includedGenres.length > 0
+                  ? 'border-[rgba(255,159,10,0.5)] text-[#FF9F0A]'
+                  : 'border-white/8 text-[#8E8E93]'
+              }`}
+            >
+              <option value="" className="bg-[#111111]">Genre</option>
+              {genres.map(g => (
+                <option key={g.id} value={String(g.id)} className="bg-[#111111] text-[#F5F5F7]">{g.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#48484A] pointer-events-none" />
+          </div>
+
+          {/* Platforms button — opens bottom sheet */}
+          {availableProviders.length > 0 && (
+            <button
+              onClick={() => setShowPlatformPicker(true)}
+              className={`shrink-0 flex items-center gap-1.5 border rounded-lg px-2.5 py-[7px] text-[12px] font-medium transition-colors ${
+                selectedProviders.length > 0
+                  ? 'bg-[#1C1C1E] border-[rgba(255,159,10,0.5)] text-[#FF9F0A]'
+                  : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
+              }`}
+            >
+              {selectedProviders.length > 0 ? (
+                <>
+                  {sortedProviders.filter(p => selectedProviders.includes(p.provider_id)).slice(0, 3).map(p => (
+                    <img key={p.provider_id} src={`${IMG_BASE}/w45${p.logo_path}`} alt="" className="w-4 h-4 rounded object-cover" />
+                  ))}
+                  {selectedProviders.length > 3 && <span>+{selectedProviders.length - 3}</span>}
+                </>
+              ) : 'Platforms'}
+              <ChevronDown className="w-3 h-3 shrink-0 text-[#48484A]" />
+            </button>
+          )}
+
+          {/* Sort */}
+          <div className="relative shrink-0">
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              style={{ fontSize: 13 }}
+              className="appearance-none bg-[#1C1C1E] border border-white/8 rounded-lg pl-2.5 pr-6 py-[7px] text-[12px] font-medium text-[#8E8E93] outline-none"
+            >
+              <option value="vote_average.desc" className="bg-[#111111]">Top Rated</option>
+              <option value="popularity.desc" className="bg-[#111111]">Popular</option>
+              <option value="first_air_date.desc" className="bg-[#111111]">Newest</option>
+              <option value="first_air_date.asc" className="bg-[#111111]">Oldest</option>
+            </select>
+            <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#48484A] pointer-events-none" />
+          </div>
+
+          {/* Year */}
+          <div className="relative shrink-0">
+            <select
+              value={yearFilter}
+              onChange={e => setYearFilter(e.target.value)}
+              style={{ fontSize: 13 }}
+              className={`appearance-none bg-[#1C1C1E] border rounded-lg pl-2.5 pr-6 py-[7px] text-[12px] font-medium outline-none transition-colors ${
+                yearFilter ? 'border-[rgba(255,159,10,0.5)] text-[#FF9F0A]' : 'border-white/8 text-[#8E8E93]'
+              }`}
+            >
+              <option value="" className="bg-[#111111]">Year</option>
+              {Array.from({ length: 2027 - 1950 + 1 }, (_, i) => 2027 - i).map(y => (
+                <option key={y} value={String(y)} className="bg-[#111111]">{y}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#48484A] pointer-events-none" />
+          </div>
+
+          {/* New only */}
           <button
             onClick={() => setHideInLibrary(prev => !prev)}
-            title={hideInLibrary ? 'Showing new only — tap to show all' : 'Hide series already in your library'}
-            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
+            className={`shrink-0 border rounded-lg px-2.5 py-[7px] text-[12px] font-medium transition-colors ${
               hideInLibrary
-                ? 'bg-[rgba(255,159,10,0.15)] border-[rgba(255,159,10,0.3)] text-[#FF9F0A]'
-                : 'bg-[#1C1C1E] border-white/8 text-[#48484A]'
+                ? 'bg-[rgba(255,159,10,0.12)] border-[rgba(255,159,10,0.35)] text-[#FF9F0A]'
+                : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
             }`}
           >
-            New only
+            New
           </button>
-          <div className="flex items-center gap-0.5 bg-white/5 rounded-xl p-0.5">
+
+          {/* View toggle */}
+          <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5 ml-auto shrink-0">
             {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
               <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
                 <Icon className="w-3.5 h-3.5" />
               </button>
             ))}
           </div>
-        </div>
-
-        {/* TV Shows / Films toggle */}
-        <div className="flex bg-[#1C1C1E] rounded-[10px] p-0.5 mb-3">
-          {(['tv', 'movie'] as const).map(mode => (
-            <button
-              key={mode}
-              onClick={() => switchMediaMode(mode)}
-              className={`flex-1 py-1.5 rounded-[8px] text-xs font-semibold transition-colors ${
-                mediaMode === mode ? 'bg-[#2C2C2E] text-[#F5F5F7]' : 'text-[#48484A]'
-              }`}
-            >
-              {mode === 'tv' ? 'TV Shows' : 'Films'}
-            </button>
-          ))}
-        </div>
-
-        {/* Search bar — hero element */}
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#1C1C1E] border border-white/8 focus-within:border-white/20 transition-colors mb-3">
-          {searching && query.trim() ? (
-            <Loader2 className="w-5 h-5 text-[#48484A] shrink-0 animate-spin" />
-          ) : (
-            <Search className="w-5 h-5 text-[#48484A] shrink-0" />
-          )}
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search TMDB for a series..."
-            style={{ fontSize: 16 }}
-            className="flex-1 bg-transparent text-[#F5F5F7] placeholder:text-[#48484A] outline-none"
-          />
-          {query && (
-            <button onClick={() => setQuery('')} className="shrink-0">
-              <X className="w-4 h-4 text-[#48484A]" />
-            </button>
-          )}
-        </div>
-
-        {/* Genre chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          {genres.map(g => {
-            const isIncluded = includedGenres.includes(g.id)
-            const isExcluded = excludedGenres.includes(g.id)
-            return (
-              <button
-                key={g.id}
-                onClick={() => toggleGenre(g.id)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                  isIncluded
-                    ? 'bg-[#FF9F0A] text-black'
-                    : isExcluded
-                      ? 'bg-rose-500/15 text-rose-400'
-                      : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
-                }`}
-              >
-                {isExcluded ? '× ' : ''}{g.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Platform provider icons — circular, icon-only */}
-        {availableProviders.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pt-2.5 pb-1" style={{ scrollbarWidth: 'none' }}>
-            {sortedProviders.map(p => {
-              const isSelected = selectedProviders.includes(p.provider_id)
-              return (
-                <button
-                  key={p.provider_id}
-                  onClick={() => toggleProvider(p.provider_id)}
-                  title={p.provider_name}
-                  className={`shrink-0 w-8 h-8 rounded-xl overflow-hidden border-2 transition-all ${
-                    isSelected
-                      ? 'border-[#FF9F0A] opacity-100'
-                      : 'border-transparent opacity-40'
-                  }`}
-                >
-                  <img
-                    src={`${IMG_BASE}/w45${p.logo_path}`}
-                    alt={p.provider_name}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              )
-            })}
-          </div>
-        )}
-
-        {/* Sort + year controls */}
-        <div className="flex items-center gap-2 mt-2.5">
-          <div className="relative flex-1">
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              style={{ fontSize: 16 }}
-              className="w-full bg-[#1C1C1E] border border-white/8 rounded-xl px-3 pr-7 py-1.5 text-xs text-[#8E8E93] outline-none appearance-none"
-            >
-              <option value="vote_average.desc">Top Rated</option>
-              <option value="popularity.desc">Most Popular</option>
-              <option value="first_air_date.desc">Newest First</option>
-              <option value="first_air_date.asc">Oldest First</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#48484A] pointer-events-none" />
-          </div>
-          <select
-            value={yearFilter}
-            onChange={e => setYearFilter(e.target.value)}
-            style={{ fontSize: 16 }}
-            className="w-24 bg-[#1C1C1E] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-[#8E8E93] outline-none appearance-none"
-          >
-            <option value="">Any year</option>
-            {Array.from({ length: 2027 - 1950 + 1 }, (_, i) => 2027 - i).map(y => (
-              <option key={y} value={String(y)}>{y}</option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -576,7 +583,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                     className="shrink-0 w-[88px] text-left active:opacity-70 transition-opacity"
                     style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
                   >
-                    <div className="w-[88px] aspect-[2/3] rounded-2xl overflow-hidden bg-[#1C1C1E] relative mb-1.5">
+                    <div className="w-[88px] aspect-[2/3] rounded-2xl overflow-hidden bg-[#1C1C1E] relative">
                       {r.poster_path ? (
                         <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
@@ -604,7 +611,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                         </button>
                       )}
                     </div>
-                    <p className="text-[10px] text-[#8E8E93] leading-tight line-clamp-2">{r.name}</p>
                   </button>
                 )
               })}
@@ -698,6 +704,64 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
           </div>
         )}
       </div>
+
+      {/* Platform picker — bottom sheet */}
+      {showPlatformPicker && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setShowPlatformPicker(false)} />
+          <div
+            className="fixed left-0 right-0 bottom-0 z-40 bg-[#1C1C1E] rounded-t-2xl shadow-2xl border-t border-white/8"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+          >
+            <div className="flex items-center justify-between px-4 pt-4 pb-3">
+              <span className="text-sm font-semibold text-[#F5F5F7]">Platforms</span>
+              <div className="flex items-center gap-3">
+                {selectedProviders.length > 0 && (
+                  <button
+                    onClick={() => setSelectedProviders([])}
+                    className="text-xs text-[#FF9F0A] font-medium"
+                  >
+                    Clear all
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowPlatformPicker(false)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/8"
+                >
+                  <X className="w-3.5 h-3.5 text-[#8E8E93]" />
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3 px-4 pb-4">
+              {sortedProviders.map(p => {
+                const isSelected = selectedProviders.includes(p.provider_id)
+                return (
+                  <button
+                    key={p.provider_id}
+                    onClick={() => toggleProvider(p.provider_id)}
+                    className="flex flex-col items-center gap-1 transition-all active:opacity-70"
+                  >
+                    <div className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all ${
+                      isSelected ? 'border-[#FF9F0A]' : 'border-transparent opacity-40'
+                    }`}>
+                      <img
+                        src={`${IMG_BASE}/w92${p.logo_path}`}
+                        alt={p.provider_name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className={`text-[9px] text-center leading-tight max-w-[52px] truncate ${
+                      isSelected ? 'text-[#FF9F0A]' : 'text-[#48484A]'
+                    }`}>
+                      {p.provider_name}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
