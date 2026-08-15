@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown } from 'lucide-react'
+import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown, BookmarkCheck } from 'lucide-react'
 import { TVFreakIcon } from './TVFreakIcon'
 import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { addSeries } from '../lib/api'
@@ -46,6 +46,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const [trendingTotalPages, setTrendingTotalPages] = useState(1)
   const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
   const [selectedProviders, setSelectedProviders] = useState<number[]>([])
+  const [hideInLibrary, setHideInLibrary] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -203,6 +204,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const noProviderFilter = selectedProviders.length === 0
   const showTrending = noQuery && noGenreFilter && noProviderFilter
   const displayResults = applySort(showTrending ? trending : results)
+  const visibleResults = hideInLibrary ? displayResults.filter(r => !libraryIds.has(r.id)) : displayResults
   const isLoading = showTrending ? loadingTrending : searching
   const hasMore = showTrending ? trendingPage < trendingTotalPages : currentPage < totalPages
 
@@ -368,6 +370,17 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
               <option key={y} value={String(y)}>{y}</option>
             ))}
           </select>
+          <button
+            onClick={() => setHideInLibrary(prev => !prev)}
+            title={hideInLibrary ? 'Showing new only — tap to show all' : 'Tap to hide series already in your library'}
+            className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-xl border transition-colors ${
+              hideInLibrary
+                ? 'bg-[#6366F1]/15 border-[#6366F1]/40 text-[#6366F1]'
+                : 'bg-white/5 border-white/8 text-white/30 active:bg-white/10'
+            }`}
+          >
+            <BookmarkCheck className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -381,7 +394,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           </div>
         )}
 
-        {displayResults.length === 0 && !isLoading ? (
+        {visibleResults.length === 0 && !isLoading ? (
           query.trim() ? (
             <div className="flex flex-col items-center justify-center h-40 text-center px-6">
               <p className="text-sm text-white/25">No results for "{query}"</p>
@@ -389,7 +402,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           ) : null
         ) : viewMode === 'list' ? (
           <div className="pb-6">
-            {displayResults.map(r => (
+            {visibleResults.map(r => (
               <div key={r.id} className="flex items-center gap-3 px-4 border-b border-white/4">
                 <button
                   onClick={() => onSelect(seriesForPreview(r))}
@@ -428,7 +441,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           </div>
         ) : (
           <div className={`px-4 pt-2 pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
-            {displayResults.map(r => {
+            {visibleResults.map(r => {
               const inLibrary = libraryIds.has(r.id)
               return (
                 <button
