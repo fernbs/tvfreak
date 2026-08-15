@@ -24,6 +24,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   const [loadingMoreRecs, setLoadingMoreRecs] = useState(false)
   const [hasMoreRecs, setHasMoreRecs] = useState(false)
   const [localImdbRating, setLocalImdbRating] = useState<string | null>(null)
+  const [imdbId, setImdbId] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [moreModal, setMoreModal] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -38,6 +39,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
       setMoreModal(false)
       setRecommendations([])
       setLocalImdbRating(null)
+      setImdbId(null)
       return
     }
     setNotes(series.notes ?? '')
@@ -45,6 +47,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     setRecsPage(1)
     setHasMoreRecs(false)
     setLocalImdbRating(null)
+    setImdbId(null)
     if (!series.tmdbId) return
 
     setLoadingDetail(true)
@@ -58,9 +61,10 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
         updates.nextEpisodeDate = null
         updates.nextEpisodeName = null
       }
-      if (!series.imdbRating) {
-        const ext = await getExternalIds(series.tmdbId!)
-        if (ext.imdb_id) {
+      const ext = await getExternalIds(series.tmdbId!)
+      if (ext.imdb_id) {
+        setImdbId(ext.imdb_id)
+        if (!series.imdbRating) {
           const rating = await getImdbRating(ext.imdb_id)
           if (rating) {
             if (series.id) updates.imdbRating = rating
@@ -334,10 +338,16 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     {(detail?.number_of_seasons ?? series.numberOfSeasons) ? ` · ${detail?.number_of_seasons ?? series.numberOfSeasons} season${(detail?.number_of_seasons ?? series.numberOfSeasons) === 1 ? '' : 's'}` : ''}
                   </p>
                   {displayImdbRating && (
-                    <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
+                    <a
+                      href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => { if (!imdbId) e.preventDefault() }}
+                      className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full active:opacity-70 transition-opacity"
+                    >
                       <span className="text-yellow-400 text-xs">★</span>
                       <span className="text-xs text-yellow-400 font-medium">{displayImdbRating}</span>
-                    </div>
+                    </a>
                   )}
 
                   {/* Genre chips */}

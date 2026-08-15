@@ -31,27 +31,33 @@ export default function App() {
   const [showMigration, setShowMigration] = useState(false)
   const [migrationDone, setMigrationDone] = useState(() => localStorage.getItem(MIGRATION_KEY) === 'true')
 
-  // iOS PWA: env(safe-area-inset-bottom) is 0 on first CSS parse and only
-  // resolves after a rotation triggers a reflow. Poll via rAF until the probe
-  // element reports a real height, then write it to --sab so the nav uses it.
+  // iOS PWA: env(safe-area-inset-bottom) is 0 on cold open and only corrects
+  // after an orientation change triggers a full CSS reflow. Apply any previously
+  // stored value immediately, then capture and persist the real value on the
+  // first rotation so all subsequent loads are gap-free from the start.
   useEffect(() => {
+    const KEY = 'tvfreak-sab'
+    const stored = localStorage.getItem(KEY)
+    if (stored) document.documentElement.style.setProperty('--sab', stored)
+
     const probe = document.createElement('div')
     probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none'
     document.documentElement.appendChild(probe)
-    let rafId: number
-    let tries = 0
-    const tick = () => {
-      const h = probe.offsetHeight
-      if (h > 0 || tries++ > 30) {
-        document.documentElement.style.setProperty('--sab', h + 'px')
-        document.documentElement.removeChild(probe)
-      } else {
-        rafId = requestAnimationFrame(tick)
-      }
+
+    const capture = () => {
+      setTimeout(() => {
+        const h = probe.offsetHeight
+        if (h > 0) {
+          const val = h + 'px'
+          document.documentElement.style.setProperty('--sab', val)
+          localStorage.setItem(KEY, val)
+        }
+      }, 150)
     }
-    rafId = requestAnimationFrame(tick)
+
+    window.addEventListener('orientationchange', capture)
     return () => {
-      cancelAnimationFrame(rafId)
+      window.removeEventListener('orientationchange', capture)
       if (probe.parentNode) probe.parentNode.removeChild(probe)
     }
   }, [])
