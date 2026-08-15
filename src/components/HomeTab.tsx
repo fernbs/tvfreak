@@ -134,7 +134,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   }
 
   // Items for the selected date, or all upcoming for the current calendar month only
-  const calMonthPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`
+  const calMonthPrefix = `${calMonth.getFullYear()}-${String(calMonth.getMonth() + 1).padStart(2, '0')}-`
   const listItems: UpcomingItem[] = selectedDate
     ? (episodeMap.get(selectedDate) ?? []).map(s => ({ date: selectedDate, series: s }))
     : allUpcoming.filter(({ date }) => date.startsWith(calMonthPrefix))
