@@ -17,35 +17,64 @@ const tabs = [
 
 const SAB_KEY = 'tvfreak-sab'
 
-function readSab(): number {
-  // Stored value from a previous orientation-change capture (most accurate)
+// Runs once at module-load time, before React mounts.
+// This is the only timing that's guaranteed to precede the very first paint.
+const INITIAL_SAB: number = (() => {
+  // 1. Stored value from a previous successful capture — most accurate.
+  //    Skip if it parses to 0 or less; fall through to live detection.
   const stored = localStorage.getItem(SAB_KEY)
-  if (stored) return Math.max(0, parseInt(stored, 10) || 0)
-  // iOS PWA cold-open: env() returns 0, so probe is useless at this point.
-  // All home-indicator iPhones (X and newer) have screen height >= 812px.
+  if (stored) {
+    const v = parseInt(stored, 10)
+    if (v > 0) return v
+  }
+
+  // 2. Try reading env() via a transient probe element.
+  //    Works immediately in Safari (env() always resolves there).
+  //    In iOS PWA cold-open, env() returns 0 — handled by step 3.
+  try {
+    const el = document.createElement('div')
+    el.style.cssText =
+      'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden'
+    document.documentElement.appendChild(el)
+    const v = parseInt(getComputedStyle(el).paddingBottom, 10) || 0
+    document.documentElement.removeChild(el)
+    if (v > 0) {
+      localStorage.setItem(SAB_KEY, String(v))
+      return v
+    }
+  } catch (_) { /* document not ready or env() unavailable */ }
+
+  // 3. iOS PWA cold-open: env() returns 0 before the first orientation change.
+  //    All home-indicator iPhones (X and newer) have a logical height >= 812 px.
+  //    Older iPhones with a home button are <= 736 px and need no safe area.
   if ((navigator as Navigator & { standalone?: boolean }).standalone === true) {
     if (Math.max(screen.width, screen.height) >= 812) return 34
   }
+
   return 0
-}
+})()
 
 export function BottomNav({ active, onChange }: Props) {
-  // useState initializer runs synchronously during the first render (before paint),
-  // unlike useEffect which runs after. No gap on first frame.
-  const [sab, setSab] = useState<number>(readSab)
+  const [sab, setSab] = useState(INITIAL_SAB)
 
   useEffect(() => {
+    // Keep a live probe to capture the real env() value whenever it resolves,
+    // and persist it so all future loads get the accurate reading.
     const probe = document.createElement('div')
-    probe.style.cssText = 'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none'
+    probe.style.cssText =
+      'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none'
     document.body.appendChild(probe)
 
     const capture = () => {
-      const val = Math.max(0, parseInt(getComputedStyle(probe).paddingBottom, 10) || 0)
-      if (val > 0) {
-        setSab(val)
-        localStorage.setItem(SAB_KEY, String(val))
+      const v = parseInt(getComputedStyle(probe).paddingBottom, 10) || 0
+      if (v > 0) {
+        setSab(v)
+        localStorage.setItem(SAB_KEY, String(v))
       }
     }
+
+    // Short-interval retries in case env() resolves with a brief delay on some iOS builds.
+    const timers = [100, 300, 800].map(d => setTimeout(capture, d))
 
     const onOrientationChange = () => setTimeout(capture, 150)
     window.addEventListener('orientationchange', onOrientationChange)
@@ -54,6 +83,7 @@ export function BottomNav({ active, onChange }: Props) {
     if (vv) vv.addEventListener('resize', capture)
 
     return () => {
+      timers.forEach(clearTimeout)
       window.removeEventListener('orientationchange', onOrientationChange)
       if (vv) vv.removeEventListener('resize', capture)
       probe.parentNode?.removeChild(probe)
