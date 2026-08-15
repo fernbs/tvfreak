@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown } from 'lucide-react'
+import { TVFreakIcon } from './TVFreakIcon'
 import { searchTv, getTrending, getDiscoverByGenres, posterUrl } from '../lib/tmdb'
 import { addSeries } from '../lib/api'
 import type { TmdbSearchResult, Series } from '../types'
@@ -229,7 +230,10 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-lg font-bold text-white">Search</h1>
+          <div className="flex items-center gap-2">
+            <TVFreakIcon size={22} />
+            <h1 className="text-lg font-bold text-white">Search</h1>
+          </div>
           {/* View toggle */}
           <div className="flex items-center gap-0.5 bg-white/6 rounded-lg p-0.5">
             {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (

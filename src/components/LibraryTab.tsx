@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { SlidersHorizontal, GitMerge, Wand2, Grid2X2, Grid3X3, List } from 'lucide-react'
+import { TVFreakIcon } from './TVFreakIcon'
 import type { Series, SeriesStatus } from '../types'
 import type { DuplicateGroup } from '../lib/api'
 import { SeriesGrid } from './SeriesGrid'
@@ -58,10 +59,13 @@ export function LibraryTab({
       >
         {/* Title row */}
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-lg font-bold text-white">
-            Library
-            <span className="ml-2 text-sm font-normal text-white/30">{filtered.length}</span>
-          </h1>
+          <div className="flex items-center gap-2">
+            <TVFreakIcon size={22} />
+            <h1 className="text-lg font-bold text-white">
+              Library
+              <span className="ml-2 text-sm font-normal text-white/30">{filtered.length}</span>
+            </h1>
+          </div>
           <div className="flex items-center gap-2">
             {duplicates.length > 0 && (
               <button

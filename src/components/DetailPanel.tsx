@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MoreHorizontal, Loader2, Calendar, CheckCircle2, Plus } from 'lucide-react'
+import { X, MoreHorizontal, Loader2, Calendar, CheckCircle2, Plus, Share2 } from 'lucide-react'
 import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, getTvSimilar, getWatchProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getCountry } from '../lib/settings'
 import { updateSeries, deleteSeries, addSeries } from '../lib/api'
@@ -239,6 +239,16 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     onUpdated()
   }
 
+  async function handleShare() {
+    if (!series?.tmdbId) return
+    const url = `https://www.themoviedb.org/tv/${series.tmdbId}`
+    if (navigator.share) {
+      try { await navigator.share({ title: series.title, url }) } catch { /* dismissed */ }
+    } else {
+      try { await navigator.clipboard.writeText(url); toast.success('Link copied') } catch { toast.error('Could not copy link') }
+    }
+  }
+
   async function handleSomeEpisodesUnwatched() {
     if (!series?.id) return
     if (series.status !== 'completed' && series.status !== 'plantowatch') return
@@ -282,14 +292,24 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
               >
                 <X className="w-4 h-4 text-white/60" />
               </button>
-              {inLibrary && (
-                <button
-                  onClick={() => setMoreModal(true)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/8 text-white/30 hover:text-white/60 transition-colors"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-              )}
+              <div className="flex items-center gap-1">
+                {series?.tmdbId && (
+                  <button
+                    onClick={handleShare}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/8 text-white/30 hover:text-white/60 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                )}
+                {inLibrary && (
+                  <button
+                    onClick={() => setMoreModal(true)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/8 text-white/30 hover:text-white/60 transition-colors"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Scrollable content */}
