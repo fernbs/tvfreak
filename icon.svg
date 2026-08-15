@@ -1,10 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="112" fill="#0D0D0D"/>
-  <text
-    x="256" y="318"
-    font-family="-apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif"
-    font-size="256" font-weight="800"
-    fill="#F5F5F7" text-anchor="middle" letter-spacing="-16"
-  >tv</text>
-  <circle cx="374" cy="364" r="30" fill="#FF9F0A"/>
+  <rect x="51" y="102" width="410" height="298" rx="46" fill="#1A1A1A"/>
+  <rect x="51" y="102" width="410" height="298" rx="46" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+  <rect x="82" y="133" width="348" height="236" rx="30" fill="#070707"/>
+  <!-- Eye iris -->
+  <circle cx="204" cy="251" r="67" fill="#FF6B00"/>
+  <circle cx="204" cy="251" r="28" fill="#070707"/>
+  <circle cx="230" cy="225" r="13" fill="rgba(255,255,255,0.75)"/>
+  <!-- Lightning bolt -->
+  <path d="M348 143 L303 247 L334 247 L287 370" fill="none" stroke="#FF6B00" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Stand -->
+  <rect x="220" y="400" width="72" height="26" rx="13" fill="#1A1A1A"/>
+  <rect x="179" y="426" width="154" height="26" rx="13" fill="#1A1A1A"/>
 </svg>
