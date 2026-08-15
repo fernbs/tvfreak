@@ -34,7 +34,7 @@ export function SettingsModal({ onClose }: Props) {
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 32, stiffness: 320, mass: 0.9 }}
         className="fixed bottom-0 left-0 right-0 bg-[#141414] rounded-t-2xl z-50 border-t border-white/8"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+        style={{ paddingBottom: '1.5rem' }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
