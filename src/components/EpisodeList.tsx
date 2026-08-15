@@ -50,14 +50,14 @@ function Checkbox({
         disabled
           ? 'bg-transparent border-white/8 cursor-not-allowed opacity-40'
           : checked
-            ? 'bg-[#06B6D4] border-[#06B6D4] hover:bg-[#0891B2]'
+            ? 'bg-[#3B82F6] border-[#3B82F6] hover:bg-[#2563EB]'
             : indeterminate
-              ? 'bg-[#06B6D4]/20 border-[#06B6D4]/50 hover:border-[#06B6D4]/70'
-              : 'bg-transparent border-white/20 hover:border-[#06B6D4]/60 hover:bg-[#06B6D4]/8',
+              ? 'bg-[#3B82F6]/20 border-[#3B82F6]/50 hover:border-[#3B82F6]/70'
+              : 'bg-transparent border-white/20 hover:border-[#3B82F6]/60 hover:bg-[#3B82F6]/8',
       ].join(' ')}
     >
       {checked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-      {!checked && indeterminate && <Minus className="w-2.5 h-2.5 text-[#06B6D4]" strokeWidth={3} />}
+      {!checked && indeterminate && <Minus className="w-2.5 h-2.5 text-[#3B82F6]" strokeWidth={3} />}
     </button>
   )
 }
@@ -93,7 +93,7 @@ function SpecialsSection({ tmdbId, season }: { tmdbId: number; season: import('.
         </div>
       </button>
       {open && (
-        <div className="bg-[#0A0A0A] divide-y divide-white/3">
+        <div className="bg-[#060C16] divide-y divide-white/3">
           {loading ? (
             <div className="px-4 py-3 text-xs text-white/20">Loading specials...</div>
           ) : episodes.map(ep => (
@@ -355,7 +355,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
             <div key={sn} className="rounded-xl overflow-hidden border border-white/6">
               {/* Season header */}
               <div className={`flex items-center gap-2.5 px-3 py-2.5 transition-colors ${
-                isFuture ? 'bg-white/2' : allWatched ? 'bg-[#06B6D4]/8' : 'bg-white/4 hover:bg-white/6'
+                isFuture ? 'bg-white/2' : allWatched ? 'bg-[#3B82F6]/8' : 'bg-white/4 hover:bg-white/6'
               }`}>
                 {/* Checkbox or future indicator */}
                 <div onClick={e => e.stopPropagation()}>
@@ -409,7 +409,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
                       {!isFuture && (
                         <div className="h-[2px] bg-white/8 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#06B6D4] rounded-full transition-all duration-500"
+                            className="h-full bg-[#3B82F6] rounded-full transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -492,7 +492,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       {episodeModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEpisodeModal(null)} />
-          <div className="relative bg-[#1E1E1E] rounded-2xl p-5 max-w-sm w-full border border-white/8 shadow-2xl">
+          <div className="relative bg-[#152337] rounded-2xl p-5 max-w-sm w-full border border-white/8 shadow-2xl">
             <h3 className="text-sm font-semibold text-white mb-1.5">Mark previous episodes?</h3>
             <p className="text-sm text-white/50 mb-5 leading-relaxed">
               {episodeModal.previousEpisodes.length} episode{episodeModal.previousEpisodes.length !== 1 ? 's' : ''} before this one {episodeModal.previousEpisodes.length !== 1 ? "aren't" : "isn't"} marked as watched. Mark them too?
@@ -500,7 +500,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
             <div className="flex gap-2">
               <button
                 onClick={() => confirmEpisodeModal(true)}
-                className="flex-1 px-3 py-2.5 bg-[#06B6D4] hover:bg-[#0891B2] text-white text-sm font-medium rounded-xl transition-colors"
+                className="flex-1 px-3 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-medium rounded-xl transition-colors"
               >
                 Mark all
               </button>
@@ -519,7 +519,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       {seasonModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSeasonModal(null)} />
-          <div className="relative bg-[#1E1E1E] rounded-2xl p-5 max-w-sm w-full border border-white/8 shadow-2xl">
+          <div className="relative bg-[#152337] rounded-2xl p-5 max-w-sm w-full border border-white/8 shadow-2xl">
             <h3 className="text-sm font-semibold text-white mb-1.5">Mark previous seasons?</h3>
             <p className="text-sm text-white/50 mb-3 leading-relaxed">
               Before marking {seasonModal.targetSeason.name || `Season ${seasonModal.targetSeason.season_number}`}, do you want to mark these as watched too?
@@ -534,7 +534,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
             <div className="flex gap-2">
               <button
                 onClick={() => confirmSeasonModal(true)}
-                className="flex-1 px-3 py-2.5 bg-[#06B6D4] hover:bg-[#0891B2] text-white text-sm font-medium rounded-xl transition-colors"
+                className="flex-1 px-3 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-medium rounded-xl transition-colors"
               >
                 Mark all
               </button>

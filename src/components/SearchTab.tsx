@@ -293,7 +293,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       <button
         onClick={e => { e.stopPropagation(); handleAdd(r) }}
         disabled={addingId === r.id}
-        className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-[#06B6D4]/15 text-[#06B6D4] active:bg-[#06B6D4]/30 transition-colors disabled:opacity-50"
+        className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-[#3B82F6]/15 text-[#3B82F6] active:bg-[#3B82F6]/30 transition-colors disabled:opacity-50"
       >
         {addingId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
       </button>
@@ -304,7 +304,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     <div className="flex flex-col h-full">
       {/* Sticky header */}
       <div
-        className="shrink-0 bg-[#0A0A0A] px-4 pb-3 z-10"
+        className="shrink-0 bg-[#060C16] px-4 pb-3 z-10"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="flex items-center justify-between mb-3">
@@ -326,7 +326,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl bg-[#1E1E1E] border border-white/8 focus-within:border-white/20 transition-colors mb-3">
+        <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl bg-[#152337] border border-white/8 focus-within:border-white/20 transition-colors mb-3">
           {searching && query.trim() ? (
             <Loader2 className="w-4 h-4 text-white/40 shrink-0 animate-spin" />
           ) : (
@@ -358,7 +358,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                 onClick={() => toggleGenre(g.id)}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   isIncluded
-                    ? 'bg-[#06B6D4] text-white'
+                    ? 'bg-[#3B82F6] text-white'
                     : isExcluded
                       ? 'bg-red-500/15 text-red-400 border border-red-500/25'
                       : 'bg-white/6 text-white/45 active:bg-white/12'
@@ -382,7 +382,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                   title={p.provider_name}
                   className={`shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
                     isSelected
-                      ? 'bg-[#06B6D4]/20 border-[#06B6D4]/60 text-white'
+                      ? 'bg-[#3B82F6]/20 border-[#3B82F6]/60 text-white'
                       : 'bg-white/5 border-white/8 text-white/40 active:bg-white/10'
                   }`}
                 >
@@ -405,7 +405,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
               style={{ fontSize: 16 }}
-              className="w-full bg-[#1E1E1E] border border-white/8 rounded-xl px-3 pr-7 py-1.5 text-xs text-white/70 outline-none appearance-none"
+              className="w-full bg-[#152337] border border-white/8 rounded-xl px-3 pr-7 py-1.5 text-xs text-white/70 outline-none appearance-none"
             >
               <option value="vote_average.desc">Top Rated</option>
               <option value="popularity.desc">Most Popular</option>
@@ -418,7 +418,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             value={yearFilter}
             onChange={e => setYearFilter(e.target.value)}
             style={{ fontSize: 16 }}
-            className="w-24 bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-white/70 outline-none appearance-none"
+            className="w-24 bg-[#152337] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-white/70 outline-none appearance-none"
           >
             <option value="">Any year</option>
             {Array.from({ length: 2027 - 1950 + 1 }, (_, i) => 2027 - i).map(y => (
@@ -430,7 +430,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             title={hideInLibrary ? 'Showing new only — tap to show all' : 'Tap to hide series already in your library'}
             className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-xl border transition-colors ${
               hideInLibrary
-                ? 'bg-[#06B6D4]/15 border-[#06B6D4]/40 text-[#06B6D4]'
+                ? 'bg-[#3B82F6]/15 border-[#3B82F6]/40 text-[#3B82F6]'
                 : 'bg-white/5 border-white/8 text-white/30 active:bg-white/10'
             }`}
           >
@@ -497,7 +497,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                   className="relative text-left active:opacity-70 transition-opacity"
                   style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
                 >
-                  <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1.5 relative">
+                  <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#152337] mb-1.5 relative">
                     {r.poster_path ? (
                       <img src={posterUrl(r.poster_path, 'w342') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
@@ -515,7 +515,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                       </button>
                     )}
                     {inLibrary && (
-                      <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#06B6D4]/80">
+                      <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#3B82F6]/80">
                         <span className="text-[9px] text-white font-bold">✓</span>
                       </div>
                     )}

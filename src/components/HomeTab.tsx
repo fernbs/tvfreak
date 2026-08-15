@@ -183,7 +183,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
       >
         <Loader2
           className={`w-5 h-5 transition-colors duration-150 ${
-            refreshing ? 'animate-spin text-[#06B6D4]' : pullReady ? 'text-[#06B6D4]' : 'text-white/30'
+            refreshing ? 'animate-spin text-[#3B82F6]' : pullReady ? 'text-[#3B82F6]' : 'text-white/30'
           }`}
           style={{
             opacity: refreshing ? 1 : Math.min(pullDistance / (PULL_THRESHOLD * 0.5), 1),
@@ -195,7 +195,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
 
       {/* Sticky header */}
       <div
-        className="shrink-0 px-4 pb-3 bg-[#0A0A0A]"
+        className="shrink-0 px-4 pb-3 bg-[#060C16]"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="flex items-center justify-between mb-5">
@@ -268,7 +268,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
         ) : (
           <div>
             {/* Calendar — accordion: header always visible, grid expands on tap */}
-            <div className="bg-[#141414] rounded-2xl border border-white/5 mb-4 mt-2 overflow-hidden">
+            <div className="bg-[#0D1926] rounded-2xl border border-white/5 mb-4 mt-2 overflow-hidden">
               {/* Month header */}
               <div className="flex items-center justify-between px-4 py-3.5">
                 <button
@@ -326,18 +326,18 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                           onClick={() => !isPast && handleDayClick(day)}
                           disabled={isPast && !hasEpisode}
                           className="flex flex-col items-center py-1 rounded-lg transition-colors"
-                          style={{ backgroundColor: isSelected ? 'rgba(6,182,212,0.2)' : undefined }}
+                          style={{ backgroundColor: isSelected ? 'rgba(59,130,246,0.2)' : undefined }}
                         >
                           <span
                             className={`text-sm leading-none font-medium ${
-                              isSelected ? 'text-[#06B6D4]' : isToday ? 'text-[#06B6D4]' : isPast ? 'text-white/15' : 'text-white/70'
+                              isSelected ? 'text-[#3B82F6]' : isToday ? 'text-[#3B82F6]' : isPast ? 'text-white/15' : 'text-white/70'
                             }`}
                             style={isToday && !isSelected ? { textDecoration: 'underline', textUnderlineOffset: 3 } : undefined}
                           >
                             {day}
                           </span>
                           <div className="h-1.5 mt-0.5 flex items-center justify-center">
-                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#06B6D4]" />}
+                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#3B82F6]" />}
                           </div>
                         </button>
                       )
@@ -390,9 +390,9 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                   <button
                     key={`${s.id}-${date}-${i}`}
                     onClick={() => onSelect(s)}
-                    className="w-full flex items-center gap-3 p-3 bg-[#141414] rounded-xl border border-white/6 active:bg-white/5 transition-colors text-left"
+                    className="w-full flex items-center gap-3 p-3 bg-[#0D1926] rounded-xl border border-white/6 active:bg-white/5 transition-colors text-left"
                   >
-                    <div className="w-10 h-14 rounded-lg overflow-hidden bg-[#1E1E1E] shrink-0">
+                    <div className="w-10 h-14 rounded-lg overflow-hidden bg-[#152337] shrink-0">
                       {s.posterPath && (
                         <img src={posterUrl(s.posterPath, 'w185') ?? ''} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                       )}
@@ -401,7 +401,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                       <p className="text-sm font-medium text-white truncate">{s.title}</p>
                     </div>
                     <div className="shrink-0">
-                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#06B6D4]/15 text-[#06B6D4] leading-tight">
+                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#3B82F6]/15 text-[#3B82F6] leading-tight">
                         {formatAirDate(date)}
                       </span>
                     </div>
@@ -425,7 +425,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                       onClick={() => onSelect(s)}
                       className="relative text-left active:opacity-70 transition-opacity"
                     >
-                      <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1 relative">
+                      <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#152337] mb-1 relative">
                         {s.posterPath ? (
                           <img src={posterUrl(s.posterPath, 'w342') ?? ''} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
@@ -433,7 +433,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                             <span className="text-[10px] text-white/20 text-center">{s.title}</span>
                           </div>
                         )}
-                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#06B6D4]/90 text-white leading-tight backdrop-blur-sm">
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#3B82F6]/90 text-white leading-tight backdrop-blur-sm">
                           {formatAirDate(date)}
                         </div>
                       </div>

@@ -49,7 +49,7 @@ export function SettingsModal({ onClose }: Props) {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 32, stiffness: 320, mass: 0.9 }}
-        className="fixed bottom-0 left-0 right-0 bg-[#141414] rounded-t-2xl z-50 border-t border-white/8"
+        className="fixed bottom-0 left-0 right-0 bg-[#0D1926] rounded-t-2xl z-50 border-t border-white/8"
         style={{ paddingBottom: '1.5rem' }}
       >
         {/* Handle */}
@@ -78,10 +78,10 @@ export function SettingsModal({ onClose }: Props) {
                 value={country}
                 onChange={e => handleCountryChange(e.target.value)}
                 style={{ fontSize: 16 }}
-                className="w-full bg-[#1E1E1E] border border-white/8 rounded-xl px-4 pr-10 py-3 text-sm text-white outline-none appearance-none"
+                className="w-full bg-[#152337] border border-white/8 rounded-xl px-4 pr-10 py-3 text-sm text-white outline-none appearance-none"
               >
                 {COUNTRIES.map(c => (
-                  <option key={c.code} value={c.code} className="bg-[#1E1E1E]">
+                  <option key={c.code} value={c.code} className="bg-[#152337]">
                     {c.name} ({c.code})
                   </option>
                 ))}
@@ -104,7 +104,7 @@ export function SettingsModal({ onClose }: Props) {
                       title={p.provider_name}
                       className={`flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
                         isSelected
-                          ? 'bg-[#06B6D4]/20 border-[#06B6D4]/60 text-white'
+                          ? 'bg-[#3B82F6]/20 border-[#3B82F6]/60 text-white'
                           : 'bg-white/5 border-white/8 text-white/40 active:bg-white/10'
                       }`}
                     >

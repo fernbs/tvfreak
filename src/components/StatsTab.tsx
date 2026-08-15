@@ -11,10 +11,10 @@ interface Props {
 }
 
 function heatColor(count: number): string {
-  if (count === 0) return '#1E1E1E'
-  if (count <= 2) return '#0C4A6E'
-  if (count <= 5) return '#0891B2'
-  return '#06B6D4'
+  if (count === 0) return '#0D1926'
+  if (count <= 2) return '#1E3A6E'
+  if (count <= 5) return '#2563EB'
+  return '#3B82F6'
 }
 
 function buildWeeks(activityByDate: { date: string; count: number }[]) {
@@ -143,7 +143,7 @@ export function StatsTab({ allSeries }: Props) {
                 { value: streak.longest, label: 'Longest streak', unit: streak.longest === 1 ? 'day' : 'days' },
               ].map(({ value, label, unit }) => (
                 <div key={label} className="bg-[#141414] rounded-2xl p-3.5 border border-white/5">
-                  <p className="text-xl font-bold text-[#06B6D4] tabular-nums">{value} <span className="text-sm font-normal text-white/40">{unit}</span></p>
+                  <p className="text-xl font-bold text-[#3B82F6] tabular-nums">{value} <span className="text-sm font-normal text-white/40">{unit}</span></p>
                   <p className="text-[10px] text-white/30 mt-0.5 uppercase tracking-wider">{label}</p>
                 </div>
               ))}
@@ -209,7 +209,7 @@ export function StatsTab({ allSeries }: Props) {
                 {/* Legend */}
                 <div className="flex items-center gap-1.5 mt-3 justify-end">
                   <span className="text-[9px] text-white/20">Less</span>
-                  {['#1E1E1E', '#0C4A6E', '#0891B2', '#06B6D4'].map(c => (
+                  {['#0D1926', '#1E3A6E', '#2563EB', '#3B82F6'].map(c => (
                     <div key={c} style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: c }} />
                   ))}
                   <span className="text-[9px] text-white/20">More</span>
@@ -239,7 +239,7 @@ export function StatsTab({ allSeries }: Props) {
                         </div>
                         <div className="h-[2px] bg-white/6 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#06B6D4] rounded-full transition-all duration-500"
+                            className="h-full bg-[#3B82F6] rounded-full transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

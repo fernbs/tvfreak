@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Home, Library, Search, BarChart2 } from 'lucide-react'
 
 export type Tab = 'home' | 'library' | 'search' | 'stats'
@@ -18,48 +18,45 @@ const tabs = [
 const SAB_KEY = 'tvfreak-sab'
 
 // Runs once at module-load time, before React mounts.
-// This is the only timing that's guaranteed to precede the very first paint.
+// Sets --tvf-sab on <html> so both the nav and the main content
+// can reference the same value without prop drilling or re-renders.
 const INITIAL_SAB: number = (() => {
-  // 1. Stored value from a previous successful capture — most accurate.
-  //    Skip if it parses to 0 or less; fall through to live detection.
-  const stored = localStorage.getItem(SAB_KEY)
-  if (stored) {
-    const v = parseInt(stored, 10)
-    if (v > 0) return v
-  }
-
-  // 2. Try reading env() via a transient probe element.
-  //    Works immediately in Safari (env() always resolves there).
-  //    In iOS PWA cold-open, env() returns 0 — handled by step 3.
-  try {
-    const el = document.createElement('div')
-    el.style.cssText =
-      'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden'
-    document.documentElement.appendChild(el)
-    const v = parseInt(getComputedStyle(el).paddingBottom, 10) || 0
-    document.documentElement.removeChild(el)
-    if (v > 0) {
-      localStorage.setItem(SAB_KEY, String(v))
-      return v
+  const detect = (): number => {
+    const stored = localStorage.getItem(SAB_KEY)
+    if (stored) {
+      const v = parseInt(stored, 10)
+      if (v > 0) return v
     }
-  } catch (_) { /* document not ready or env() unavailable */ }
 
-  // 3. iOS PWA cold-open: env() returns 0 before the first orientation change.
-  //    All home-indicator iPhones (X and newer) have a logical height >= 812 px.
-  //    Older iPhones with a home button are <= 736 px and need no safe area.
-  if ((navigator as Navigator & { standalone?: boolean }).standalone === true) {
-    if (Math.max(screen.width, screen.height) >= 812) return 34
+    try {
+      const el = document.createElement('div')
+      el.style.cssText =
+        'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden'
+      document.documentElement.appendChild(el)
+      const v = parseInt(getComputedStyle(el).paddingBottom, 10) || 0
+      document.documentElement.removeChild(el)
+      if (v > 0) {
+        localStorage.setItem(SAB_KEY, String(v))
+        return v
+      }
+    } catch (_) { /* env() unavailable */ }
+
+    if ((navigator as Navigator & { standalone?: boolean }).standalone === true) {
+      if (Math.max(screen.width, screen.height) >= 812) return 34
+    }
+
+    return 0
   }
 
-  return 0
+  const result = detect()
+  document.documentElement.style.setProperty('--tvf-sab', `${result}px`)
+  return result
 })()
 
-export function BottomNav({ active, onChange }: Props) {
-  const [sab, setSab] = useState(INITIAL_SAB)
+export { INITIAL_SAB }
 
+export function BottomNav({ active, onChange }: Props) {
   useEffect(() => {
-    // Keep a live probe to capture the real env() value whenever it resolves,
-    // and persist it so all future loads get the accurate reading.
     const probe = document.createElement('div')
     probe.style.cssText =
       'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none'
@@ -68,17 +65,14 @@ export function BottomNav({ active, onChange }: Props) {
     const capture = () => {
       const v = parseInt(getComputedStyle(probe).paddingBottom, 10) || 0
       if (v > 0) {
-        setSab(v)
+        document.documentElement.style.setProperty('--tvf-sab', `${v}px`)
         localStorage.setItem(SAB_KEY, String(v))
       }
     }
 
-    // Short-interval retries in case env() resolves with a brief delay on some iOS builds.
     const timers = [100, 300, 800].map(d => setTimeout(capture, d))
-
     const onOrientationChange = () => setTimeout(capture, 150)
     window.addEventListener('orientationchange', onOrientationChange)
-
     const vv = window.visualViewport
     if (vv) vv.addEventListener('resize', capture)
 
@@ -92,21 +86,21 @@ export function BottomNav({ active, onChange }: Props) {
 
   return (
     <nav
-      className="fixed left-0 right-0 flex bg-[#0D0D0D]/95 backdrop-blur-md border-t border-white/8 z-10"
-      style={{ bottom: `-${sab}px`, paddingBottom: `${sab}px` }}
+      className="fixed left-0 right-0 flex bg-[#060C16]/95 backdrop-blur-md border-t border-white/8 z-10"
+      style={{ bottom: 0, paddingBottom: 'var(--tvf-sab, 0px)' }}
     >
       {tabs.map(({ id, icon: Icon, label }) => (
         <button
           key={id}
           onClick={() => onChange(id)}
           className={`relative flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors ${
-            active === id ? 'text-[#06B6D4]' : 'text-white/30 active:text-white/60'
+            active === id ? 'text-[#3B82F6]' : 'text-white/30 active:text-white/60'
           }`}
         >
           {active === id && (
             <span
               className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-              style={{ backgroundColor: '#06B6D4', boxShadow: '0 0 10px 3px rgba(6,182,212,0.55)' }}
+              style={{ backgroundColor: '#3B82F6', boxShadow: '0 0 10px 3px rgba(59,130,246,0.55)' }}
             />
           )}
           <Icon className="w-5 h-5" strokeWidth={active === id ? 2.5 : 1.8} />

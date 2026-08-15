@@ -54,7 +54,7 @@ export function LibraryTab({
     <div className="flex flex-col h-full">
       {/* Sticky header */}
       <div
-        className="shrink-0 bg-[#0A0A0A] px-4 pb-3 z-10"
+        className="shrink-0 bg-[#060C16] px-4 pb-3 z-10"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         {/* Title row */}
@@ -79,7 +79,7 @@ export function LibraryTab({
             {!migrationDone && (
               <button
                 onClick={onShowMigration}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#06B6D4]/10 text-[#06B6D4] border border-[#06B6D4]/20 active:bg-[#06B6D4]/20 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20 active:bg-[#3B82F6]/20 transition-colors"
               >
                 <Wand2 className="w-3.5 h-3.5" />
                 Restore
@@ -97,10 +97,10 @@ export function LibraryTab({
               onChange={e => setSort(e.target.value as SortKey)}
               className="bg-transparent text-xs text-white/40 outline-none"
             >
-              <option value="title" className="bg-[#1E1E1E]">A-Z</option>
-              <option value="added" className="bg-[#1E1E1E]">Added</option>
-              <option value="updated" className="bg-[#1E1E1E]">Updated</option>
-              <option value="nextEpisode" className="bg-[#1E1E1E]">Next episode</option>
+              <option value="title" className="bg-[#152337]">A-Z</option>
+              <option value="added" className="bg-[#152337]">Added</option>
+              <option value="updated" className="bg-[#152337]">Updated</option>
+              <option value="nextEpisode" className="bg-[#152337]">Next episode</option>
             </select>
           </div>
 
@@ -126,7 +126,7 @@ export function LibraryTab({
               onClick={() => setFilter(f.value)}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                 filter === f.value
-                  ? 'bg-[#06B6D4] text-white'
+                  ? 'bg-[#3B82F6] text-white'
                   : 'bg-white/6 text-white/45 active:bg-white/12'
               }`}
             >

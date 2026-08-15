@@ -52,13 +52,13 @@ export function SeriesGrid({ series, loading, onSelect, viewMode = 'small' }: Pr
             <button
               key={s.id ?? s.tmdbId}
               onClick={() => onSelect(s)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 bg-[#141414] rounded-xl border border-white/5 active:bg-white/5 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-3 py-2.5 bg-[#0D1926] rounded-xl border border-white/5 active:bg-white/5 transition-colors text-left"
             >
               {/* Status bar */}
               <div className="w-[3px] self-stretch rounded-full shrink-0" style={{ backgroundColor: config.color }} />
 
               {/* Poster */}
-              <div className="w-9 h-[52px] rounded-lg overflow-hidden bg-[#1E1E1E] shrink-0">
+              <div className="w-9 h-[52px] rounded-lg overflow-hidden bg-[#152337] shrink-0">
                 {poster && (
                   <img src={poster} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                 )}

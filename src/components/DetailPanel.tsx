@@ -281,7 +281,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320, mass: 0.9 }}
-            className="fixed bottom-0 left-0 right-0 h-[93dvh] bg-[#141414] rounded-t-2xl z-50 flex flex-col overflow-hidden border-t border-white/8"
+            className="fixed bottom-0 left-0 right-0 h-[93dvh] bg-[#0D1926] rounded-t-2xl z-50 flex flex-col overflow-hidden border-t border-white/8"
           >
             {/* Drag handle */}
             <div className="shrink-0 flex justify-center pt-3 pb-1">
@@ -321,7 +321,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
               {/* Poster + metadata */}
               <div className="flex gap-4 mb-5">
-                <div className="w-28 shrink-0 aspect-[2/3] rounded-xl overflow-hidden bg-[#1E1E1E]">
+                <div className="w-28 shrink-0 aspect-[2/3] rounded-xl overflow-hidden bg-[#152337]">
                   {poster ? (
                     <img src={poster} alt={series.title} className="w-full h-full object-cover" />
                   ) : (
@@ -378,7 +378,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                       </div>
                       {/* Next episode date chip */}
                       {nextEpDate && (
-                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-[#06B6D4]/10 text-[#06B6D4]">
+                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-[#3B82F6]/10 text-[#3B82F6]">
                           <Calendar className="w-3 h-3" />
                           {formatAirDate(nextEpDate)}
                         </div>
@@ -388,7 +388,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     <button
                       onClick={handleAddToLibrary}
                       disabled={adding}
-                      className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-[#06B6D4]/15 border border-[#06B6D4]/30 rounded-xl text-xs font-medium text-[#06B6D4] active:bg-[#06B6D4]/25 transition-colors disabled:opacity-50"
+                      className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-[#3B82F6]/15 border border-[#3B82F6]/30 rounded-xl text-xs font-medium text-[#3B82F6] active:bg-[#3B82F6]/25 transition-colors disabled:opacity-50"
                     >
                       {adding ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -423,7 +423,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                         target="_blank"
                         rel="noopener noreferrer"
                         title={p.provider_name}
-                        className="w-9 h-9 rounded-xl overflow-hidden bg-[#1E1E1E] border border-white/8 active:opacity-70 transition-opacity shrink-0"
+                        className="w-9 h-9 rounded-xl overflow-hidden bg-[#152337] border border-white/8 active:opacity-70 transition-opacity shrink-0"
                         onClick={e => { if (!watchLink) e.preventDefault() }}
                       >
                         <img
@@ -440,10 +440,10 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
 
               {/* Next episode */}
               {hasUpcoming && nextEp && (
-                <div className="mb-5 px-3.5 py-3 rounded-xl bg-[#06B6D4]/8 border border-[#06B6D4]/15">
+                <div className="mb-5 px-3.5 py-3 rounded-xl bg-[#3B82F6]/8 border border-[#3B82F6]/15">
                   <div className="flex items-center gap-2 mb-1">
-                    <Calendar className="w-3.5 h-3.5 text-[#06B6D4]" />
-                    <p className="text-xs text-[#06B6D4] font-medium uppercase tracking-wider">Next episode</p>
+                    <Calendar className="w-3.5 h-3.5 text-[#3B82F6]" />
+                    <p className="text-xs text-[#3B82F6] font-medium uppercase tracking-wider">Next episode</p>
                   </div>
                   <p className="text-sm text-white/80 font-medium">
                     S{String(nextEp.season_number).padStart(2, '0')} E{String(nextEp.episode_number).padStart(2, '0')} · {nextEp.name}
@@ -482,7 +482,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                     {recommendations.map(r => (
                       <div key={r.id} className="shrink-0 w-[72px]">
-                        <div className="w-[72px] h-[108px] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1.5 relative">
+                        <div className="w-[72px] h-[108px] rounded-xl overflow-hidden bg-[#152337] mb-1.5 relative">
                           <img
                             src={posterUrl(r.poster_path, 'w185') ?? ''}
                             alt={r.name}
@@ -530,7 +530,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                     onChange={e => handleNotesChange(e.target.value)}
                     placeholder="Add notes..."
                     rows={3}
-                    className="w-full bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white/75 placeholder:text-white/20 outline-none focus:border-white/20 resize-none transition-colors"
+                    className="w-full bg-[#152337] border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white/75 placeholder:text-white/20 outline-none focus:border-white/20 resize-none transition-colors"
                   />
                 </div>
               )}
@@ -555,7 +555,7 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 20, opacity: 0 }}
                   transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                  className="relative bg-[#1E1E1E] rounded-2xl p-5 max-w-sm w-full border border-white/8 shadow-2xl"
+                  className="relative bg-[#152337] rounded-2xl p-5 max-w-sm w-full border border-white/8 shadow-2xl"
                 >
                   <h3 className="text-sm font-semibold text-white truncate mb-4">{series.title}</h3>
 

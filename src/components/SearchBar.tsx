@@ -77,7 +77,7 @@ export function SearchBar({ onSeriesAdded }: Props) {
 
   return (
     <div ref={containerRef} className="relative w-full max-w-md">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1E1E1E] border border-white/8 focus-within:border-white/20 transition-colors">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#152337] border border-white/8 focus-within:border-white/20 transition-colors">
         {searching ? (
           <Loader2 className="w-4 h-4 text-white/40 shrink-0 animate-spin" />
         ) : (
@@ -99,7 +99,7 @@ export function SearchBar({ onSeriesAdded }: Props) {
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-2 left-0 right-0 bg-[#1E1E1E] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+        <div className="absolute top-full mt-2 left-0 right-0 bg-[#152337] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
           {results.map(r => (
             <div key={r.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors">
               <div className="w-9 h-14 rounded shrink-0 overflow-hidden bg-[#2A2A2A]">
@@ -120,7 +120,7 @@ export function SearchBar({ onSeriesAdded }: Props) {
               <button
                 onClick={() => handleAdd(r)}
                 disabled={addingId === r.id}
-                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-white/8 hover:bg-[#06B6D4]/30 hover:text-[#06B6D4] transition-colors disabled:opacity-50"
+                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-white/8 hover:bg-[#3B82F6]/30 hover:text-[#3B82F6] transition-colors disabled:opacity-50"
               >
                 {addingId === r.id ? (
                   <Loader2 className="w-4 h-4 animate-spin text-white/40" />

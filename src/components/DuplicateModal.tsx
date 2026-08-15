@@ -53,11 +53,11 @@ export function DuplicateModal({ groups, onClose, onResolved }: Props) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.96, opacity: 0 }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="relative bg-[#141414] rounded-2xl border border-white/8 shadow-2xl w-full max-w-lg overflow-hidden"
+        className="relative bg-[#0D1926] rounded-2xl border border-white/8 shadow-2xl w-full max-w-lg overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/6">
-          <GitMerge className="w-4 h-4 text-[#06B6D4] shrink-0" />
+          <GitMerge className="w-4 h-4 text-[#3B82F6] shrink-0" />
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-semibold text-white">Resolve duplicates</h2>
             <p className="text-xs text-white/40 mt-0.5">
@@ -101,7 +101,7 @@ export function DuplicateModal({ groups, onClose, onResolved }: Props) {
                   const otherIds = group.series.filter(o => o.id !== s.id).map(o => o.id!)
 
                   return (
-                    <div key={s.id} className="bg-[#1E1E1E] rounded-xl overflow-hidden border border-white/6">
+                    <div key={s.id} className="bg-[#152337] rounded-xl overflow-hidden border border-white/6">
                       {/* Poster */}
                       <div className="aspect-[2/3] w-full relative">
                         {poster ? (
@@ -126,7 +126,7 @@ export function DuplicateModal({ groups, onClose, onResolved }: Props) {
                         <button
                           onClick={() => handleKeep(s.id!, otherIds[0], originalGroupIndex)}
                           disabled={resolving !== null}
-                          className="w-full py-1.5 bg-[#06B6D4] hover:bg-[#0891B2] disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors"
+                          className="w-full py-1.5 bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors"
                         >
                           {resolving === s.id ? 'Keeping...' : 'Keep this'}
                         </button>

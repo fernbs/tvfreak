@@ -34,17 +34,17 @@ export function SeriesCard({ series, onClick }: Props) {
           draggable={false}
         />
       ) : (
-        <div className="w-full h-full bg-[#1E1E1E] flex items-center justify-center p-3 transition-transform duration-300 group-hover:scale-[1.03]">
+        <div className="w-full h-full bg-[#152337] flex items-center justify-center p-3 transition-transform duration-300 group-hover:scale-[1.03]">
           <span className="text-xs text-white/40 text-center leading-snug font-medium">
             {series.title}
           </span>
         </div>
       )}
 
-      {/* Status radial gradient — top-left corner */}
+      {/* Status top strip with glow */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: `radial-gradient(circle at 0% 0%, ${config.color}80 0%, ${config.color}30 40%, transparent 65%)` }}
+        className="absolute top-0 left-0 right-0 h-[3px] pointer-events-none rounded-t-xl"
+        style={{ backgroundColor: config.color, boxShadow: `0 1px 14px 5px ${config.color}50` }}
       />
 
       {/* Hover overlay */}
@@ -60,7 +60,7 @@ export function SeriesCard({ series, onClick }: Props) {
 
       {/* Upcoming episode date badge */}
       {hasUpcoming && series.nextEpisodeDate && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#06B6D4]/90 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#3B82F6]/90 text-white leading-tight backdrop-blur-sm">
           {formatAirDate(series.nextEpisodeDate)}
         </div>
       )}
@@ -74,7 +74,7 @@ export function SeriesCard({ series, onClick }: Props) {
 
       {/* New episode aired badge */}
       {hasNewEpisode && !hasUpcoming && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#06B6D4]/90 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#3B82F6]/90 text-white leading-tight backdrop-blur-sm">
           New
         </div>
       )}

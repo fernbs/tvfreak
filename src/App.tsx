@@ -445,7 +445,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0A0A] overflow-hidden">
+    <div className="flex flex-col h-full bg-[#060C16] overflow-hidden">
       {/* Worker unreachable banner */}
       {workerError && !loading && (
         <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border-b border-red-500/20">
@@ -461,7 +461,7 @@ export default function App() {
       )}
 
       {/* Tab content */}
-      <main className="flex-1 overflow-hidden min-h-0" style={{ paddingBottom: '3.75rem' }}>
+      <main className="flex-1 overflow-hidden min-h-0" style={{ paddingBottom: 'calc(3.75rem + var(--tvf-sab, 0px))' }}>
         {tab === 'home' && (
           <HomeTab series={allSeries} loading={loading} onSelect={setSelected} onRefresh={refreshNextEpisodeDates} />
         )}
