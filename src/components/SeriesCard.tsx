@@ -41,10 +41,10 @@ export function SeriesCard({ series, onClick }: Props) {
         </div>
       )}
 
-      {/* Status top strip with glow */}
+      {/* Status top strip */}
       <div
-        className="absolute top-0 left-0 right-0 h-[3px] pointer-events-none rounded-t-xl"
-        style={{ backgroundColor: config.color, boxShadow: `0 1px 14px 5px ${config.color}50` }}
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{ backgroundColor: config.color, boxShadow: `0 0 8px 2px ${config.color}60` }}
       />
 
       {/* Hover overlay */}

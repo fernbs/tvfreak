@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Home, Library, Search, BarChart2 } from 'lucide-react'
 
 export type Tab = 'home' | 'library' | 'search' | 'stats'
@@ -18,44 +18,43 @@ const tabs = [
 const SAB_KEY = 'tvfreak-sab'
 
 // Runs once at module-load time, before React mounts.
-// Sets --tvf-sab on <html> so both the nav and the main content
-// can reference the same value without prop drilling or re-renders.
 const INITIAL_SAB: number = (() => {
-  const detect = (): number => {
+  const isStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true
+
+  // 1. Stored value — only trust it if we are actually in standalone mode right now.
+  //    If opened in browser after a prior PWA session, the stored value would wrongly
+  //    add safe-area padding that the browser is already handling.
+  if (isStandalone) {
     const stored = localStorage.getItem(SAB_KEY)
     if (stored) {
       const v = parseInt(stored, 10)
       if (v > 0) return v
     }
-
-    try {
-      const el = document.createElement('div')
-      el.style.cssText =
-        'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden'
-      document.documentElement.appendChild(el)
-      const v = parseInt(getComputedStyle(el).paddingBottom, 10) || 0
-      document.documentElement.removeChild(el)
-      if (v > 0) {
-        localStorage.setItem(SAB_KEY, String(v))
-        return v
-      }
-    } catch (_) { /* env() unavailable */ }
-
-    if ((navigator as Navigator & { standalone?: boolean }).standalone === true) {
-      if (Math.max(screen.width, screen.height) >= 812) return 34
-    }
-
-    return 0
   }
 
-  const result = detect()
-  document.documentElement.style.setProperty('--tvf-sab', `${result}px`)
-  return result
+  // 2. Try reading env() via a transient probe element.
+  try {
+    const el = document.createElement('div')
+    el.style.cssText =
+      'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden'
+    document.documentElement.appendChild(el)
+    const v = parseInt(getComputedStyle(el).paddingBottom, 10) || 0
+    document.documentElement.removeChild(el)
+    if (v > 0) {
+      localStorage.setItem(SAB_KEY, String(v))
+      return v
+    }
+  } catch (_) { /* env() unavailable */ }
+
+  // 3. iOS PWA cold-open heuristic: env() returns 0 before the first orientation change.
+  if (isStandalone && Math.max(screen.width, screen.height) >= 812) return 34
+
+  return 0
 })()
 
-export { INITIAL_SAB }
-
 export function BottomNav({ active, onChange }: Props) {
+  const [sab, setSab] = useState(INITIAL_SAB)
+
   useEffect(() => {
     const probe = document.createElement('div')
     probe.style.cssText =
@@ -65,7 +64,7 @@ export function BottomNav({ active, onChange }: Props) {
     const capture = () => {
       const v = parseInt(getComputedStyle(probe).paddingBottom, 10) || 0
       if (v > 0) {
-        document.documentElement.style.setProperty('--tvf-sab', `${v}px`)
+        setSab(v)
         localStorage.setItem(SAB_KEY, String(v))
       }
     }
@@ -87,7 +86,7 @@ export function BottomNav({ active, onChange }: Props) {
   return (
     <nav
       className="fixed left-0 right-0 flex bg-[#060C16]/95 backdrop-blur-md border-t border-white/8 z-10"
-      style={{ bottom: 0, paddingBottom: 'var(--tvf-sab, 0px)' }}
+      style={{ bottom: `-${sab}px`, paddingBottom: `${sab}px` }}
     >
       {tabs.map(({ id, icon: Icon, label }) => (
         <button
