@@ -31,43 +31,6 @@ export default function App() {
   const [showMigration, setShowMigration] = useState(false)
   const [migrationDone, setMigrationDone] = useState(() => localStorage.getItem(MIGRATION_KEY) === 'true')
 
-  // iOS PWA: env(safe-area-inset-bottom) is 0 on cold open and only corrects
-  // after an orientation change. The stored value is already applied in index.html
-  // before React mounts (no flash for returning users). Here we keep trying to
-  // capture the real value and persist it for all future loads.
-  useEffect(() => {
-    const KEY = 'tvfreak-sab'
-
-    const probe = document.createElement('div')
-    probe.style.cssText = 'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none'
-    document.body.appendChild(probe)
-
-    const capture = () => {
-      const val = parseInt(getComputedStyle(probe).paddingBottom, 10)
-      if (val > 0) {
-        const sab = val + 'px'
-        document.documentElement.style.setProperty('--sab', sab)
-        localStorage.setItem(KEY, sab)
-      }
-    }
-
-    // Try at increasing delays — some iOS versions resolve env() after a short wait
-    const timers = [50, 200, 600, 1500].map(d => setTimeout(capture, d))
-
-    const onOrientationChange = () => setTimeout(capture, 150)
-    window.addEventListener('orientationchange', onOrientationChange)
-
-    const vv = window.visualViewport
-    if (vv) vv.addEventListener('resize', capture)
-
-    return () => {
-      timers.forEach(clearTimeout)
-      window.removeEventListener('orientationchange', onOrientationChange)
-      if (vv) vv.removeEventListener('resize', capture)
-      if (probe.parentNode) probe.parentNode.removeChild(probe)
-    }
-  }, [])
-
   // Auto-dismiss migration banner if data already exists in the DB
   useEffect(() => {
     if (allSeries.length > 0 && !migrationDone) {
