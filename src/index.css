@@ -1,38 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  /* Backgrounds - violet-black luxe */
-  --color-bg: #0C0A14;
-  --color-surface: #13101E;
-  --color-surface-elevated: #1C1830;
-  --color-surface-hover: #251E3A;
+  /* Backgrounds - neutral OLED dark, no purple tint */
+  --color-bg: #000000;
+  --color-surface: #111111;
+  --color-surface-elevated: #1C1C1E;
+  --color-surface-hover: #2C2C2E;
 
-  /* Borders - violet-tinted */
-  --color-border: rgba(167, 139, 250, 0.08);
-  --color-border-strong: rgba(167, 139, 250, 0.18);
+  /* Borders - neutral white */
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
 
-  /* Accent - luminous violet */
-  --color-accent: #B39DFF;
-  --color-accent-fill: #7C3AED;
-  --color-accent-hover: #6D28D9;
-  --color-accent-subtle: rgba(124, 58, 237, 0.12);
-  --color-accent-glow: rgba(179, 157, 255, 0.25);
+  /* Accent - amber, used sparingly on active/CTA elements only */
+  --color-accent: #FF9F0A;
+  --color-accent-fill: #FF8C00;
+  --color-accent-hover: #E07000;
+  --color-accent-subtle: rgba(255, 159, 10, 0.15);
 
-  /* Gold - ratings, premium elements */
-  --color-gold: #F0C060;
+  /* Gold - ratings */
+  --color-gold: #FFD60A;
 
-  /* Status */
+  /* Status indicators */
   --color-watching: #38BDF8;
   --color-completed: #34D399;
   --color-dropped: #FB7185;
   --color-pending: #FBBF24;
 
-  /* Text - very slight violet tint */
-  --color-text-primary: #F0ECFF;
-  --color-text-secondary: #9B8EC4;
-  --color-text-muted: #4A3F6E;
+  /* Text */
+  --color-text-primary: #F5F5F7;
+  --color-text-secondary: #8E8E93;
+  --color-text-muted: #48484A;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
 }
 
 *, *::before, *::after {
@@ -40,7 +39,7 @@
 }
 
 html {
-  background-color: #0C0A14;
+  background-color: #000000;
 }
 
 html, #root {
@@ -58,9 +57,9 @@ body {
   margin: 0;
   padding: 0;
   overscroll-behavior: none;
-  background-color: #0C0A14;
-  color: #F0ECFF;
-  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #000000;
+  color: #F5F5F7;
+  font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   touch-action: pan-y;
@@ -71,14 +70,12 @@ body {
   flex-direction: column;
 }
 
-/* Scrollable containers */
 .scroll-area {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Hide scrollbars on mobile, keep on desktop */
 @media (pointer: coarse) {
   ::-webkit-scrollbar { display: none; }
   * { scrollbar-width: none; }
@@ -88,15 +85,14 @@ body {
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(167, 139, 250, 0.12);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(167, 139, 250, 0.22);
+    background: rgba(255, 255, 255, 0.2);
   }
 }
 
-/* Safe area for iOS notch / home indicator */
 .safe-top { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 

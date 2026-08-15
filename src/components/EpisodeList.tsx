@@ -48,16 +48,16 @@ function Checkbox({
       className={[
         'w-[18px] h-[18px] rounded-md flex items-center justify-center shrink-0 transition-all duration-150 border',
         disabled
-          ? 'bg-transparent border-[rgba(167,139,250,0.08)] cursor-not-allowed opacity-40'
+          ? 'bg-transparent border-white/6 cursor-not-allowed opacity-40'
           : checked
-            ? 'bg-[#7C3AED] border-[#7C3AED] hover:bg-[#6D28D9]'
+            ? 'bg-[#FF8C00] border-[#FF8C00] hover:bg-[#E07000]'
             : indeterminate
-              ? 'bg-[rgba(124,58,237,0.18)] border-[rgba(124,58,237,0.45)] hover:border-[rgba(124,58,237,0.65)]'
-              : 'bg-transparent border-[rgba(167,139,250,0.2)] hover:border-[rgba(167,139,250,0.5)] hover:bg-[rgba(124,58,237,0.06)]',
+              ? 'bg-[rgba(255,159,10,0.18)] border-[rgba(255,159,10,0.45)] hover:border-[rgba(255,159,10,0.65)]'
+              : 'bg-transparent border-white/18 hover:border-white/40 hover:bg-white/4',
       ].join(' ')}
     >
       {checked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-      {!checked && indeterminate && <Minus className="w-2.5 h-2.5 text-[#B39DFF]" strokeWidth={3} />}
+      {!checked && indeterminate && <Minus className="w-2.5 h-2.5 text-[#FF9F0A]" strokeWidth={3} />}
     </button>
   )
 }
@@ -79,31 +79,31 @@ function SpecialsSection({ tmdbId, season }: { tmdbId: number; season: import('.
   }
 
   return (
-    <div className="mt-2 rounded-xl overflow-hidden border border-[rgba(167,139,250,0.06)] opacity-60">
+    <div className="mt-2 rounded-xl overflow-hidden border border-white/6 opacity-60">
       <button
         onClick={toggle}
-        className="w-full flex items-center gap-2.5 px-3 py-2.5 bg-[rgba(167,139,250,0.02)] hover:bg-[rgba(167,139,250,0.04)] transition-colors text-left"
+        className="w-full flex items-center gap-2.5 px-3 py-2.5 bg-white/2 hover:bg-white/4 transition-colors text-left"
       >
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-medium text-[#4A3F6E]">Specials</span>
-          <span className="text-xs text-[#4A3F6E]/60 ml-2">{season.episode_count} episode{season.episode_count !== 1 ? 's' : ''}</span>
+          <span className="text-sm font-medium text-[#48484A]">Specials</span>
+          <span className="text-xs text-[#48484A]/60 ml-2">{season.episode_count} episode{season.episode_count !== 1 ? 's' : ''}</span>
         </div>
-        <div className="shrink-0 text-[#4A3F6E]">
+        <div className="shrink-0 text-[#48484A]">
           {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
         </div>
       </button>
       {open && (
-        <div className="bg-[#0C0A14] divide-y divide-[rgba(167,139,250,0.04)]">
+        <div className="bg-black divide-y divide-white/4">
           {loading ? (
-            <div className="px-4 py-3 text-xs text-[#4A3F6E]">Loading specials...</div>
+            <div className="px-4 py-3 text-xs text-[#48484A]">Loading specials...</div>
           ) : episodes.map(ep => (
             <div key={ep.episode_number} className="flex items-center gap-3 px-3 py-2">
-              <span className="text-[11px] font-mono text-[#251E3A] shrink-0 tabular-nums w-7">
+              <span className="text-[11px] font-mono text-[#2C2C2E] shrink-0 tabular-nums w-7">
                 S{String(ep.episode_number).padStart(2, '0')}
               </span>
-              <span className="flex-1 text-sm text-[#4A3F6E] truncate min-w-0">{ep.name}</span>
+              <span className="flex-1 text-sm text-[#48484A] truncate min-w-0">{ep.name}</span>
               {ep.air_date && (
-                <span className="text-xs text-[#251E3A] shrink-0">{formatAirDate(ep.air_date)}</span>
+                <span className="text-xs text-[#2C2C2E] shrink-0">{formatAirDate(ep.air_date)}</span>
               )}
             </div>
           ))}
@@ -345,14 +345,14 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
           const pct = displayTotal > 0 ? (watchedCount / displayTotal) * 100 : 0
 
           return (
-            <div key={sn} className="rounded-xl overflow-hidden border border-[rgba(167,139,250,0.07)]">
+            <div key={sn} className="rounded-xl overflow-hidden border border-white/7">
               {/* Season header */}
               <div className={`flex items-center gap-2.5 px-3 py-2.5 transition-colors ${
                 isFuture
-                  ? 'bg-[rgba(167,139,250,0.02)]'
+                  ? 'bg-transparent'
                   : allWatched
-                    ? 'bg-[rgba(124,58,237,0.07)]'
-                    : 'bg-[rgba(167,139,250,0.03)] hover:bg-[rgba(167,139,250,0.05)]'
+                    ? 'bg-white/3'
+                    : 'bg-transparent hover:bg-white/2'
               }`}>
                 <div onClick={e => e.stopPropagation()}>
                   {isFuture ? (
@@ -371,7 +371,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
                 {isFuture && hasNoEpisodes ? (
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-[#4A3F6E] truncate">
+                      <span className="text-sm font-medium text-[#48484A] truncate">
                         {season.name || `Season ${sn}`}
                       </span>
                       <span className="text-xs text-amber-500/50 ml-2 shrink-0">
@@ -388,10 +388,10 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
                       <div className="flex items-center justify-between mb-1.5">
                         <span className={`text-sm font-medium truncate ${
                           isFuture
-                            ? 'text-[#4A3F6E]'
+                            ? 'text-[#48484A]'
                             : allWatched
-                              ? 'text-[#9B8EC4]'
-                              : 'text-[#F0ECFF]'
+                              ? 'text-[#8E8E93]'
+                              : 'text-[#F5F5F7]'
                         }`}>
                           {season.name || `Season ${sn}`}
                         </span>
@@ -400,21 +400,21 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
                             {season.air_date ? `Premieres ${formatAirDate(season.air_date)}` : 'Coming soon'}
                           </span>
                         ) : (
-                          <span className="text-xs text-[#4A3F6E] ml-2 shrink-0 tabular-nums">
+                          <span className="text-xs text-[#48484A] ml-2 shrink-0 tabular-nums">
                             {watchedCount}/{displayTotal}
                           </span>
                         )}
                       </div>
                       {!isFuture && (
-                        <div className="h-[3px] bg-[rgba(167,139,250,0.08)] rounded-full overflow-hidden">
+                        <div className="h-[3px] bg-white/7 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#7C3AED] rounded-full transition-all duration-500"
+                            className="h-full bg-[#FF8C00] rounded-full transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
                       )}
                     </div>
-                    <div className="shrink-0 text-[#4A3F6E]">
+                    <div className="shrink-0 text-[#48484A]">
                       {state?.open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                     </div>
                   </button>
@@ -423,9 +423,9 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
 
               {/* Episodes */}
               {state?.open && (
-                <div className="bg-[#0C0A14] divide-y divide-[rgba(167,139,250,0.04)]">
+                <div className="bg-black divide-y divide-white/4">
                   {state.loading ? (
-                    <div className="px-4 py-3 text-xs text-[#4A3F6E]">Loading episodes...</div>
+                    <div className="px-4 py-3 text-xs text-[#48484A]">Loading episodes...</div>
                   ) : (
                     state.episodes.map(ep => {
                       const key = `${sn}-${ep.episode_number}`
@@ -436,7 +436,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
                         <div
                           key={ep.episode_number}
                           className={`flex items-center gap-3 px-3 py-2 transition-colors ${
-                            !released ? 'opacity-70' : isWatched ? '' : 'hover:bg-[rgba(167,139,250,0.03)]'
+                            !released ? 'opacity-70' : isWatched ? '' : 'hover:bg-white/2'
                           }`}
                         >
                           {released ? (
@@ -450,22 +450,22 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
                             </div>
                           )}
 
-                          <span className="text-[11px] font-mono text-[#251E3A] shrink-0 tabular-nums w-7">
+                          <span className="text-[11px] font-mono text-[#2C2C2E] shrink-0 tabular-nums w-7">
                             E{String(ep.episode_number).padStart(2, '0')}
                           </span>
 
                           <span className={`flex-1 text-sm truncate min-w-0 ${
                             isWatched
-                              ? 'line-through text-[#4A3F6E]'
+                              ? 'line-through text-[#48484A]'
                               : released
-                                ? 'text-[#9B8EC4]'
+                                ? 'text-[#8E8E93]'
                                 : 'text-amber-400/60'
                           }`}>
                             {ep.name}
                           </span>
 
                           {ep.air_date ? (
-                            <span className={`text-xs shrink-0 ${released ? 'text-[#251E3A]' : 'text-amber-500/50'}`}>
+                            <span className={`text-xs shrink-0 ${released ? 'text-[#2C2C2E]' : 'text-amber-500/50'}`}>
                               {released ? formatAirDate(ep.air_date) : `Airs ${formatAirDate(ep.air_date)}`}
                             </span>
                           ) : !released ? (
@@ -490,21 +490,21 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       {episodeModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={() => setEpisodeModal(null)} />
-          <div className="relative bg-[#1C1830] rounded-3xl p-5 max-w-sm w-full border border-[rgba(167,139,250,0.12)] shadow-2xl">
-            <h3 className="text-sm font-semibold text-[#F0ECFF] mb-1.5">Mark previous episodes?</h3>
-            <p className="text-sm text-[#9B8EC4] mb-5 leading-relaxed">
+          <div className="relative bg-[#1C1C1E] rounded-3xl p-5 max-w-sm w-full border border-white/10 shadow-2xl">
+            <h3 className="text-sm font-semibold text-[#F5F5F7] mb-1.5">Mark previous episodes?</h3>
+            <p className="text-sm text-[#8E8E93] mb-5 leading-relaxed">
               {episodeModal.previousEpisodes.length} episode{episodeModal.previousEpisodes.length !== 1 ? 's' : ''} before this one {episodeModal.previousEpisodes.length !== 1 ? "aren't" : "isn't"} marked as watched. Mark them too?
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => confirmEpisodeModal(true)}
-                className="flex-1 px-3 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="flex-1 px-3 py-2.5 bg-[#FF8C00] hover:bg-[#E07000] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Mark all
               </button>
               <button
                 onClick={() => confirmEpisodeModal(false)}
-                className="flex-1 px-3 py-2.5 bg-[rgba(167,139,250,0.06)] hover:bg-[rgba(167,139,250,0.1)] text-[#9B8EC4] text-sm font-medium rounded-2xl transition-colors border border-[rgba(167,139,250,0.08)]"
+                className="flex-1 px-3 py-2.5 bg-white/5 hover:bg-white/8 text-[#8E8E93] text-sm font-medium rounded-2xl transition-colors border border-white/8"
               >
                 Just this one
               </button>
@@ -517,14 +517,14 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       {seasonModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={() => setSeasonModal(null)} />
-          <div className="relative bg-[#1C1830] rounded-3xl p-5 max-w-sm w-full border border-[rgba(167,139,250,0.12)] shadow-2xl">
-            <h3 className="text-sm font-semibold text-[#F0ECFF] mb-1.5">Mark previous seasons?</h3>
-            <p className="text-sm text-[#9B8EC4] mb-3 leading-relaxed">
+          <div className="relative bg-[#1C1C1E] rounded-3xl p-5 max-w-sm w-full border border-white/10 shadow-2xl">
+            <h3 className="text-sm font-semibold text-[#F5F5F7] mb-1.5">Mark previous seasons?</h3>
+            <p className="text-sm text-[#8E8E93] mb-3 leading-relaxed">
               Before marking {seasonModal.targetSeason.name || `Season ${seasonModal.targetSeason.season_number}`}, do you want to mark these as watched too?
             </p>
             <div className="mb-4 space-y-1 pl-1">
               {seasonModal.unwatchedPrevious.map(s => (
-                <p key={s.season_number} className="text-xs text-[#4A3F6E]">
+                <p key={s.season_number} className="text-xs text-[#48484A]">
                   · {s.name || `Season ${s.season_number}`}
                 </p>
               ))}
@@ -532,13 +532,13 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
             <div className="flex gap-2">
               <button
                 onClick={() => confirmSeasonModal(true)}
-                className="flex-1 px-3 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="flex-1 px-3 py-2.5 bg-[#FF8C00] hover:bg-[#E07000] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Mark all
               </button>
               <button
                 onClick={() => confirmSeasonModal(false)}
-                className="flex-1 px-3 py-2.5 bg-[rgba(167,139,250,0.06)] hover:bg-[rgba(167,139,250,0.1)] text-[#9B8EC4] text-sm font-medium rounded-2xl transition-colors border border-[rgba(167,139,250,0.08)]"
+                className="flex-1 px-3 py-2.5 bg-white/5 hover:bg-white/8 text-[#8E8E93] text-sm font-medium rounded-2xl transition-colors border border-white/8"
               >
                 Just this season
               </button>

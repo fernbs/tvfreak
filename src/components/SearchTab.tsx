@@ -283,21 +283,21 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   }
 
   const viewToggleClasses = (mode: string) =>
-    `p-1.5 rounded-md transition-colors ${viewMode === mode
-      ? 'bg-[rgba(124,58,237,0.15)] text-[#B39DFF]'
-      : 'text-[#4A3F6E] active:text-[#9B8EC4]'
+    `p-1.5 rounded-lg transition-colors ${viewMode === mode
+      ? 'bg-[#2C2C2E] text-[#F5F5F7]'
+      : 'text-[#48484A] active:text-[#8E8E93]'
     }`
 
   function AddButton({ r }: { r: TmdbSearchResult }) {
     const inLibrary = libraryIds.has(r.id)
     if (inLibrary) {
-      return <span className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium text-[#4A3F6E] bg-[#13101E] border border-[rgba(167,139,250,0.07)]">In library</span>
+      return <span className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium text-[#48484A] bg-[#111111] border border-white/7">In library</span>
     }
     return (
       <button
         onClick={e => { e.stopPropagation(); handleAdd(r) }}
         disabled={addingId === r.id}
-        className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-[rgba(124,58,237,0.12)] text-[#B39DFF] border border-[rgba(124,58,237,0.2)] active:bg-[rgba(124,58,237,0.22)] transition-colors disabled:opacity-50"
+        className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-[rgba(255,159,10,0.12)] text-[#FF9F0A] border border-[rgba(255,159,10,0.2)] active:bg-[rgba(255,159,10,0.22)] transition-colors disabled:opacity-50"
       >
         {addingId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
       </button>
@@ -308,15 +308,15 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     <div className="flex flex-col h-full">
       {/* Sticky header */}
       <div
-        className="shrink-0 bg-[#0C0A14] px-4 pb-3 z-10"
+        className="shrink-0 bg-black px-4 pb-3 z-10"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <TVFreakIcon size={22} />
-            <h1 className="text-lg font-bold text-[#F0ECFF]">Search</h1>
+            <TVFreakIcon size={24} />
+            <h1 className="text-xl font-bold text-[#F5F5F7]">Search</h1>
           </div>
-          <div className="flex items-center gap-0.5 bg-[#13101E] border border-[rgba(167,139,250,0.07)] rounded-xl p-0.5">
+          <div className="flex items-center gap-0.5 bg-white/5 rounded-xl p-0.5">
             {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
               <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
                 <Icon className="w-3.5 h-3.5" />
@@ -326,11 +326,11 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
         </div>
 
         {/* Search input */}
-        <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl bg-[#13101E] border border-[rgba(167,139,250,0.1)] focus-within:border-[rgba(167,139,250,0.28)] transition-colors mb-3">
+        <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/8 focus-within:border-white/20 transition-colors mb-3">
           {searching && query.trim() ? (
-            <Loader2 className="w-4 h-4 text-[#4A3F6E] shrink-0 animate-spin" />
+            <Loader2 className="w-4 h-4 text-[#48484A] shrink-0 animate-spin" />
           ) : (
-            <Search className="w-4 h-4 text-[#4A3F6E] shrink-0" />
+            <Search className="w-4 h-4 text-[#48484A] shrink-0" />
           )}
           <input
             type="text"
@@ -338,16 +338,16 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             onChange={e => setQuery(e.target.value)}
             placeholder="Search TMDB for a series..."
             style={{ fontSize: 16 }}
-            className="flex-1 bg-transparent text-[#F0ECFF] placeholder:text-[#4A3F6E] outline-none"
+            className="flex-1 bg-transparent text-[#F5F5F7] placeholder:text-[#48484A] outline-none"
           />
           {query && (
             <button onClick={() => setQuery('')} className="shrink-0">
-              <X className="w-4 h-4 text-[#4A3F6E]" />
+              <X className="w-4 h-4 text-[#48484A]" />
             </button>
           )}
         </div>
 
-        {/* Genre chips */}
+        {/* Genre chips — Apple-style solid fill for active */}
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {GENRES.map(g => {
             const isIncluded = includedGenres.includes(g.id)
@@ -356,12 +356,12 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
               <button
                 key={g.id}
                 onClick={() => toggleGenre(g.id)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                   isIncluded
-                    ? 'bg-[rgba(124,58,237,0.18)] text-[#B39DFF] border-[rgba(124,58,237,0.3)]'
+                    ? 'bg-[#FF9F0A] text-black'
                     : isExcluded
-                      ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                      : 'bg-[#13101E] text-[#4A3F6E] border-[rgba(167,139,250,0.07)] active:border-[rgba(167,139,250,0.15)]'
+                      ? 'bg-rose-500/15 text-rose-400'
+                      : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
                 }`}
               >
                 {isExcluded ? '× ' : ''}{g.label}
@@ -382,8 +382,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                   title={p.provider_name}
                   className={`shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
                     isSelected
-                      ? 'bg-[rgba(124,58,237,0.15)] border-[rgba(124,58,237,0.35)] text-[#F0ECFF]'
-                      : 'bg-[#13101E] border-[rgba(167,139,250,0.07)] text-[#4A3F6E] active:bg-[#1C1830]'
+                      ? 'bg-[rgba(255,159,10,0.15)] border-[rgba(255,159,10,0.35)] text-[#F5F5F7]'
+                      : 'bg-[#1C1C1E] border-white/7 text-[#48484A] active:bg-[#2C2C2E]'
                   }`}
                 >
                   <img
@@ -405,20 +405,20 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
               style={{ fontSize: 16 }}
-              className="w-full bg-[#13101E] border border-[rgba(167,139,250,0.08)] rounded-xl px-3 pr-7 py-1.5 text-xs text-[#9B8EC4] outline-none appearance-none"
+              className="w-full bg-[#1C1C1E] border border-white/8 rounded-xl px-3 pr-7 py-1.5 text-xs text-[#8E8E93] outline-none appearance-none"
             >
               <option value="vote_average.desc">Top Rated</option>
               <option value="popularity.desc">Most Popular</option>
               <option value="first_air_date.desc">Newest First</option>
               <option value="first_air_date.asc">Oldest First</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#4A3F6E] pointer-events-none" />
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#48484A] pointer-events-none" />
           </div>
           <select
             value={yearFilter}
             onChange={e => setYearFilter(e.target.value)}
             style={{ fontSize: 16 }}
-            className="w-24 bg-[#13101E] border border-[rgba(167,139,250,0.08)] rounded-xl px-3 py-1.5 text-xs text-[#9B8EC4] outline-none appearance-none"
+            className="w-24 bg-[#1C1C1E] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-[#8E8E93] outline-none appearance-none"
           >
             <option value="">Any year</option>
             {Array.from({ length: 2027 - 1950 + 1 }, (_, i) => 2027 - i).map(y => (
@@ -430,8 +430,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             title={hideInLibrary ? 'Showing new only — tap to show all' : 'Tap to hide series already in your library'}
             className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-xl border transition-colors ${
               hideInLibrary
-                ? 'bg-[rgba(124,58,237,0.15)] border-[rgba(124,58,237,0.3)] text-[#B39DFF]'
-                : 'bg-[#13101E] border-[rgba(167,139,250,0.08)] text-[#4A3F6E] active:bg-[#1C1830]'
+                ? 'bg-[rgba(255,159,10,0.15)] border-[rgba(255,159,10,0.3)] text-[#FF9F0A]'
+                : 'bg-[#1C1C1E] border-white/8 text-[#48484A] active:bg-[#2C2C2E]'
             }`}
           >
             <BookmarkCheck className="w-3.5 h-3.5" />
@@ -443,16 +443,16 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0">
         {sectionLabel && (
           <div className="flex items-center gap-1.5 px-4 pt-3 pb-1">
-            <SectionIcon className="w-3.5 h-3.5 text-[#4A3F6E]" />
-            <span className="text-xs font-medium text-[#4A3F6E] uppercase tracking-wider truncate">{sectionLabel}</span>
-            {isLoading && <Loader2 className="w-3 h-3 text-[#4A3F6E] animate-spin shrink-0" />}
+            <SectionIcon className="w-3.5 h-3.5 text-[#48484A]" />
+            <span className="text-xs font-medium text-[#48484A] uppercase tracking-wider truncate">{sectionLabel}</span>
+            {isLoading && <Loader2 className="w-3 h-3 text-[#48484A] animate-spin shrink-0" />}
           </div>
         )}
 
         {visibleResults.length === 0 && !isLoading ? (
           query.trim() ? (
             <div className="flex flex-col items-center justify-center h-40 text-center px-6">
-              <p className="text-sm text-[#4A3F6E]">No results for "{query}"</p>
+              <p className="text-sm text-[#48484A]">No results for "{query}"</p>
             </div>
           ) : null
         ) : viewMode === 'list' ? (
@@ -460,24 +460,24 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             {visibleResults.map(r => (
               <div
                 key={r.id}
-                className="flex items-center gap-3 px-4 border-b border-[rgba(167,139,250,0.05)]"
+                className="flex items-center gap-3 px-4 border-b border-white/5"
                 style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
               >
                 <button
                   onClick={() => onSelect(seriesForPreview(r))}
                   className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
                 >
-                  <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#1C1830]">
+                  <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#1C1C1E]">
                     {r.poster_path && (
                       <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#F0ECFF] leading-snug truncate">{r.name}</p>
+                    <p className="text-sm font-medium text-[#F5F5F7] leading-snug truncate">{r.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs text-[#4A3F6E]">{r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}</p>
+                      <p className="text-xs text-[#48484A]">{r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}</p>
                       {(r.vote_average ?? 0) > 0 && (
-                        <span className="text-xs text-[#F0C060]">★ {r.vote_average!.toFixed(1)}</span>
+                        <span className="text-xs text-[#FFD60A]">★ {r.vote_average!.toFixed(1)}</span>
                       )}
                     </div>
                   </div>
@@ -497,35 +497,35 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                   className="relative text-left active:opacity-70 transition-opacity"
                   style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
                 >
-                  <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1C1830] mb-1.5 relative">
+                  <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1C1C1E] mb-1.5 relative">
                     {r.poster_path ? (
                       <img src={posterUrl(r.poster_path, 'w342') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center p-2">
-                        <span className="text-[10px] text-[#4A3F6E] text-center">{r.name}</span>
+                        <span className="text-[10px] text-[#48484A] text-center">{r.name}</span>
                       </div>
                     )}
                     {!inLibrary && (
                       <button
                         onClick={e => { e.stopPropagation(); handleAdd(r) }}
                         disabled={addingId === r.id}
-                        className="absolute bottom-1.5 right-1.5 w-7 h-7 flex items-center justify-center rounded-lg bg-[rgba(12,10,20,0.8)] text-[#B39DFF] border border-[rgba(179,157,255,0.2)] active:bg-[rgba(124,58,237,0.5)] transition-colors disabled:opacity-50"
+                        className="absolute bottom-1.5 right-1.5 w-7 h-7 flex items-center justify-center rounded-lg bg-black/80 text-[#FF9F0A] border border-white/15 active:bg-[rgba(255,159,10,0.5)] transition-colors disabled:opacity-50"
                       >
                         {addingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                       </button>
                     )}
                     {inLibrary && (
-                      <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#7C3AED]/80">
+                      <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#FF8C00]/80">
                         <span className="text-[9px] text-white font-bold">✓</span>
                       </div>
                     )}
                     {(r.vote_average ?? 0) > 0 && (
                       <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
-                        <span className="text-[10px] text-[#F0C060] font-medium leading-none">★ {r.vote_average!.toFixed(1)}</span>
+                        <span className="text-[10px] text-[#FFD60A] font-medium leading-none">★ {r.vote_average!.toFixed(1)}</span>
                       </div>
                     )}
                   </div>
-                  <p className="text-[11px] text-[#9B8EC4] leading-tight line-clamp-2">{r.name}</p>
+                  <p className="text-[11px] text-[#8E8E93] leading-tight line-clamp-2">{r.name}</p>
                 </button>
               )
             })}
@@ -534,7 +534,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
         {hasMore && <div ref={sentinelRef} className="h-px" />}
         {loadingMore && (
           <div className="flex justify-center py-4">
-            <Loader2 className="w-5 h-5 text-[#4A3F6E] animate-spin" />
+            <Loader2 className="w-5 h-5 text-[#48484A] animate-spin" />
           </div>
         )}
       </div>

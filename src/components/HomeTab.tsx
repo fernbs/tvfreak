@@ -165,9 +165,9 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   }
 
   const viewToggleClasses = (mode: string) =>
-    `p-1.5 rounded-md transition-colors ${viewMode === mode
-      ? 'bg-[rgba(124,58,237,0.15)] text-[#B39DFF]'
-      : 'text-[#4A3F6E] active:text-[#9B8EC4]'
+    `p-1.5 rounded-lg transition-colors ${viewMode === mode
+      ? 'bg-[#2C2C2E] text-[#F5F5F7]'
+      : 'text-[#48484A] active:text-[#8E8E93]'
     }`
 
   return (
@@ -182,7 +182,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
       >
         <Loader2
           className={`w-5 h-5 transition-colors duration-150 ${
-            refreshing ? 'animate-spin text-[#B39DFF]' : pullReady ? 'text-[#B39DFF]' : 'text-[#4A3F6E]'
+            refreshing ? 'animate-spin text-[#FF9F0A]' : pullReady ? 'text-[#FF9F0A]' : 'text-[#48484A]'
           }`}
           style={{
             opacity: refreshing ? 1 : Math.min(pullDistance / (PULL_THRESHOLD * 0.5), 1),
@@ -194,30 +194,30 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
 
       {/* Sticky header */}
       <div
-        className="shrink-0 px-4 pb-3 bg-[#0C0A14]"
+        className="shrink-0 px-4 pb-3 bg-black"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <TVFreakIcon size={22} />
-            <span className="text-lg font-bold tracking-tight text-[#F0ECFF]">TVFREAK</span>
+            <TVFreakIcon size={24} />
+            <span className="text-xl font-bold tracking-tight text-[#F5F5F7]">TVFREAK</span>
           </div>
           <button
             onClick={() => setShowSettings(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg active:bg-[rgba(167,139,250,0.08)] transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-xl active:bg-white/5 transition-colors"
           >
-            <Settings className="w-4 h-4 text-[#4A3F6E]" />
+            <Settings className="w-[18px] h-[18px] text-[#48484A]" />
           </button>
         </div>
 
-        {/* View toggle */}
-        <div className="flex bg-[#13101E] border border-[rgba(167,139,250,0.08)] rounded-2xl p-1 gap-1">
+        {/* Segmented control */}
+        <div className="flex bg-white/5 rounded-2xl p-1 gap-1">
           <button
             onClick={() => setView('watching')}
             className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
               view === 'watching'
-                ? 'bg-[#1C1830] text-[#F0ECFF] shadow-sm'
-                : 'text-[#4A3F6E]'
+                ? 'bg-[#1C1C1E] text-[#F5F5F7] shadow'
+                : 'text-[#48484A]'
             }`}
           >
             Watching now
@@ -226,8 +226,8 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
             onClick={() => setView('upcoming')}
             className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
               view === 'upcoming'
-                ? 'bg-[#1C1830] text-[#F0ECFF] shadow-sm'
-                : 'text-[#4A3F6E]'
+                ? 'bg-[#1C1C1E] text-[#F5F5F7] shadow'
+                : 'text-[#48484A]'
             }`}
           >
             Upcoming
@@ -241,18 +241,18 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
         className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 min-h-0"
       >
         {loading ? (
-          <p className="text-sm text-[#4A3F6E] py-12 text-center">Loading...</p>
+          <p className="text-sm text-[#48484A] py-12 text-center">Loading...</p>
         ) : view === 'watching' ? (
           watchingNow.length === 0 ? (
             <div className="py-16 text-center">
-              <Tv className="w-10 h-10 text-[#251E3A] mx-auto mb-3" />
-              <p className="text-sm text-[#4A3F6E]">Nothing actively watching right now.</p>
-              <p className="text-xs text-[#251E3A] mt-1">Series you're mid-way through will appear here.</p>
+              <Tv className="w-10 h-10 text-[#2C2C2E] mx-auto mb-3" />
+              <p className="text-sm text-[#48484A]">Nothing actively watching right now.</p>
+              <p className="text-xs text-[#2C2C2E] mt-1">Series you're mid-way through will appear here.</p>
             </div>
           ) : (
             <>
               <div className="flex justify-end pt-2 pb-1">
-                <div className="flex items-center gap-0.5 bg-[#13101E] border border-[rgba(167,139,250,0.07)] rounded-xl p-0.5">
+                <div className="flex items-center gap-0.5 bg-white/5 rounded-xl p-0.5">
                   {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
                     <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
                       <Icon className="w-3.5 h-3.5" />
@@ -266,28 +266,28 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
         ) : (
           <div>
             {/* Calendar accordion */}
-            <div className="bg-[#13101E] rounded-2xl border border-[rgba(167,139,250,0.08)] mb-4 mt-2 overflow-hidden">
+            <div className="bg-[#111111] rounded-2xl border border-white/7 mb-4 mt-2 overflow-hidden">
               {/* Month header */}
               <div className="flex items-center justify-between px-4 py-3.5">
                 <button
                   onClick={() => { setCalMonth(addMonths(calMonth, -1)); setSelectedDate(null) }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-[#4A3F6E] active:bg-[rgba(167,139,250,0.08)] transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-[#48484A] active:bg-white/5 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setCalOpen(prev => !prev)}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-[#F0ECFF] active:opacity-60 transition-opacity"
+                  className="flex items-center gap-1.5 text-sm font-semibold text-[#F5F5F7] active:opacity-60 transition-opacity"
                 >
                   {monthLabel}
                   <ChevronDown
-                    className="w-3.5 h-3.5 text-[#4A3F6E] transition-transform duration-200"
+                    className="w-3.5 h-3.5 text-[#48484A] transition-transform duration-200"
                     style={{ transform: calOpen ? 'rotate(180deg)' : 'none' }}
                   />
                 </button>
                 <button
                   onClick={() => { setCalMonth(addMonths(calMonth, 1)); setSelectedDate(null) }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-[#4A3F6E] active:bg-[rgba(167,139,250,0.08)] transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-[#48484A] active:bg-white/5 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -304,7 +304,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                 <div className="px-4 pb-4">
                   <div className="grid grid-cols-7 mb-2">
                     {DAY_LABELS.map(d => (
-                      <div key={d} className="text-center text-[10px] font-medium text-[#4A3F6E] uppercase tracking-wide">
+                      <div key={d} className="text-center text-[10px] font-medium text-[#48484A] uppercase tracking-wide">
                         {d.slice(0, 1)}
                       </div>
                     ))}
@@ -324,24 +324,24 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                           onClick={() => !isPast && handleDayClick(day)}
                           disabled={isPast && !hasEpisode}
                           className="flex flex-col items-center py-1 rounded-lg transition-colors"
-                          style={{ backgroundColor: isSelected ? 'rgba(124,58,237,0.2)' : undefined }}
+                          style={{ backgroundColor: isSelected ? 'rgba(255,159,10,0.18)' : undefined }}
                         >
                           <span
                             className={`text-sm leading-none font-medium ${
                               isSelected
-                                ? 'text-[#B39DFF]'
+                                ? 'text-[#FF9F0A]'
                                 : isToday
-                                  ? 'text-[#B39DFF]'
+                                  ? 'text-[#FF9F0A]'
                                   : isPast
-                                    ? 'text-[#251E3A]'
-                                    : 'text-[#9B8EC4]'
+                                    ? 'text-[#2C2C2E]'
+                                    : 'text-[#8E8E93]'
                             }`}
                             style={isToday && !isSelected ? { textDecoration: 'underline', textUnderlineOffset: 3 } : undefined}
                           >
                             {day}
                           </span>
                           <div className="h-1.5 mt-0.5 flex items-center justify-center">
-                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#B39DFF]" />}
+                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#FF9F0A]" />}
                           </div>
                         </button>
                       )
@@ -355,17 +355,17 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
             <div className="flex items-center justify-between mb-2">
               {selectedDate ? (
                 <>
-                  <p className="text-xs text-[#4A3F6E] uppercase tracking-wider font-medium">
+                  <p className="text-xs text-[#48484A] uppercase tracking-wider font-medium">
                     {new Date(selectedDate + 'T12:00:00').toLocaleDateString('default', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </p>
-                  <button onClick={() => setSelectedDate(null)} className="text-[10px] text-[#4A3F6E] active:text-[#9B8EC4]">
+                  <button onClick={() => setSelectedDate(null)} className="text-[10px] text-[#48484A] active:text-[#8E8E93]">
                     Clear
                   </button>
                 </>
               ) : (
                 <div />
               )}
-              <div className="flex items-center gap-0.5 bg-[#13101E] border border-[rgba(167,139,250,0.07)] rounded-xl p-0.5">
+              <div className="flex items-center gap-0.5 bg-white/5 rounded-xl p-0.5">
                 {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
                   <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
                     <Icon className="w-3.5 h-3.5" />
@@ -376,12 +376,12 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
 
             {listItems.length === 0 ? (
               <div className="py-10 text-center">
-                <Calendar className="w-10 h-10 text-[#251E3A] mx-auto mb-3" />
-                <p className="text-sm text-[#4A3F6E]">
+                <Calendar className="w-10 h-10 text-[#2C2C2E] mx-auto mb-3" />
+                <p className="text-sm text-[#48484A]">
                   {selectedDate ? 'No episodes airing this day.' : 'No upcoming episodes found.'}
                 </p>
                 {!selectedDate && (
-                  <p className="text-xs text-[#251E3A] mt-1">Pull to refresh to update dates.</p>
+                  <p className="text-xs text-[#2C2C2E] mt-1">Pull to refresh to update dates.</p>
                 )}
               </div>
             ) : viewMode === 'list' ? (
@@ -390,18 +390,18 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                   <button
                     key={`${s.id}-${date}-${i}`}
                     onClick={() => onSelect(s)}
-                    className="w-full flex items-center gap-3 p-3 bg-[#13101E] rounded-xl border border-[rgba(167,139,250,0.07)] active:bg-[#1C1830] transition-colors text-left"
+                    className="w-full flex items-center gap-3 p-3 bg-[#111111] rounded-xl border border-white/7 active:bg-[#1C1C1E] transition-colors text-left"
                   >
-                    <div className="w-10 h-14 rounded-lg overflow-hidden bg-[#1C1830] shrink-0">
+                    <div className="w-10 h-14 rounded-lg overflow-hidden bg-[#1C1C1E] shrink-0">
                       {s.posterPath && (
                         <img src={posterUrl(s.posterPath, 'w185') ?? ''} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#F0ECFF] truncate">{s.title}</p>
+                      <p className="text-sm font-medium text-[#F5F5F7] truncate">{s.title}</p>
                     </div>
                     <div className="shrink-0">
-                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(124,58,237,0.15)] text-[#B39DFF] leading-tight border border-[rgba(124,58,237,0.2)]">
+                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(255,159,10,0.12)] text-[#FF9F0A] leading-tight">
                         {formatAirDate(date)}
                       </span>
                     </div>
@@ -410,7 +410,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                 {visibleCount < listItems.length && (
                   <button
                     onClick={() => setVisibleCount(c => c + 20)}
-                    className="w-full py-3 text-xs font-medium text-[#4A3F6E] active:text-[#9B8EC4] transition-colors"
+                    className="w-full py-3 text-xs font-medium text-[#48484A] active:text-[#8E8E93] transition-colors"
                   >
                     Load more ({listItems.length - visibleCount} remaining)
                   </button>
@@ -425,26 +425,26 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                       onClick={() => onSelect(s)}
                       className="relative text-left active:opacity-70 transition-opacity"
                     >
-                      <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1C1830] mb-1 relative">
+                      <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1C1C1E] mb-1 relative">
                         {s.posterPath ? (
                           <img src={posterUrl(s.posterPath, 'w342') ?? ''} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center p-2">
-                            <span className="text-[10px] text-[#4A3F6E] text-center">{s.title}</span>
+                            <span className="text-[10px] text-[#48484A] text-center">{s.title}</span>
                           </div>
                         )}
-                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#7C3AED]/90 text-white leading-tight backdrop-blur-sm">
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF8C00]/90 text-white leading-tight backdrop-blur-sm">
                           {formatAirDate(date)}
                         </div>
                       </div>
-                      <p className={`text-[#9B8EC4] leading-tight line-clamp-2 ${viewMode === 'big' ? 'text-[11px]' : 'text-[10px]'}`}>{s.title}</p>
+                      <p className={`text-[#8E8E93] leading-tight line-clamp-2 ${viewMode === 'big' ? 'text-[11px]' : 'text-[10px]'}`}>{s.title}</p>
                     </button>
                   ))}
                 </div>
                 {visibleCount < listItems.length && (
                   <button
                     onClick={() => setVisibleCount(c => c + 20)}
-                    className="w-full py-3 mt-2 text-xs font-medium text-[#4A3F6E] active:text-[#9B8EC4] transition-colors"
+                    className="w-full py-3 mt-2 text-xs font-medium text-[#48484A] active:text-[#8E8E93] transition-colors"
                   >
                     Load more ({listItems.length - visibleCount} remaining)
                   </button>

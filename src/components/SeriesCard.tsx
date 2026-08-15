@@ -34,21 +34,21 @@ export function SeriesCard({ series, onClick }: Props) {
           draggable={false}
         />
       ) : (
-        <div className="w-full h-full bg-[#1C1830] flex items-center justify-center p-3 transition-transform duration-300 group-hover:scale-[1.04]">
-          <span className="text-xs text-[#4A3F6E] text-center leading-snug font-medium">
+        <div className="w-full h-full bg-[#1C1C1E] flex items-center justify-center p-3 transition-transform duration-300 group-hover:scale-[1.04]">
+          <span className="text-xs text-[#48484A] text-center leading-snug font-medium">
             {series.title}
           </span>
         </div>
       )}
 
-      {/* Status colour strip at top */}
+      {/* Status dot: bottom-left corner */}
       <div
-        className="absolute top-0 left-0 right-0 h-[2px] pointer-events-none"
-        style={{ backgroundColor: config.color, boxShadow: `0 0 10px 2px ${config.color}55` }}
+        className="absolute bottom-2 left-2 w-[9px] h-[9px] rounded-full pointer-events-none ring-[1.5px] ring-black/60"
+        style={{ backgroundColor: config.color }}
       />
 
       {/* Hover overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
         <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{series.title}</p>
         <span
           className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full"
@@ -60,21 +60,21 @@ export function SeriesCard({ series, onClick }: Props) {
 
       {/* Upcoming episode date badge */}
       {hasUpcoming && series.nextEpisodeDate && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#7C3AED]/90 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF8C00]/90 text-white leading-tight backdrop-blur-sm">
           {formatAirDate(series.nextEpisodeDate)}
         </div>
       )}
 
       {/* Pending + no known date: TBA badge */}
       {!hasUpcoming && !hasNewEpisode && series.status === 'plantowatch' && !series.nextEpisodeDate && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(167,139,250,0.1)] text-[#9B8EC4] leading-tight backdrop-blur-sm border border-[rgba(167,139,250,0.12)]">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-black/60 text-[#8E8E93] leading-tight backdrop-blur-sm">
           TBA
         </div>
       )}
 
       {/* New episode aired badge */}
       {hasNewEpisode && !hasUpcoming && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#7C3AED]/90 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF8C00]/90 text-white leading-tight backdrop-blur-sm">
           New
         </div>
       )}
@@ -86,9 +86,9 @@ export function SeriesCard({ series, onClick }: Props) {
         </div>
       )}
 
-      {/* Rating — bottom right */}
+      {/* Rating */}
       {series.imdbRating && (
-        <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 text-[#F0C060] leading-tight backdrop-blur-sm">
+        <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 text-[#FFD60A] leading-tight backdrop-blur-sm">
           ★ {series.imdbRating}
         </div>
       )}

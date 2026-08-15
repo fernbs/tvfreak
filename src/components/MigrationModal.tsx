@@ -120,14 +120,14 @@ export function MigrationModal({ onClose, onDone }: Props) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.96, opacity: 0 }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="relative bg-[#13101E] rounded-3xl border border-[rgba(167,139,250,0.12)] shadow-2xl w-full max-w-md overflow-hidden"
+        className="relative bg-[#111111] rounded-3xl border border-white/10 shadow-2xl w-full max-w-md overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-[rgba(167,139,250,0.07)]">
-          <Wand2 className="w-4 h-4 text-[#B39DFF] shrink-0" />
-          <h2 className="text-sm font-semibold text-[#F0ECFF] flex-1">Restore watch history from colours</h2>
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/6">
+          <Wand2 className="w-4 h-4 text-[#FF9F0A] shrink-0" />
+          <h2 className="text-sm font-semibold text-[#F5F5F7] flex-1">Restore watch history from colours</h2>
           {step !== 'running' && (
-            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#1C1830] border border-[rgba(167,139,250,0.08)] text-[#9B8EC4] transition-colors">
+            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#1C1C1E] border border-white/8 text-[#8E8E93] transition-colors">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -136,7 +136,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
         <div className="p-5">
           {step === 'confirm' && (
             <>
-              <p className="text-sm text-[#9B8EC4] leading-relaxed mb-4">
+              <p className="text-sm text-[#8E8E93] leading-relaxed mb-4">
                 Since your original watch history was lost, this will reconstruct it from the status colour of each series:
               </p>
               <div className="space-y-2.5 mb-5">
@@ -152,18 +152,18 @@ export function MigrationModal({ onClose, onDone }: Props) {
                       <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: cfg.color }} />
                       <div>
                         <span className="text-xs font-medium" style={{ color: cfg.color }}>{cfg.label}</span>
-                        <span className="text-xs text-[#4A3F6E]"> — {desc}</span>
+                        <span className="text-xs text-[#48484A]"> · {desc}</span>
                       </div>
                     </div>
                   )
                 })}
               </div>
-              <p className="text-xs text-[#9B8EC4] mb-5 px-3 py-2.5 bg-[rgba(167,139,250,0.04)] rounded-xl border border-[rgba(167,139,250,0.07)]">
+              <p className="text-xs text-[#8E8E93] mb-5 px-3 py-2.5 bg-white/3 rounded-xl border border-white/6">
                 Episodes already marked won't be changed. This uses your TMDB key and may take a few minutes for large libraries.
               </p>
               <button
                 onClick={runMigration}
-                className="w-full py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="w-full py-2.5 bg-[#FF8C00] hover:bg-[#E07000] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Start migration
               </button>
@@ -172,17 +172,17 @@ export function MigrationModal({ onClose, onDone }: Props) {
 
           {step === 'running' && (
             <>
-              <div className="mb-2 flex justify-between text-xs text-[#4A3F6E]">
+              <div className="mb-2 flex justify-between text-xs text-[#48484A]">
                 <span className="truncate mr-2">{progress.current || 'Starting...'}</span>
                 <span className="shrink-0 tabular-nums">{progress.done}/{progress.total}</span>
               </div>
-              <div className="w-full h-[3px] bg-[rgba(167,139,250,0.1)] rounded-full overflow-hidden mb-4">
+              <div className="w-full h-[3px] bg-white/7 rounded-full overflow-hidden mb-4">
                 <div
-                  className="h-full bg-[#7C3AED] rounded-full transition-all duration-300"
+                  className="h-full bg-[#FF8C00] rounded-full transition-all duration-300"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <p className="text-xs text-[#4A3F6E] text-center">Don't close this window while it's running</p>
+              <p className="text-xs text-[#48484A] text-center">Don't close this window while it's running</p>
             </>
           )}
 
@@ -191,12 +191,12 @@ export function MigrationModal({ onClose, onDone }: Props) {
               <div className="w-12 h-12 rounded-full bg-emerald-500/12 flex items-center justify-center mx-auto mb-3">
                 <Check className="w-6 h-6 text-emerald-400" />
               </div>
-              <p className="text-sm font-medium text-[#F0ECFF] mb-1">Done</p>
-              <p className="text-xs text-[#4A3F6E] mb-1">{summary.processed} series processed · {summary.markedEpisodes.toLocaleString()} episodes marked</p>
-              {summary.skipped > 0 && <p className="text-xs text-[#251E3A]">{summary.skipped} skipped (no TMDB data)</p>}
+              <p className="text-sm font-medium text-[#F5F5F7] mb-1">Done</p>
+              <p className="text-xs text-[#48484A] mb-1">{summary.processed} series processed · {summary.markedEpisodes.toLocaleString()} episodes marked</p>
+              {summary.skipped > 0 && <p className="text-xs text-[#2C2C2E]">{summary.skipped} skipped (no TMDB data)</p>}
               <button
                 onClick={onClose}
-                className="mt-5 px-4 py-2 bg-[rgba(167,139,250,0.08)] hover:bg-[rgba(167,139,250,0.14)] text-[#F0ECFF] text-sm font-medium rounded-2xl transition-colors"
+                className="mt-5 px-4 py-2 bg-white/8 hover:bg-white/12 text-[#F5F5F7] text-sm font-medium rounded-2xl transition-colors"
               >
                 Close
               </button>
@@ -208,11 +208,11 @@ export function MigrationModal({ onClose, onDone }: Props) {
               <div className="w-12 h-12 rounded-full bg-rose-500/12 flex items-center justify-center mx-auto mb-3">
                 <AlertCircle className="w-6 h-6 text-rose-400" />
               </div>
-              <p className="text-sm font-medium text-[#F0ECFF] mb-1">Something went wrong</p>
-              <p className="text-xs text-[#4A3F6E] mb-5">{errorMsg}</p>
+              <p className="text-sm font-medium text-[#F5F5F7] mb-1">Something went wrong</p>
+              <p className="text-xs text-[#48484A] mb-5">{errorMsg}</p>
               <button
                 onClick={() => setStep('confirm')}
-                className="px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="px-4 py-2 bg-[#FF8C00] hover:bg-[#E07000] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Try again
               </button>

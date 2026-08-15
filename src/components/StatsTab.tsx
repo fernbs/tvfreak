@@ -11,10 +11,10 @@ interface Props {
 }
 
 function heatColor(count: number): string {
-  if (count === 0) return '#1C1830'
-  if (count <= 2) return '#3B1F72'
-  if (count <= 5) return '#6B21A8'
-  return '#9333EA'
+  if (count === 0) return '#1C1C1E'
+  if (count <= 2) return '#7A3B0A'
+  if (count <= 5) return '#B85C0A'
+  return '#FF8C00'
 }
 
 function buildWeeks(activityByDate: { date: string; count: number }[]) {
@@ -105,19 +105,19 @@ export function StatsTab({ allSeries }: Props) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div
-        className="shrink-0 bg-[#0C0A14] px-4 pb-3"
+        className="shrink-0 bg-black px-4 pb-3"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <div className="flex items-center gap-2">
-          <TVFreakIcon size={22} />
-          <h1 className="text-lg font-bold text-[#F0ECFF]">Stats</h1>
+          <TVFreakIcon size={24} />
+          <h1 className="text-xl font-bold text-[#F5F5F7]">Stats</h1>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8 min-h-0">
         {loading ? (
           <div className="flex items-center justify-center h-40">
-            <Loader2 className="w-6 h-6 text-[#4A3F6E] animate-spin" />
+            <Loader2 className="w-6 h-6 text-[#48484A] animate-spin" />
           </div>
         ) : (
           <div className="space-y-4 pt-1">
@@ -129,9 +129,9 @@ export function StatsTab({ allSeries }: Props) {
                 { value: `${totalHours.toLocaleString()}h`, label: 'Watched' },
                 { value: activeDays.toString(), label: 'Active days' },
               ].map(({ value, label }) => (
-                <div key={label} className="bg-[#13101E] rounded-2xl p-3.5 text-center border border-[rgba(167,139,250,0.07)]">
-                  <p className="text-xl font-bold text-[#F0ECFF] tabular-nums">{value}</p>
-                  <p className="text-[10px] text-[#4A3F6E] mt-0.5 uppercase tracking-wider">{label}</p>
+                <div key={label} className="bg-[#111111] rounded-2xl p-4 text-center border border-white/7">
+                  <p className="text-2xl font-bold text-[#F5F5F7] tabular-nums leading-none">{value}</p>
+                  <p className="text-[10px] text-[#48484A] mt-1.5 uppercase tracking-wider font-medium">{label}</p>
                 </div>
               ))}
             </div>
@@ -142,28 +142,28 @@ export function StatsTab({ allSeries }: Props) {
                 { value: streak.current, label: 'Current streak', unit: streak.current === 1 ? 'day' : 'days' },
                 { value: streak.longest, label: 'Longest streak', unit: streak.longest === 1 ? 'day' : 'days' },
               ].map(({ value, label, unit }) => (
-                <div key={label} className="bg-[#13101E] rounded-2xl p-3.5 border border-[rgba(167,139,250,0.07)]">
-                  <p className="text-xl font-bold text-[#B39DFF] tabular-nums">
-                    {value} <span className="text-sm font-normal text-[#4A3F6E]">{unit}</span>
+                <div key={label} className="bg-[#111111] rounded-2xl p-4 border border-white/7">
+                  <p className="text-2xl font-bold text-[#FF9F0A] tabular-nums leading-none">
+                    {value} <span className="text-sm font-normal text-[#48484A]">{unit}</span>
                   </p>
-                  <p className="text-[10px] text-[#4A3F6E] mt-0.5 uppercase tracking-wider">{label}</p>
+                  <p className="text-[10px] text-[#48484A] mt-1.5 uppercase tracking-wider font-medium">{label}</p>
                 </div>
               ))}
             </div>
 
             {/* Library breakdown */}
-            <div className="bg-[#13101E] rounded-2xl p-4 border border-[rgba(167,139,250,0.07)]">
-              <p className="text-[10px] text-[#4A3F6E] uppercase tracking-wider font-semibold mb-3">
+            <div className="bg-[#111111] rounded-2xl p-4 border border-white/7">
+              <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-3">
                 Library · {allSeries.length} series
               </p>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-3">
                 {(Object.entries(byStatus) as [keyof typeof byStatus, number][]).map(([status, count]) => {
                   const cfg = STATUS_CONFIG[status]
                   return (
                     <div key={status} className="flex items-center gap-2.5">
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cfg.color }} />
-                      <span className="text-sm text-[#9B8EC4] flex-1">{cfg.label}</span>
-                      <span className="text-sm font-semibold text-[#F0ECFF] tabular-nums">{count}</span>
+                      <span className="text-sm text-[#8E8E93] flex-1">{cfg.label}</span>
+                      <span className="text-sm font-semibold text-[#F5F5F7] tabular-nums">{count}</span>
                     </div>
                   )
                 })}
@@ -172,26 +172,24 @@ export function StatsTab({ allSeries }: Props) {
 
             {/* Activity heatmap */}
             {weeks.length > 0 && (
-              <div className="bg-[#13101E] rounded-2xl p-4 border border-[rgba(167,139,250,0.07)]">
-                <p className="text-[10px] text-[#4A3F6E] uppercase tracking-wider font-semibold mb-3">
+              <div className="bg-[#111111] rounded-2xl p-4 border border-white/7">
+                <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-3">
                   Activity · last 6 months
                 </p>
                 <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
                   <div style={{ minWidth: `${weeks.length * 12}px` }}>
-                    {/* Month labels */}
                     <div className="flex mb-1" style={{ gap: '2px' }}>
                       {weeks.map((week, i) => {
                         const label = monthLabels.find(m => m.colIndex === i)
                         return (
                           <div key={i} style={{ width: 10, flexShrink: 0 }}>
                             {label && (
-                              <span className="text-[8px] text-[#4A3F6E] whitespace-nowrap">{label.label}</span>
+                              <span className="text-[8px] text-[#48484A] whitespace-nowrap">{label.label}</span>
                             )}
                           </div>
                         )
                       })}
                     </div>
-                    {/* Grid */}
                     <div className="flex" style={{ gap: '2px' }}>
                       {weeks.map((week, wi) => (
                         <div key={wi} className="flex flex-col" style={{ gap: '2px' }}>
@@ -212,21 +210,20 @@ export function StatsTab({ allSeries }: Props) {
                     </div>
                   </div>
                 </div>
-                {/* Legend */}
                 <div className="flex items-center gap-1.5 mt-3 justify-end">
-                  <span className="text-[9px] text-[#4A3F6E]">Less</span>
-                  {['#1C1830', '#3B1F72', '#6B21A8', '#9333EA'].map(c => (
+                  <span className="text-[9px] text-[#48484A]">Less</span>
+                  {['#1C1C1E', '#7A3B0A', '#B85C0A', '#FF8C00'].map(c => (
                     <div key={c} style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: c }} />
                   ))}
-                  <span className="text-[9px] text-[#4A3F6E]">More</span>
+                  <span className="text-[9px] text-[#48484A]">More</span>
                 </div>
               </div>
             )}
 
             {/* Top shows */}
             {stats && stats.topSeries.length > 0 && (
-              <div className="bg-[#13101E] rounded-2xl p-4 border border-[rgba(167,139,250,0.07)]">
-                <p className="text-[10px] text-[#4A3F6E] uppercase tracking-wider font-semibold mb-3">Most watched</p>
+              <div className="bg-[#111111] rounded-2xl p-4 border border-white/7">
+                <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-3">Most watched</p>
                 <div className="space-y-3">
                   {stats.topSeries.map((s, i) => {
                     const pct = stats.topSeries[0].episodeCount > 0
@@ -236,16 +233,16 @@ export function StatsTab({ allSeries }: Props) {
                       <div key={s.seriesId}>
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xs text-[#251E3A] tabular-nums w-4 shrink-0">{i + 1}</span>
-                            <span className="text-sm text-[#F0ECFF] truncate">{s.title}</span>
+                            <span className="text-xs text-[#2C2C2E] tabular-nums w-4 shrink-0">{i + 1}</span>
+                            <span className="text-sm text-[#F5F5F7] truncate">{s.title}</span>
                           </div>
-                          <span className="text-xs text-[#4A3F6E] tabular-nums shrink-0 ml-2">
+                          <span className="text-xs text-[#48484A] tabular-nums shrink-0 ml-2">
                             {s.episodeCount} ep{s.episodeCount !== 1 ? 's' : ''}
                           </span>
                         </div>
-                        <div className="h-[3px] bg-[rgba(167,139,250,0.08)] rounded-full overflow-hidden">
+                        <div className="h-[3px] bg-white/7 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#7C3AED] rounded-full transition-all duration-500"
+                            className="h-full bg-[#FF8C00] rounded-full transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

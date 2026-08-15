@@ -79,7 +79,7 @@ export function BottomNav({ active, onChange }: Props) {
 
   return (
     <nav
-      className="fixed left-0 right-0 flex bg-[#0C0A14]/96 backdrop-blur-md border-t border-[rgba(167,139,250,0.08)] z-10"
+      className="fixed left-0 right-0 flex bg-black/94 backdrop-blur-2xl border-t border-white/6 z-10"
       style={{ bottom: `-${sab}px`, paddingBottom: `${sab}px` }}
     >
       {tabs.map(({ id, icon: Icon, label }) => {
@@ -88,32 +88,26 @@ export function BottomNav({ active, onChange }: Props) {
           <button
             key={id}
             onClick={() => onChange(id)}
-            className="relative flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors"
+            className="flex-1 flex flex-col items-center justify-center gap-[5px] py-3 relative transition-colors"
           >
-            {isActive && (
-              <span
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-[2px] rounded-full"
-                style={{
-                  backgroundColor: '#B39DFF',
-                  boxShadow: '0 0 12px 3px rgba(179,157,255,0.35)',
-                }}
-              />
-            )}
-            <div className={`flex flex-col items-center gap-1 transition-all duration-200 ${
-              isActive
-                ? 'px-3 py-1 rounded-xl bg-[rgba(124,58,237,0.1)]'
-                : ''
+            {/* Amber capsule indicator at top */}
+            <div
+              className="absolute top-0 left-1/2 -translate-x-1/2 h-[2.5px] rounded-full transition-all duration-300"
+              style={{
+                width: isActive ? 28 : 0,
+                backgroundColor: '#FF9F0A',
+                opacity: isActive ? 1 : 0,
+              }}
+            />
+            <Icon
+              className={`w-[22px] h-[22px] transition-all duration-200 ${isActive ? 'text-white' : 'text-[#48484A]'}`}
+              strokeWidth={isActive ? 2.5 : 1.8}
+            />
+            <span className={`text-[10px] font-medium tracking-wide transition-colors duration-200 ${
+              isActive ? 'text-white' : 'text-[#48484A]'
             }`}>
-              <Icon
-                className={`w-5 h-5 transition-colors ${isActive ? 'text-[#B39DFF]' : 'text-[#4A3F6E]'}`}
-                strokeWidth={isActive ? 2.5 : 1.8}
-              />
-              <span className={`text-[10px] font-medium tracking-wide transition-colors ${
-                isActive ? 'text-[#B39DFF]' : 'text-[#4A3F6E]'
-              }`}>
-                {label}
-              </span>
-            </div>
+              {label}
+            </span>
           </button>
         )
       })}

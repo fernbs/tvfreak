@@ -39,7 +39,7 @@ export function SettingsModal({ onClose }: Props) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 bg-black/50 z-40 backdrop-blur-[2px]"
+        className="fixed inset-0 bg-black/60 z-40 backdrop-blur-[2px]"
         onClick={onClose}
       />
 
@@ -49,20 +49,20 @@ export function SettingsModal({ onClose }: Props) {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 32, stiffness: 320, mass: 0.9 }}
-        className="fixed bottom-0 left-0 right-0 bg-[#13101E] rounded-t-3xl z-50 border-t border-[rgba(167,139,250,0.12)]"
+        className="fixed bottom-0 left-0 right-0 bg-[#111111] rounded-t-3xl z-50 border-t border-white/10"
         style={{ paddingBottom: '1.5rem' }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-[rgba(167,139,250,0.2)]" />
+          <div className="w-10 h-1 rounded-full bg-white/12" />
         </div>
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-2 pb-5">
-          <h2 className="text-base font-semibold text-[#F0ECFF]">Settings</h2>
+          <h2 className="text-base font-semibold text-[#F5F5F7]">Settings</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#1C1830] border border-[rgba(167,139,250,0.08)] text-[#9B8EC4] hover:text-[#F0ECFF] transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#1C1C1E] border border-white/8 text-[#8E8E93] hover:text-[#F5F5F7] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -71,29 +71,29 @@ export function SettingsModal({ onClose }: Props) {
         {/* Content */}
         <div className="px-5 pb-4 space-y-5">
           <div>
-            <p className="text-[10px] text-[#4A3F6E] uppercase tracking-widest font-semibold mb-1.5">Your country</p>
-            <p className="text-xs text-[#9B8EC4] mb-3">Used to show streaming platforms available in your region.</p>
+            <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-1.5">Your country</p>
+            <p className="text-xs text-[#8E8E93] mb-3">Used to show streaming platforms available in your region.</p>
             <div className="relative">
               <select
                 value={country}
                 onChange={e => handleCountryChange(e.target.value)}
                 style={{ fontSize: 16 }}
-                className="w-full bg-[#1C1830] border border-[rgba(167,139,250,0.1)] rounded-2xl px-4 pr-10 py-3 text-sm text-[#F0ECFF] outline-none appearance-none focus:border-[rgba(167,139,250,0.25)] transition-colors"
+                className="w-full bg-[#1C1C1E] border border-white/8 rounded-2xl px-4 pr-10 py-3 text-sm text-[#F5F5F7] outline-none appearance-none focus:border-white/20 transition-colors"
               >
                 {COUNTRIES.map(c => (
-                  <option key={c.code} value={c.code} className="bg-[#1C1830]">
+                  <option key={c.code} value={c.code} className="bg-[#1C1C1E]">
                     {c.name} ({c.code})
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A3F6E] pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484A] pointer-events-none" />
             </div>
           </div>
 
           {availableProviders.length > 0 && (
             <div>
-              <p className="text-[10px] text-[#4A3F6E] uppercase tracking-widest font-semibold mb-1">Default platforms in search</p>
-              <p className="text-xs text-[#9B8EC4] mb-3">Selected platforms will be pre-applied every time you open Search. Leave all off to show everything.</p>
+              <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-1">Default platforms in search</p>
+              <p className="text-xs text-[#8E8E93] mb-3">Selected platforms will be pre-applied every time you open Search. Leave all off to show everything.</p>
               <div className="flex flex-wrap gap-2">
                 {availableProviders.map(p => {
                   const isSelected = defaultProviderIds.includes(p.provider_id)
@@ -104,8 +104,8 @@ export function SettingsModal({ onClose }: Props) {
                       title={p.provider_name}
                       className={`flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
                         isSelected
-                          ? 'bg-[rgba(124,58,237,0.15)] border-[rgba(124,58,237,0.35)] text-[#F0ECFF]'
-                          : 'bg-[#1C1830] border-[rgba(167,139,250,0.08)] text-[#4A3F6E] active:bg-[#251E3A]'
+                          ? 'bg-[rgba(255,159,10,0.15)] border-[rgba(255,159,10,0.35)] text-[#F5F5F7]'
+                          : 'bg-[#1C1C1E] border-white/8 text-[#48484A] active:bg-[#2C2C2E]'
                       }`}
                     >
                       <img src={`${IMG_BASE}/w45${p.logo_path}`} alt={p.provider_name} className="w-5 h-5 rounded-sm object-cover shrink-0" />

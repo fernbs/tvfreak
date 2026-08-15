@@ -445,7 +445,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#0C0A14] overflow-hidden">
+    <div className="flex flex-col h-full bg-black overflow-hidden">
       {/* Worker unreachable banner */}
       {workerError && !loading && (
         <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-rose-500/8 border-b border-rose-500/15">
