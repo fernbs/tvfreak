@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown, BookmarkCheck } from 'lucide-react'
 import { TVFreakIcon } from './TVFreakIcon'
 import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
@@ -51,6 +51,20 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const handleLoadMoreRef = useRef<() => void>(() => {})
+
+  // These must be computed before any useEffect that depends on them
+  const noQuery = !query.trim()
+  const noGenreFilter = includedGenres.length === 0 && excludedGenres.length === 0
+  const noProviderFilter = selectedProviders.length === 0
+  const noYearFilter = yearFilter.length !== 4
+  const showTrending = noQuery && noGenreFilter && noProviderFilter && noYearFilter
+  const hasMore = showTrending ? trendingPage < trendingTotalPages : currentPage < totalPages
+
+  const sortedProviders = useMemo(() => {
+    const sel = availableProviders.filter(p => selectedProviders.includes(p.provider_id))
+    const unsel = availableProviders.filter(p => !selectedProviders.includes(p.provider_id))
+    return [...sel, ...unsel]
+  }, [availableProviders, selectedProviders])
 
   useEffect(() => {
     setLoadingTrending(true)
@@ -232,15 +246,9 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     })
   }
 
-  const noQuery = !query.trim()
-  const noGenreFilter = includedGenres.length === 0 && excludedGenres.length === 0
-  const noProviderFilter = selectedProviders.length === 0
-  const noYearFilter = yearFilter.length !== 4
-  const showTrending = noQuery && noGenreFilter && noProviderFilter && noYearFilter
   const displayResults = applySort(showTrending ? trending : results)
   const visibleResults = hideInLibrary ? displayResults.filter(r => !libraryIds.has(r.id)) : displayResults
   const isLoading = showTrending ? loadingTrending : searching
-  const hasMore = showTrending ? trendingPage < trendingTotalPages : currentPage < totalPages
 
   let sectionLabel = ''
   let SectionIcon = TrendingUp
@@ -353,7 +361,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
         {/* Platform chips */}
         {availableProviders.length > 0 && (
           <div className="flex gap-1.5 overflow-x-auto pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
-            {availableProviders.map(p => {
+            {sortedProviders.map(p => {
               const isSelected = selectedProviders.includes(p.provider_id)
               return (
                 <button
