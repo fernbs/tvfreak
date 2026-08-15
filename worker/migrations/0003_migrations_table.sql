@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS migrations (
+  key TEXT PRIMARY KEY,
+  ran_at TEXT NOT NULL
+);

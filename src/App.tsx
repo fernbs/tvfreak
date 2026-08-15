@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes } from './lib/api'
+import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
 import { getTvDetails, getSeasonEpisodes } from './lib/tmdb'
@@ -53,11 +53,17 @@ export default function App() {
 
   useEffect(() => {
     async function init() {
-      if (!localStorage.getItem('tvfreak-csv-import-done')) {
+      // Preload DB migration state once so all per-device jobs can check it.
+      // This prevents jobs from re-running on new devices when the DB already
+      // shows they completed on a previous device.
+      await preloadMigrations()
+
+      const CSV_KEY = 'tvfreak-csv-import-done'
+      if (!(await isMigrationDone(CSV_KEY))) {
         try {
           setImporting(true)
           await importFromCsv((done, total) => setImportProgress({ done, total }))
-          localStorage.setItem('tvfreak-csv-import-done', 'true')
+          await markMigration(CSV_KEY)
         } catch { /* import file not found or failed, skip silently */ }
         finally { setImporting(false) }
       }
@@ -323,37 +329,12 @@ export default function App() {
     populateRatings()
   }, [loading, loadSeries])
 
-  // DEAD JOB — already ran on all devices (key: tvfreak-fix-completed-v1).
-  // Do NOT change the logic or the key — it would re-run on any device that hasn't seen it.
-  // What it did: changed completed+returning shows → watching. Was too broad; caused collateral
-  // damage (Fargo, Black Mirror, etc. got bumped). checkRevived now handles this without auto-flipping status.
+  // DEAD JOB — logic removed. Key preserved so it doesn't re-run on new devices.
+  // What it did: changed completed+returning shows → watching. Caused collateral damage.
   useEffect(() => {
     if (loading) return
-    if (localStorage.getItem('tvfreak-fix-completed-v1')) return
-    async function fixCompletedReturning() {
-      const all = await getAllSeries()
-      const completed = all.filter(s => s.tmdbId && s.id && s.status === 'completed')
-      let changed = false
-      for (const s of completed) {
-        try {
-          const detail = await getTvDetails(s.tmdbId!)
-          if (!detail) continue
-          if (detail.status === 'Returning Series' || detail.status === 'In Production') {
-            await updateSeries(s.id!, {
-              status: 'watching',
-              nextEpisodeDate: detail.next_episode_to_air?.air_date ?? null,
-              nextEpisodeName: detail.next_episode_to_air?.name ?? null,
-            })
-            changed = true
-          }
-        } catch { /* ignore */ }
-        await new Promise(r => setTimeout(r, 300))
-      }
-      localStorage.setItem('tvfreak-fix-completed-v1', 'true')
-      if (changed) await loadSeries()
-    }
-    fixCompletedReturning()
-  }, [loading, loadSeries])
+    markMigration('tvfreak-fix-completed-v1')
+  }, [loading])
 
   // Once-ever: for series imported without a poster, backfill ALL available TMDB info
   useEffect(() => {
@@ -390,119 +371,23 @@ export default function App() {
     backfillSeriesInfo()
   }, [loading, loadSeries])
 
-  // DEAD JOB — already ran on all devices (key: tvfreak-watching-fix-v1).
-  // Do NOT change the logic or the key. What it did: changed plantowatch+aired → watching.
-  // Was too broad — also caught shows imported from Simkl as plantowatch that Fernando
-  // considered dropped. v2 below catches anything this missed due to missing firstAirDate.
+  // DEAD JOBs — logic removed. Keys preserved so they never re-run on any device.
+  // watching-fix-v1/v2: changed plantowatch+aired → watching (too broad).
+  // unmark-2026-v1/v2: deleted watched episodes in 2026 seasons (one-time data fix, done).
   useEffect(() => {
     if (loading) return
-    if (localStorage.getItem('tvfreak-watching-fix-v1')) return
-    async function fixPendingToWatching() {
-      const all = await getAllSeries()
-      const today = new Date().toISOString().slice(0, 10)
-      const toFix = all.filter(s =>
-        s.id &&
-        s.status === 'plantowatch' &&
-        s.firstAirDate &&
-        s.firstAirDate <= today
-      )
-      if (toFix.length === 0) { localStorage.setItem('tvfreak-watching-fix-v1', 'true'); return }
-      for (const s of toFix) {
-        try {
-          await updateSeries(s.id!, { status: 'watching' })
-        } catch { /* ignore */ }
-      }
-      localStorage.setItem('tvfreak-watching-fix-v1', 'true')
-      await loadSeries()
-    }
-    fixPendingToWatching()
-  }, [loading, loadSeries])
+    markMigration('tvfreak-watching-fix-v1')
+    markMigration('tvfreak-watching-fix-v2')
+    markMigration('tvfreak-unmark-2026-v1')
+    markMigration('tvfreak-unmark-2026-v2')
+  }, [loading])
 
-  // DEAD JOB (v2) — already ran on all devices (key: tvfreak-watching-fix-v2).
-  // Do NOT change the logic or the key. Catches plantowatch series v1 missed (e.g. HotD,
-  // whose firstAirDate wasn't stored yet when v1 ran).
+  // Once-ever: flip 'watching' series that have no released episodes yet to 'plantowatch'.
+  // DB-tracked so it runs exactly once across all devices.
   useEffect(() => {
     if (loading) return
-    if (localStorage.getItem('tvfreak-watching-fix-v2')) return
-    async function fixPendingToWatchingV2() {
-      const all = await getAllSeries()
-      const today = new Date().toISOString().slice(0, 10)
-      const toFix = all.filter(s =>
-        s.id &&
-        s.status === 'plantowatch' &&
-        s.firstAirDate &&
-        s.firstAirDate <= today
-      )
-      if (toFix.length === 0) { localStorage.setItem('tvfreak-watching-fix-v2', 'true'); return }
-      for (const s of toFix) {
-        try {
-          await updateSeries(s.id!, { status: 'watching' })
-        } catch { /* ignore */ }
-      }
-      localStorage.setItem('tvfreak-watching-fix-v2', 'true')
-      await loadSeries()
-    }
-    fixPendingToWatchingV2()
-  }, [loading, loadSeries])
-
-  // Once-ever: unmark all watched episodes in seasons that premiered in 2026
-  useEffect(() => {
-    if (loading) return
-    if (localStorage.getItem('tvfreak-unmark-2026-v1')) return
-    async function unmark2026Seasons() {
-      const all = await getAllSeries()
-      const eligible = all.filter(s => s.tmdbId && s.id)
-      let changed = false
-      for (const s of eligible) {
-        try {
-          const detail = await getTvDetails(s.tmdbId!)
-          if (!detail) continue
-          const seasons2026 = detail.seasons.filter(
-            season => season.season_number > 0 && season.air_date?.startsWith('2026')
-          )
-          for (const season of seasons2026) {
-            await unmarkSeasonEpisodes(s.id!, season.season_number)
-            changed = true
-          }
-        } catch { /* ignore */ }
-        await new Promise(r => setTimeout(r, 400))
-      }
-      localStorage.setItem('tvfreak-unmark-2026-v1', 'true')
-      if (changed) await loadSeries()
-    }
-    unmark2026Seasons()
-  }, [loading, loadSeries])
-
-  // Once-ever v2: re-run 2026 unmark for watching/plantowatch series (catches series whose status changed after v1 ran)
-  useEffect(() => {
-    if (loading) return
-    if (localStorage.getItem('tvfreak-unmark-2026-v2')) return
-    async function unmark2026SeasonsV2() {
-      const all = await getAllSeries()
-      const eligible = all.filter(s => s.tmdbId && s.id && s.status !== 'dropped' && s.status !== 'completed')
-      for (const s of eligible) {
-        try {
-          const detail = await getTvDetails(s.tmdbId!)
-          if (!detail) continue
-          const seasons2026 = detail.seasons.filter(
-            season => season.season_number > 0 && season.air_date?.startsWith('2026')
-          )
-          for (const season of seasons2026) {
-            await unmarkSeasonEpisodes(s.id!, season.season_number)
-          }
-        } catch { /* ignore */ }
-        await new Promise(r => setTimeout(r, 400))
-      }
-      localStorage.setItem('tvfreak-unmark-2026-v2', 'true')
-    }
-    unmark2026SeasonsV2()
-  }, [loading, loadSeries])
-
-  // Once-ever: flip 'watching' series that have no released episodes yet to 'plantowatch'
-  useEffect(() => {
-    if (loading) return
-    if (localStorage.getItem('tvfreak-pending-fix-v1')) return
     async function fixWatchingNothingAired() {
+      if (await isMigrationDone('tvfreak-pending-fix-v1')) return
       const all = await getAllSeries()
       const watching = all.filter(s => s.tmdbId && s.id && s.status === 'watching')
       let changed = false
@@ -533,7 +418,7 @@ export default function App() {
         } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 300))
       }
-      localStorage.setItem('tvfreak-pending-fix-v1', 'true')
+      await markMigration('tvfreak-pending-fix-v1')
       if (changed) await loadSeries()
     }
     fixWatchingNothingAired()

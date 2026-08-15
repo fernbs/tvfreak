@@ -273,6 +273,22 @@ export default {
         return json({ watched: true }, 200, cors)
       }
 
+      // GET /api/migrations — returns all migration keys that have run
+      if (path === '/api/migrations' && method === 'GET') {
+        const { results } = await env.DB.prepare('SELECT key FROM migrations').all()
+        return json(results.map(r => r.key), 200, cors)
+      }
+
+      // POST /api/migrations — marks a migration key as done
+      if (path === '/api/migrations' && method === 'POST') {
+        const body = await request.json() as { key: string }
+        if (!body.key) return json({ error: 'Missing key' }, 400, cors)
+        await env.DB.prepare(
+          "INSERT OR IGNORE INTO migrations (key, ran_at) VALUES (?, datetime('now'))"
+        ).bind(body.key).run()
+        return json({ ok: true }, 200, cors)
+      }
+
       // GET /api/stats
       if (path === '/api/stats' && method === 'GET') {
         const [totalResult, activityResult, topResult] = await Promise.all([

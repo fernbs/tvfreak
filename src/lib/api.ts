@@ -2,6 +2,40 @@ import type { Series, WatchedEpisode } from '../types'
 
 const BASE = (import.meta.env.VITE_WORKER_URL ?? 'http://localhost:8787').replace(/\/$/, '')
 
+// Single shared promise so all callers get the same fetch result.
+let _migrationsPromise: Promise<Set<string>> | null = null
+
+export function preloadMigrations(): Promise<Set<string>> {
+  if (!_migrationsPromise) {
+    _migrationsPromise = fetch(`${BASE}/api/migrations`)
+      .then(r => r.ok ? r.json() as Promise<string[]> : [])
+      .then(keys => {
+        const set = new Set(keys)
+        for (const key of set) localStorage.setItem(key, 'true')
+        return set
+      })
+      .catch(() => new Set<string>())
+  }
+  return _migrationsPromise
+}
+
+export async function markMigration(key: string): Promise<void> {
+  const set = await preloadMigrations()
+  set.add(key)
+  localStorage.setItem(key, 'true')
+  await fetch(`${BASE}/api/migrations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key }),
+  }).catch(() => {})
+}
+
+export async function isMigrationDone(key: string): Promise<boolean> {
+  if (localStorage.getItem(key)) return true
+  const set = await preloadMigrations()
+  return set.has(key)
+}
+
 function parseSeries(row: Record<string, unknown>): Series {
   const rawDates = row.futureDates as string | null
   return {
