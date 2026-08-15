@@ -277,21 +277,17 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             <option value="first_air_date.desc">Newest First</option>
             <option value="first_air_date.asc">Oldest First</option>
           </select>
-          <input
-            type="number"
-            min="1900"
-            max="2030"
+          <select
             value={yearFilter}
-            onChange={e => setYearFilter(e.target.value.slice(0, 4))}
-            placeholder="Year"
-            className="w-20 bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-white/70 placeholder:text-white/25 outline-none"
-            style={{ appearance: 'textfield' }}
-          />
-          {yearFilter && (
-            <button onClick={() => setYearFilter('')} className="shrink-0 text-white/30 active:text-white/60">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+            onChange={e => setYearFilter(e.target.value)}
+            style={{ fontSize: 16 }}
+            className="w-24 bg-[#1E1E1E] border border-white/8 rounded-xl px-3 py-1.5 text-xs text-white/70 outline-none appearance-none"
+          >
+            <option value="">Any year</option>
+            {Array.from({ length: 2027 - 1950 + 1 }, (_, i) => 2027 - i).map(y => (
+              <option key={y} value={String(y)}>{y}</option>
+            ))}
+          </select>
         </div>
       </div>
 
