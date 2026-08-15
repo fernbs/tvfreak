@@ -177,10 +177,7 @@ export function LibraryTab({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <TVFreakIcon size={24} />
-            <h1 className="text-xl font-bold text-[#F5F5F7]">
-              Library
-              <span className="ml-2 text-sm font-normal text-[#48484A]">{mediaMode === 'tv' ? filtered.length : filteredMovies.length}</span>
-            </h1>
+            <h1 className="text-xl font-bold text-[#F5F5F7]">Library</h1>
           </div>
           <div className="flex items-center gap-2">
             {duplicates.length > 0 && (
@@ -204,19 +201,28 @@ export function LibraryTab({
           </div>
         </div>
 
-        {/* TV / Films toggle */}
-        <div className="flex bg-[#1C1C1E] rounded-[10px] p-0.5 mb-3">
-          {(['tv', 'movie'] as const).map(mode => (
-            <button
-              key={mode}
-              onClick={() => setMediaMode(mode)}
-              className={`flex-1 py-1.5 rounded-[8px] text-xs font-semibold transition-colors ${
-                mediaMode === mode ? 'bg-[#2C2C2E] text-[#F5F5F7]' : 'text-[#48484A]'
-              }`}
-            >
-              {mode === 'tv' ? 'TV Shows' : 'Films'}
-            </button>
-          ))}
+        {/* Series / Films tab bar */}
+        <div className="flex border-b border-white/6 mb-3 -mx-4 px-4">
+          {([['tv', 'Series', series.length], ['movie', 'Films', allMovies.length]] as const).map(([mode, label, count]) => {
+            const isActive = mediaMode === mode
+            return (
+              <button
+                key={mode}
+                onClick={() => setMediaMode(mode)}
+                className="flex-1 flex flex-col items-center pb-2.5 pt-1 relative transition-colors"
+              >
+                <span className={`text-sm font-semibold transition-colors ${isActive ? 'text-[#F5F5F7]' : 'text-[#48484A]'}`}>
+                  {label}
+                </span>
+                <span className={`text-[11px] font-medium transition-colors ${isActive ? 'text-[#FF9F0A]' : 'text-[#48484A]'}`}>
+                  {count}
+                </span>
+                {isActive && (
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-10 bg-[#FF9F0A] rounded-full" />
+                )}
+              </button>
+            )
+          })}
         </div>
 
         {/* Controls row */}

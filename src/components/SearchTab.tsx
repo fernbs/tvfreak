@@ -567,11 +567,11 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
 
         {/* Trending section (only when no filters active) */}
         {showTrending && (
-          <div className="px-4 pt-1 pb-2">
-            <div className="flex items-center gap-1.5 mb-2.5">
-              <SectionIcon className="w-3 h-3 text-[#48484A]" />
-              <span className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold">{sectionLabel}</span>
-              {isLoading && <Loader2 className="w-3 h-3 text-[#48484A] animate-spin shrink-0" />}
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-center gap-2 mb-3">
+              <SectionIcon className="w-5 h-5 text-[#FF9F0A] shrink-0" />
+              <h2 className="text-base font-bold text-[#F5F5F7] flex-1">{sectionLabel}</h2>
+              {isLoading && <Loader2 className="w-4 h-4 text-[#48484A] animate-spin shrink-0" />}
             </div>
             <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
               {visibleResults.slice(0, 12).map(r => {
@@ -622,10 +622,10 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
         {(!showTrending || visibleResults.length > 0) && (
           <>
             {(!showTrending && sectionLabel) && (
-              <div className="flex items-center gap-1.5 px-4 pt-3 pb-1">
-                <SectionIcon className="w-3.5 h-3.5 text-[#48484A]" />
-                <span className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold truncate">{sectionLabel}</span>
-                {isLoading && <Loader2 className="w-3 h-3 text-[#48484A] animate-spin shrink-0" />}
+              <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+                <SectionIcon className="w-4.5 h-4.5 text-[#FF9F0A] shrink-0" />
+                <h2 className="text-sm font-bold text-[#F5F5F7] flex-1 truncate">{sectionLabel}</h2>
+                {isLoading && <Loader2 className="w-3.5 h-3.5 text-[#48484A] animate-spin shrink-0" />}
               </div>
             )}
 
