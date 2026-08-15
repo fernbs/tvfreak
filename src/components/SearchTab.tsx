@@ -48,12 +48,16 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const [selectedProviders, setSelectedProviders] = useState<number[]>(getDefaultProviders)
   const [hideInLibrary, setHideInLibrary] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const handleLoadMoreRef = useRef<() => void>(() => {})
 
   useEffect(() => {
     setLoadingTrending(true)
-    getTrending(1).then(({ results: r, totalPages: tp }) => {
-      setTrending(r)
-      setTrendingTotalPages(tp)
+    Promise.all([getTrending(1), getTrending(2)]).then(([p1, p2]) => {
+      setTrending([...p1.results, ...p2.results])
+      setTrendingTotalPages(p1.totalPages)
+      setTrendingPage(Math.min(2, p1.totalPages))
     }).finally(() => setLoadingTrending(false))
     getStreamingProviders(getCountry()).then(setAvailableProviders)
   }, [])
@@ -79,15 +83,18 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       const year = yearFilter.length === 4 ? yearFilter : undefined
       try {
         if (hasQuery) {
-          const { results: r, totalPages: tp } = await searchTv(query, 1, year)
-          setResults(r)
-          setTotalPages(tp)
+          const [p1, p2] = await Promise.all([searchTv(query, 1, year), searchTv(query, 2, year)])
+          setResults([...p1.results, ...p2.results])
+          setTotalPages(p1.totalPages)
+          setCurrentPage(Math.min(2, p1.totalPages))
         } else {
-          const { results: r, totalPages: tp } = await getDiscoverByGenres(
-            includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()
-          )
-          setResults(r)
-          setTotalPages(tp)
+          const [p1, p2] = await Promise.all([
+            getDiscoverByGenres(includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()),
+            getDiscoverByGenres(includedGenres, excludedGenres, 2, sortBy, year, selectedProviders, getCountry()),
+          ])
+          setResults([...p1.results, ...p2.results])
+          setTotalPages(p1.totalPages)
+          setCurrentPage(Math.min(2, p1.totalPages))
         }
       } finally { setSearching(false) }
     }, hasQuery ? 400 : 200)
@@ -112,31 +119,58 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     if (loadingMore) return
     setLoadingMore(true)
     try {
+      const year = yearFilter.length === 4 ? yearFilter : undefined
+      const hasQuery = query.trim().length > 0
       if (showTrending) {
-        const nextPage = trendingPage + 1
-        const { results: r, totalPages: tp } = await getTrending(nextPage)
-        setTrending(prev => [...prev, ...r])
-        setTrendingTotalPages(tp)
-        setTrendingPage(nextPage)
+        const p1 = trendingPage + 1
+        const p2 = trendingPage + 2
+        const fetches = p2 <= trendingTotalPages
+          ? [getTrending(p1), getTrending(p2)]
+          : [getTrending(p1)]
+        const pages = await Promise.all(fetches)
+        setTrending(prev => [...prev, ...pages.flatMap(p => p.results)])
+        setTrendingTotalPages(pages[0].totalPages)
+        setTrendingPage(fetches.length === 2 ? p2 : p1)
       } else {
-        const nextPage = currentPage + 1
-        const year = yearFilter.length === 4 ? yearFilter : undefined
-        const hasQuery = query.trim().length > 0
+        const p1 = currentPage + 1
+        const p2 = currentPage + 2
         if (hasQuery) {
-          const { results: r, totalPages: tp } = await searchTv(query, nextPage, year)
-          setResults(prev => [...prev, ...r])
-          setTotalPages(tp)
+          const fetches = p2 <= totalPages
+            ? [searchTv(query, p1, year), searchTv(query, p2, year)]
+            : [searchTv(query, p1, year)]
+          const pages = await Promise.all(fetches)
+          setResults(prev => [...prev, ...pages.flatMap(p => p.results)])
+          setTotalPages(pages[0].totalPages)
+          setCurrentPage(fetches.length === 2 ? p2 : p1)
         } else {
-          const { results: r, totalPages: tp } = await getDiscoverByGenres(
-            includedGenres, excludedGenres, nextPage, sortBy, year, selectedProviders, getCountry()
-          )
-          setResults(prev => [...prev, ...r])
-          setTotalPages(tp)
+          const fetches = p2 <= totalPages
+            ? [getDiscoverByGenres(includedGenres, excludedGenres, p1, sortBy, year, selectedProviders, getCountry()),
+               getDiscoverByGenres(includedGenres, excludedGenres, p2, sortBy, year, selectedProviders, getCountry())]
+            : [getDiscoverByGenres(includedGenres, excludedGenres, p1, sortBy, year, selectedProviders, getCountry())]
+          const pages = await Promise.all(fetches)
+          setResults(prev => [...prev, ...pages.flatMap(p => p.results)])
+          setTotalPages(pages[0].totalPages)
+          setCurrentPage(fetches.length === 2 ? p2 : p1)
         }
-        setCurrentPage(nextPage)
       }
     } finally { setLoadingMore(false) }
   }
+
+  // Keep ref current so the IntersectionObserver callback never gets a stale closure
+  handleLoadMoreRef.current = handleLoadMore
+
+  useEffect(() => {
+    if (!hasMore || loadingMore) return
+    const sentinel = sentinelRef.current
+    const container = scrollRef.current
+    if (!sentinel || !container) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) handleLoadMoreRef.current() },
+      { root: container, rootMargin: '0px 0px 300px 0px', threshold: 0 }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, loadingMore])
 
   const libraryIds = new Set(allSeries.map(s => s.tmdbId).filter(Boolean))
 
@@ -386,7 +420,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       </div>
 
       {/* Results */}
-      <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0">
         {sectionLabel && (
           <div className="flex items-center gap-1.5 px-4 pt-3 pb-1">
             <SectionIcon className="w-3.5 h-3.5 text-white/30" />
@@ -427,18 +461,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                 <AddButton r={r} />
               </div>
             ))}
-            {hasMore && (
-              <div className="flex justify-center py-4">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/6 text-white/50 text-sm font-medium active:bg-white/10 transition-colors disabled:opacity-50"
-                >
-                  {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  {loadingMore ? 'Loading...' : `Load more`}
-                </button>
-              </div>
-            )}
           </div>
         ) : (
           <div className={`px-4 pt-2 pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
@@ -482,20 +504,12 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                 </button>
               )
             })}
-            {hasMore && (
-              <button
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-                className="active:opacity-60 transition-opacity disabled:opacity-30"
-              >
-                <div className="aspect-[2/3] rounded-xl bg-[#1E1E1E] border border-dashed border-white/12 flex flex-col items-center justify-center gap-2">
-                  {loadingMore
-                    ? <Loader2 className="w-5 h-5 text-white/25 animate-spin" />
-                    : <><Plus className="w-5 h-5 text-white/25" /><span className="text-[10px] text-white/25 font-medium leading-none">Load more</span></>
-                  }
-                </div>
-              </button>
-            )}
+          </div>
+        )}
+        {hasMore && <div ref={sentinelRef} className="h-px" />}
+        {loadingMore && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 text-white/25 animate-spin" />
           </div>
         )}
       </div>

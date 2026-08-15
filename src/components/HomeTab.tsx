@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Calendar, Loader2, ChevronLeft, ChevronRight, Grid2X2, Grid3X3, List, Settings } from 'lucide-react'
+import { Calendar, Loader2, ChevronLeft, ChevronRight, ChevronDown, Grid2X2, Grid3X3, List, Settings, Tv } from 'lucide-react'
 import { AnimatePresence } from 'framer-motion'
 import type { Series } from '../types'
 import { SeriesGrid } from './SeriesGrid'
@@ -43,6 +43,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
     return d
   })
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [calOpen, setCalOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(20)
   const scrollRef = useRef<HTMLDivElement>(null)
   const touchStartY = useRef(0)
@@ -167,8 +168,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
     const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`
     setSelectedDate(prev => prev === dateStr ? null : dateStr)
     setVisibleCount(20)
-    // Scroll list into view
-    setTimeout(() => scrollRef.current?.scrollTo({ top: 260, behavior: 'smooth' }), 50)
+    setCalOpen(false)
   }
 
   return (
@@ -267,17 +267,26 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
           )
         ) : (
           <div>
-            {/* Calendar */}
-            <div className="bg-[#141414] rounded-2xl p-4 border border-white/5 mb-4 mt-2">
-              {/* Month nav */}
-              <div className="flex items-center justify-between mb-4">
+            {/* Calendar — accordion: header always visible, grid expands on tap */}
+            <div className="bg-[#141414] rounded-2xl border border-white/5 mb-4 mt-2 overflow-hidden">
+              {/* Month header */}
+              <div className="flex items-center justify-between px-4 py-3.5">
                 <button
                   onClick={() => { setCalMonth(addMonths(calMonth, -1)); setSelectedDate(null) }}
                   className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 active:bg-white/8 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="text-sm font-semibold text-white">{monthLabel}</span>
+                <button
+                  onClick={() => setCalOpen(prev => !prev)}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-white active:opacity-60 transition-opacity"
+                >
+                  {monthLabel}
+                  <ChevronDown
+                    className="w-3.5 h-3.5 text-white/40 transition-transform duration-200"
+                    style={{ transform: calOpen ? 'rotate(180deg)' : 'none' }}
+                  />
+                </button>
                 <button
                   onClick={() => { setCalMonth(addMonths(calMonth, 1)); setSelectedDate(null) }}
                   className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 active:bg-white/8 transition-colors"
@@ -286,61 +295,55 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                 </button>
               </div>
 
-              {/* Weekday labels */}
-              <div className="grid grid-cols-7 mb-2">
-                {DAY_LABELS.map(d => (
-                  <div key={d} className="text-center text-[10px] font-medium text-white/20 uppercase tracking-wide">
-                    {d.slice(0, 1)}
-                  </div>
-                ))}
-              </div>
-
-              {/* Day grid */}
-              <div className="grid grid-cols-7 gap-y-1">
-                {calCells.map((day, i) => {
-                  if (!day) return <div key={i} />
-                  const pad = (n: number) => String(n).padStart(2, '0')
-                  const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`
-                  const isToday = dateStr === todayStr
-                  const isSelected = dateStr === selectedDate
-                  const hasEpisode = episodeMap.has(dateStr)
-                  const isPast = dateStr < todayStr
-
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => !isPast && handleDayClick(day)}
-                      disabled={isPast && !hasEpisode}
-                      className="flex flex-col items-center py-1 rounded-lg transition-colors"
-                      style={{
-                        backgroundColor: isSelected ? 'rgba(99,102,241,0.2)' : undefined,
-                      }}
-                    >
-                      <span
-                        className={`text-sm leading-none font-medium ${
-                          isSelected
-                            ? 'text-[#6366F1]'
-                            : isToday
-                              ? 'text-[#6366F1]'
-                              : isPast
-                                ? 'text-white/15'
-                                : 'text-white/70'
-                        }`}
-                        style={isToday && !isSelected ? { textDecoration: 'underline', textUnderlineOffset: 3 } : undefined}
-                      >
-                        {day}
-                      </span>
-                      <div className="h-1.5 mt-0.5 flex items-center justify-center">
-                        {hasEpisode && (
-                          <div
-                            className="w-1 h-1 rounded-full"
-                            style={{ backgroundColor: isSelected ? '#6366F1' : '#6366F1' }}
-                          />
-                        )}
+              {/* Collapsible grid */}
+              <div
+                style={{
+                  maxHeight: calOpen ? '320px' : '0px',
+                  overflow: 'hidden',
+                  transition: 'max-height 0.25s ease',
+                }}
+              >
+                <div className="px-4 pb-4">
+                  <div className="grid grid-cols-7 mb-2">
+                    {DAY_LABELS.map(d => (
+                      <div key={d} className="text-center text-[10px] font-medium text-white/20 uppercase tracking-wide">
+                        {d.slice(0, 1)}
                       </div>
-                    </button>
-                  )
-                })}
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-y-1">
+                    {calCells.map((day, i) => {
+                      if (!day) return <div key={i} />
+                      const pad = (n: number) => String(n).padStart(2, '0')
+                      const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`
+                      const isToday = dateStr === todayStr
+                      const isSelected = dateStr === selectedDate
+                      const hasEpisode = episodeMap.has(dateStr)
+                      const isPast = dateStr < todayStr
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => !isPast && handleDayClick(day)}
+                          disabled={isPast && !hasEpisode}
+                          className="flex flex-col items-center py-1 rounded-lg transition-colors"
+                          style={{ backgroundColor: isSelected ? 'rgba(99,102,241,0.2)' : undefined }}
+                        >
+                          <span
+                            className={`text-sm leading-none font-medium ${
+                              isSelected ? 'text-[#6366F1]' : isToday ? 'text-[#6366F1]' : isPast ? 'text-white/15' : 'text-white/70'
+                            }`}
+                            style={isToday && !isSelected ? { textDecoration: 'underline', textUnderlineOffset: 3 } : undefined}
+                          >
+                            {day}
+                          </span>
+                          <div className="h-1.5 mt-0.5 flex items-center justify-center">
+                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#6366F1]" />}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
 
