@@ -289,33 +289,48 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     }`
 
   function AddButton({ r }: { r: TmdbSearchResult }) {
-    const inLibrary = libraryIds.has(r.id)
-    if (inLibrary) {
-      return <span className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium text-[#48484A] bg-[#111111] border border-white/7">In library</span>
+    const inLib = libraryIds.has(r.id)
+    if (inLib) {
+      return (
+        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#FF8C00]/80">
+          <span className="text-[9px] text-white font-bold">✓</span>
+        </div>
+      )
     }
     return (
       <button
         onClick={e => { e.stopPropagation(); handleAdd(r) }}
         disabled={addingId === r.id}
-        className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-[rgba(255,159,10,0.12)] text-[#FF9F0A] border border-[rgba(255,159,10,0.2)] active:bg-[rgba(255,159,10,0.22)] transition-colors disabled:opacity-50"
+        className="absolute bottom-1.5 right-1.5 w-7 h-7 flex items-center justify-center rounded-lg bg-black/80 text-[#FF9F0A] border border-white/15 active:bg-[rgba(255,159,10,0.5)] transition-colors disabled:opacity-50"
       >
-        {addingId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+        {addingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
       </button>
     )
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-black">
+
       {/* Sticky header */}
       <div
         className="shrink-0 bg-black px-4 pb-3 z-10"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <TVFreakIcon size={24} />
-            <h1 className="text-xl font-bold text-[#F5F5F7]">Search</h1>
-          </div>
+        {/* Top row: icon + title + hide-library pill + view toggle */}
+        <div className="flex items-center gap-2 mb-3">
+          <TVFreakIcon size={24} />
+          <h1 className="text-xl font-bold text-[#F5F5F7] flex-1">Search</h1>
+          <button
+            onClick={() => setHideInLibrary(prev => !prev)}
+            title={hideInLibrary ? 'Showing new only — tap to show all' : 'Hide series already in your library'}
+            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
+              hideInLibrary
+                ? 'bg-[rgba(255,159,10,0.15)] border-[rgba(255,159,10,0.3)] text-[#FF9F0A]'
+                : 'bg-[#1C1C1E] border-white/8 text-[#48484A]'
+            }`}
+          >
+            New only
+          </button>
           <div className="flex items-center gap-0.5 bg-white/5 rounded-xl p-0.5">
             {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
               <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
@@ -325,12 +340,12 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           </div>
         </div>
 
-        {/* Search input */}
-        <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/8 focus-within:border-white/20 transition-colors mb-3">
+        {/* Search bar — hero element */}
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#1C1C1E] border border-white/8 focus-within:border-white/20 transition-colors mb-3">
           {searching && query.trim() ? (
-            <Loader2 className="w-4 h-4 text-[#48484A] shrink-0 animate-spin" />
+            <Loader2 className="w-5 h-5 text-[#48484A] shrink-0 animate-spin" />
           ) : (
-            <Search className="w-4 h-4 text-[#48484A] shrink-0" />
+            <Search className="w-5 h-5 text-[#48484A] shrink-0" />
           )}
           <input
             type="text"
@@ -347,7 +362,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           )}
         </div>
 
-        {/* Genre chips — Apple-style solid fill for active */}
+        {/* Genre chips */}
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {GENRES.map(g => {
             const isIncluded = includedGenres.includes(g.id)
@@ -370,9 +385,9 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           })}
         </div>
 
-        {/* Platform chips */}
+        {/* Platform provider icons — circular, icon-only */}
         {availableProviders.length > 0 && (
-          <div className="flex gap-1.5 overflow-x-auto pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-2 overflow-x-auto pt-2.5 pb-1" style={{ scrollbarWidth: 'none' }}>
             {sortedProviders.map(p => {
               const isSelected = selectedProviders.includes(p.provider_id)
               return (
@@ -380,26 +395,25 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                   key={p.provider_id}
                   onClick={() => toggleProvider(p.provider_id)}
                   title={p.provider_name}
-                  className={`shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
+                  className={`shrink-0 w-8 h-8 rounded-xl overflow-hidden border-2 transition-all ${
                     isSelected
-                      ? 'bg-[rgba(255,159,10,0.15)] border-[rgba(255,159,10,0.35)] text-[#F5F5F7]'
-                      : 'bg-[#1C1C1E] border-white/7 text-[#48484A] active:bg-[#2C2C2E]'
+                      ? 'border-[#FF9F0A] opacity-100'
+                      : 'border-transparent opacity-40'
                   }`}
                 >
                   <img
                     src={`${IMG_BASE}/w45${p.logo_path}`}
                     alt={p.provider_name}
-                    className="w-5 h-5 rounded-sm object-cover shrink-0"
+                    className="w-full h-full object-cover"
                   />
-                  <span className="text-[11px] font-medium whitespace-nowrap">{p.provider_name}</span>
                 </button>
               )
             })}
           </div>
         )}
 
-        {/* Sort + year + hide row */}
-        <div className="flex items-center gap-2 mt-2">
+        {/* Sort + year controls */}
+        <div className="flex items-center gap-2 mt-2.5">
           <div className="relative flex-1">
             <select
               value={sortBy}
@@ -425,112 +439,145 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
               <option key={y} value={String(y)}>{y}</option>
             ))}
           </select>
-          <button
-            onClick={() => setHideInLibrary(prev => !prev)}
-            title={hideInLibrary ? 'Showing new only — tap to show all' : 'Tap to hide series already in your library'}
-            className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-xl border transition-colors ${
-              hideInLibrary
-                ? 'bg-[rgba(255,159,10,0.15)] border-[rgba(255,159,10,0.3)] text-[#FF9F0A]'
-                : 'bg-[#1C1C1E] border-white/8 text-[#48484A] active:bg-[#2C2C2E]'
-            }`}
-          >
-            <BookmarkCheck className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
 
-      {/* Results */}
+      {/* Scrollable content */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0">
-        {sectionLabel && (
-          <div className="flex items-center gap-1.5 px-4 pt-3 pb-1">
-            <SectionIcon className="w-3.5 h-3.5 text-[#48484A]" />
-            <span className="text-xs font-medium text-[#48484A] uppercase tracking-wider truncate">{sectionLabel}</span>
-            {isLoading && <Loader2 className="w-3 h-3 text-[#48484A] animate-spin shrink-0" />}
+
+        {/* Trending section (only when no filters active) */}
+        {showTrending && (
+          <div className="px-4 pt-1 pb-2">
+            <div className="flex items-center gap-1.5 mb-2.5">
+              <SectionIcon className="w-3 h-3 text-[#48484A]" />
+              <span className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold">{sectionLabel}</span>
+              {isLoading && <Loader2 className="w-3 h-3 text-[#48484A] animate-spin shrink-0" />}
+            </div>
+            <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+              {visibleResults.slice(0, 12).map(r => {
+                const inLib = libraryIds.has(r.id)
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => onSelect(seriesForPreview(r))}
+                    className="shrink-0 w-[88px] text-left active:opacity-70 transition-opacity"
+                    style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
+                  >
+                    <div className="w-[88px] aspect-[2/3] rounded-2xl overflow-hidden bg-[#1C1C1E] relative mb-1.5">
+                      {r.poster_path ? (
+                        <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center p-2">
+                          <span className="text-[9px] text-[#48484A] text-center">{r.name}</span>
+                        </div>
+                      )}
+                      {(r.vote_average ?? 0) > 0 && (
+                        <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
+                          <span className="text-[10px] font-medium leading-none"><span className="text-[#FF9F0A]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                        </div>
+                      )}
+                      {inLib && (
+                        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#FF8C00]/80">
+                          <span className="text-[9px] text-white font-bold">✓</span>
+                        </div>
+                      )}
+                      {!inLib && (
+                        <button
+                          onClick={e => { e.stopPropagation(); handleAdd(r) }}
+                          disabled={addingId === r.id}
+                          className="absolute bottom-1.5 right-1.5 w-7 h-7 flex items-center justify-center rounded-lg bg-black/80 text-[#FF9F0A] border border-white/15 active:bg-[rgba(255,159,10,0.5)] transition-colors disabled:opacity-50"
+                        >
+                          {addingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-[#8E8E93] leading-tight line-clamp-2">{r.name}</p>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
 
-        {visibleResults.length === 0 && !isLoading ? (
-          query.trim() ? (
-            <div className="flex flex-col items-center justify-center h-40 text-center px-6">
-              <p className="text-sm text-[#48484A]">No results for "{query}"</p>
-            </div>
-          ) : null
-        ) : viewMode === 'list' ? (
-          <div className="pb-6">
-            {visibleResults.map(r => (
-              <div
-                key={r.id}
-                className="flex items-center gap-3 px-4 border-b border-white/5"
-                style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
-              >
-                <button
-                  onClick={() => onSelect(seriesForPreview(r))}
-                  className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
-                >
-                  <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#1C1C1E]">
-                    {r.poster_path && (
-                      <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#F5F5F7] leading-snug truncate">{r.name}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs text-[#48484A]">{r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}</p>
-                      {(r.vote_average ?? 0) > 0 && (
-                        <span className="text-xs text-[#FFD60A]">★ {r.vote_average!.toFixed(1)}</span>
-                      )}
-                    </div>
-                  </div>
-                </button>
-                <AddButton r={r} />
+        {/* Results grid (also used as the full grid when no trending) */}
+        {(!showTrending || visibleResults.length > 0) && (
+          <>
+            {(!showTrending && sectionLabel) && (
+              <div className="flex items-center gap-1.5 px-4 pt-3 pb-1">
+                <SectionIcon className="w-3.5 h-3.5 text-[#48484A]" />
+                <span className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold truncate">{sectionLabel}</span>
+                {isLoading && <Loader2 className="w-3 h-3 text-[#48484A] animate-spin shrink-0" />}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className={`px-4 pt-2 pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
-            {visibleResults.map(r => {
-              const inLibrary = libraryIds.has(r.id)
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => onSelect(seriesForPreview(r))}
-                  className="relative text-left active:opacity-70 transition-opacity"
-                  style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
-                >
-                  <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1C1C1E] mb-1.5 relative">
-                    {r.poster_path ? (
-                      <img src={posterUrl(r.poster_path, 'w342') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center p-2">
-                        <span className="text-[10px] text-[#48484A] text-center">{r.name}</span>
+            )}
+
+            {visibleResults.length === 0 && !isLoading ? (
+              query.trim() ? (
+                <div className="flex flex-col items-center justify-center h-40 text-center px-6">
+                  <p className="text-sm text-[#48484A]">No results for "{query}"</p>
+                </div>
+              ) : null
+            ) : viewMode === 'list' ? (
+              <div className="pb-6">
+                {visibleResults.map(r => (
+                  <div
+                    key={r.id}
+                    className="flex items-center gap-3 px-4 border-b border-white/5"
+                    style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
+                  >
+                    <button
+                      onClick={() => onSelect(seriesForPreview(r))}
+                      className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
+                    >
+                      <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#1C1C1E]">
+                        {r.poster_path && (
+                          <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
+                        )}
                       </div>
-                    )}
-                    {!inLibrary && (
-                      <button
-                        onClick={e => { e.stopPropagation(); handleAdd(r) }}
-                        disabled={addingId === r.id}
-                        className="absolute bottom-1.5 right-1.5 w-7 h-7 flex items-center justify-center rounded-lg bg-black/80 text-[#FF9F0A] border border-white/15 active:bg-[rgba(255,159,10,0.5)] transition-colors disabled:opacity-50"
-                      >
-                        {addingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                      </button>
-                    )}
-                    {inLibrary && (
-                      <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#FF8C00]/80">
-                        <span className="text-[9px] text-white font-bold">✓</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#F5F5F7] leading-snug truncate">{r.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-[#48484A]">{r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}</p>
+                          {(r.vote_average ?? 0) > 0 && (
+                            <span className="text-xs"><span className="text-[#FF9F0A]">★</span><span className="text-[#8E8E93]"> {r.vote_average!.toFixed(1)}</span></span>
+                          )}
+                        </div>
                       </div>
-                    )}
-                    {(r.vote_average ?? 0) > 0 && (
-                      <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
-                        <span className="text-[10px] text-[#FFD60A] font-medium leading-none">★ {r.vote_average!.toFixed(1)}</span>
-                      </div>
-                    )}
+                    </button>
+                    <AddButton r={r} />
                   </div>
-                  <p className="text-[11px] text-[#8E8E93] leading-tight line-clamp-2">{r.name}</p>
-                </button>
-              )
-            })}
-          </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`px-4 ${showTrending ? 'pt-1' : 'pt-2'} pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
+                {(showTrending ? visibleResults : visibleResults).map(r => (
+                  <button
+                    key={r.id}
+                    onClick={() => onSelect(seriesForPreview(r))}
+                    className="relative text-left active:opacity-70 transition-opacity"
+                    style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
+                  >
+                    <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#1C1C1E] relative">
+                      {r.poster_path ? (
+                        <img src={posterUrl(r.poster_path, 'w342') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center p-2">
+                          <span className="text-[10px] text-[#48484A] text-center">{r.name}</span>
+                        </div>
+                      )}
+                      {(r.vote_average ?? 0) > 0 && (
+                        <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
+                          <span className="text-[10px] font-medium leading-none"><span className="text-[#FF9F0A]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                        </div>
+                      )}
+                      <AddButton r={r} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
+
         {hasMore && <div ref={sentinelRef} className="h-px" />}
         {loadingMore && (
           <div className="flex justify-center py-4">

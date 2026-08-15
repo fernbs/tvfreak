@@ -14,9 +14,31 @@ interface Props {
   series: Series | null
   onClose: () => void
   onUpdated: () => void
+  onSelect: (s: Series) => void
 }
 
-export function DetailPanel({ series, onClose, onUpdated }: Props) {
+function recToSeries(r: TmdbSearchResult): Series {
+  return {
+    id: undefined,
+    tmdbId: r.id,
+    title: r.name,
+    status: 'plantowatch',
+    posterPath: r.poster_path ?? null,
+    overview: r.overview ?? null,
+    firstAirDate: r.first_air_date ?? null,
+    lastAirDate: null,
+    numberOfSeasons: null,
+    notes: '',
+    nextEpisodeDate: null,
+    nextEpisodeName: null,
+    imdbRating: (r.vote_average ?? 0) > 0 ? r.vote_average!.toFixed(1) : null,
+    futureDates: null,
+    addedAt: new Date(),
+    updatedAt: new Date(),
+  }
+}
+
+export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const [detail, setDetail] = useState<TmdbShowDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
@@ -341,10 +363,10 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={e => { if (!imdbId) e.preventDefault() }}
-                      className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-[rgba(255,214,10,0.08)] border border-[rgba(255,214,10,0.18)] rounded-full active:opacity-70 transition-opacity"
+                      className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                     >
-                      <span className="text-[#FFD60A] text-xs">★</span>
-                      <span className="text-xs text-[#FFD60A] font-medium">{displayImdbRating}</span>
+                      <span className="text-[#FF9F0A] text-xs">★</span>
+                      <span className="text-xs text-white font-medium">{displayImdbRating}</span>
                     </a>
                   )}
 
@@ -481,7 +503,11 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   </p>
                   <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                     {recommendations.map(r => (
-                      <div key={r.id} className="shrink-0 w-[72px]">
+                      <button
+                        key={r.id}
+                        onClick={() => onSelect(recToSeries(r))}
+                        className="shrink-0 w-[72px] text-left active:opacity-70 transition-opacity"
+                      >
                         <div className="w-[72px] h-[108px] rounded-xl overflow-hidden bg-[#1C1C1E] mb-1.5 relative">
                           <img
                             src={posterUrl(r.poster_path, 'w185') ?? ''}
@@ -491,12 +517,12 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                           />
                           {(r.vote_average ?? 0) > 0 && (
                             <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-black/65">
-                              <span className="text-[9px] text-[#FFD60A] font-medium">★ {r.vote_average!.toFixed(1)}</span>
+                              <span className="text-[9px] font-medium"><span className="text-[#FF9F0A]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
                             </div>
                           )}
                         </div>
                         <p className="text-[10px] text-[#8E8E93] leading-tight line-clamp-2 text-center">{r.name}</p>
-                      </div>
+                      </button>
                     ))}
                     {hasMoreRecs && (
                       <div className="shrink-0 w-[72px] flex flex-col items-center justify-center">

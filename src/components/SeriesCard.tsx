@@ -22,7 +22,7 @@ export function SeriesCard({ series, onClick }: Props) {
   return (
     <div
       onClick={() => onClick(series)}
-      className="relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer group select-none"
+      className="relative aspect-[2/3] rounded-2xl overflow-hidden cursor-pointer group select-none"
       style={{ transform: 'translateZ(0)' }}
     >
       {poster ? (
@@ -30,21 +30,25 @@ export function SeriesCard({ series, onClick }: Props) {
           src={poster}
           alt={series.title}
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.06]"
           draggable={false}
         />
       ) : (
-        <div className="w-full h-full bg-[#1C1C1E] flex items-center justify-center p-3 transition-transform duration-300 group-hover:scale-[1.04]">
+        <div className="w-full h-full bg-[#1C1C1E] flex items-center justify-center p-3 transition-transform duration-300 group-hover:scale-[1.06]">
           <span className="text-xs text-[#48484A] text-center leading-snug font-medium">
             {series.title}
           </span>
         </div>
       )}
 
-      {/* Status dot: bottom-left corner */}
+      {/* Fingernail tip — bottom-left corner status indicator */}
       <div
-        className="absolute bottom-2 left-2 w-[9px] h-[9px] rounded-full pointer-events-none ring-[1.5px] ring-black/60"
-        style={{ backgroundColor: config.color }}
+        className="absolute bottom-0 left-0 pointer-events-none"
+        style={{
+          width: 28,
+          height: 28,
+          background: `linear-gradient(to top right, ${config.color} 0%, ${config.color} 48%, transparent 50%)`,
+        }}
       />
 
       {/* Hover overlay */}
@@ -88,8 +92,9 @@ export function SeriesCard({ series, onClick }: Props) {
 
       {/* Rating */}
       {series.imdbRating && (
-        <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 text-[#FFD60A] leading-tight backdrop-blur-sm">
-          ★ {series.imdbRating}
+        <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
+          <span className="text-[#FF9F0A]">★</span>
+          <span className="text-white"> {series.imdbRating}</span>
         </div>
       )}
     </div>

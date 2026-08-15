@@ -492,6 +492,7 @@ export default function App() {
         series={selected}
         onClose={() => setSelected(null)}
         onUpdated={handleSeriesUpdated}
+        onSelect={setSelected}
       />
 
       {importing && (
