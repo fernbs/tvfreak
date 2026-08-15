@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { SlidersHorizontal, GitMerge, Wand2, Grid2X2, Grid3X3, List, Film } from 'lucide-react'
 import { TVFreakIcon } from './TVFreakIcon'
 import type { Series, SeriesStatus, Movie, MovieStatus } from '../types'
@@ -19,6 +19,7 @@ interface Props {
   onShowMigration: () => void
   allMovies: Movie[]
   onMovieSelect: (m: Movie) => void
+  importBanner?: ReactNode
 }
 
 function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; loading: boolean; onSelect: (m: Movie) => void; viewMode: string }) {
@@ -137,6 +138,7 @@ export function LibraryTab({
   duplicates, onShowDuplicates,
   migrationDone, onShowMigration,
   allMovies, onMovieSelect,
+  importBanner,
 }: Props) {
   const [filter, setFilter] = useState<SeriesStatus | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('title')
@@ -297,12 +299,17 @@ export function LibraryTab({
       </div>
 
       {/* Grid */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 min-h-0">
-        {mediaMode === 'tv' ? (
-          <SeriesGrid series={filtered} loading={loading} onSelect={onSelect} viewMode={viewMode} />
-        ) : (
-          <MovieGrid movies={filteredMovies} loading={false} onSelect={onMovieSelect} viewMode={viewMode} />
+      <div className="flex-1 overflow-y-auto overscroll-contain pb-6 min-h-0">
+        {importBanner && mediaMode === 'movie' && (
+          <div className="pt-3">{importBanner}</div>
         )}
+        <div className="px-4">
+          {mediaMode === 'tv' ? (
+            <SeriesGrid series={filtered} loading={loading} onSelect={onSelect} viewMode={viewMode} />
+          ) : (
+            <MovieGrid movies={filteredMovies} loading={false} onSelect={onMovieSelect} viewMode={viewMode} />
+          )}
+        </div>
       </div>
     </div>
   )

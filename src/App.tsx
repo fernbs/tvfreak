@@ -17,6 +17,7 @@ import { MovieDetailPanel } from './components/MovieDetailPanel'
 import { ImportBanner } from './components/ImportBanner'
 import { DuplicateModal } from './components/DuplicateModal'
 import { MigrationModal, MIGRATION_KEY } from './components/MigrationModal'
+import { MovieImportBanner, MovieImportSheet, useMovieImport } from './components/MovieImportSheet'
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('home')
@@ -28,6 +29,8 @@ export default function App() {
   const [selected, setSelected] = useState<Series | null>(null)
   const [allMovies, setAllMovies] = useState<Movie[]>([])
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
+
+  const movieImport = useMovieImport()
 
   const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([])
   const [showDuplicates, setShowDuplicates] = useState(false)
@@ -500,6 +503,9 @@ export default function App() {
             onShowMigration={() => setShowMigration(true)}
             allMovies={allMovies}
             onMovieSelect={setSelectedMovie}
+            importBanner={movieImport.showBanner ? (
+              <MovieImportBanner onOpen={movieImport.openSheet} count={movieImport.matchCount} />
+            ) : null}
           />
         )}
         {tab === 'search' && (
@@ -537,6 +543,13 @@ export default function App() {
 
       {importing && (
         <ImportBanner done={importProgress.done} total={importProgress.total} />
+      )}
+
+      {movieImport.sheetOpen && (
+        <MovieImportSheet
+          onClose={movieImport.closeSheet}
+          onImportDone={() => { movieImport.onImportDone(); loadMovies() }}
+        />
       )}
 
       <AnimatePresence>
