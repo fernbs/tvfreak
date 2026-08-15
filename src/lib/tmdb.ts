@@ -100,6 +100,26 @@ export async function getExternalIds(tmdbId: number): Promise<{ imdb_id: string 
   return { imdb_id: data.imdb_id ?? null }
 }
 
+export async function getWatchProviders(
+  tmdbId: number,
+  countryCode: string,
+): Promise<{ flatrate: import('../types').WatchProvider[]; free: import('../types').WatchProvider[]; link: string | null }> {
+  const url = `${BASE_URL}/tv/${tmdbId}/watch/providers`
+  try {
+    const res = await fetch(url, { headers: headers() })
+    if (!res.ok) return { flatrate: [], free: [], link: null }
+    const data = await res.json()
+    const country = data.results?.[countryCode] ?? {}
+    return {
+      flatrate: country.flatrate ?? [],
+      free: country.free ?? [],
+      link: country.link ?? null,
+    }
+  } catch {
+    return { flatrate: [], free: [], link: null }
+  }
+}
+
 export async function getImdbRating(imdbId: string): Promise<string | null> {
   if (!OMDB_KEY || !imdbId) return null
   const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_KEY}`

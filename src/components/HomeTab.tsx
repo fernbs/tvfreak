@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { Tv, Calendar, Loader2, ChevronLeft, ChevronRight, Grid2X2, Grid3X3, List } from 'lucide-react'
+import { Tv, Calendar, Loader2, ChevronLeft, ChevronRight, Grid2X2, Grid3X3, List, Settings } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
 import type { Series } from '../types'
 import { SeriesGrid } from './SeriesGrid'
 import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
 import { useViewMode } from '../lib/useViewMode'
+import { SettingsModal } from './SettingsModal'
 
 const PULL_THRESHOLD = 72
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -29,6 +31,7 @@ function addMonths(date: Date, n: number): Date {
 
 export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   const [view, setView] = useState<'watching' | 'upcoming'>('watching')
+  const [showSettings, setShowSettings] = useState(false)
   const [viewMode, setViewMode] = useViewMode()
   const [pullDistance, setPullDistance] = useState(0)
   const [pullReady, setPullReady] = useState(false)
@@ -193,9 +196,17 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
         className="shrink-0 px-4 pb-3 bg-[#0A0A0A]"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
-        <div className="flex items-center gap-2 mb-5">
-          <Tv className="w-5 h-5 text-[#6366F1]" />
-          <span className="text-lg font-bold tracking-tight text-white">TVFREAK</span>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <Tv className="w-5 h-5 text-[#6366F1]" />
+            <span className="text-lg font-bold tracking-tight text-white">TVFREAK</span>
+          </div>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg active:bg-white/8 transition-colors"
+          >
+            <Settings className="w-4 h-4 text-white/30" />
+          </button>
         </div>
 
         {/* Toggle */}
@@ -436,6 +447,10 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      </AnimatePresence>
     </div>
   )
 }

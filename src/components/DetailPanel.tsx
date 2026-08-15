@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, MoreHorizontal, Loader2, Calendar, CheckCircle2, Plus } from 'lucide-react'
-import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, getTvSimilar, posterUrl } from '../lib/tmdb'
+import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, getTvSimilar, getWatchProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
+import { getCountry } from '../lib/settings'
 import { updateSeries, deleteSeries, addSeries } from '../lib/api'
-import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode, TmdbSearchResult } from '../types'
+import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode, TmdbSearchResult, WatchProvider } from '../types'
 import { STATUS_CONFIG } from '../types'
 import { EpisodeList } from './EpisodeList'
 import { formatAirDate } from '../lib/utils'
@@ -26,6 +27,8 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
   const [notes, setNotes] = useState('')
   const [moreModal, setMoreModal] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [providers, setProviders] = useState<WatchProvider[]>([])
+  const [watchLink, setWatchLink] = useState<string | null>(null)
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Dep on tmdbId (not id) so previews from search also load
@@ -87,6 +90,19 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
       setRecsPage(1)
       // Both endpoints return up to 20 each; if either is full, page 2 may exist
       setHasMoreRecs(recs.length >= 20 || similar.length >= 20)
+    })
+  }, [series?.tmdbId])
+
+  useEffect(() => {
+    if (!series?.tmdbId) { setProviders([]); setWatchLink(null); return }
+    getWatchProviders(series.tmdbId, getCountry()).then(({ flatrate, free, link }) => {
+      const combined: WatchProvider[] = []
+      const seen = new Set<number>()
+      for (const p of [...flatrate, ...free]) {
+        if (!seen.has(p.provider_id)) { seen.add(p.provider_id); combined.push(p) }
+      }
+      setProviders(combined)
+      setWatchLink(link)
     })
   }, [series?.tmdbId])
 
@@ -362,6 +378,33 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
                   <p className="text-sm text-white/55 leading-relaxed line-clamp-4">
                     {detail?.overview || series.overview}
                   </p>
+                </div>
+              )}
+
+              {/* Where to watch */}
+              {providers.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-xs text-white/30 mb-2 uppercase tracking-wider font-medium">Where to watch</p>
+                  <div className="flex flex-wrap gap-2">
+                    {providers.map(p => (
+                      <a
+                        key={p.provider_id}
+                        href={watchLink ?? undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={p.provider_name}
+                        className="w-9 h-9 rounded-xl overflow-hidden bg-[#1E1E1E] border border-white/8 active:opacity-70 transition-opacity shrink-0"
+                        onClick={e => { if (!watchLink) e.preventDefault() }}
+                      >
+                        <img
+                          src={`${IMG_BASE}/w45${p.logo_path}`}
+                          alt={p.provider_name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
 
