@@ -400,8 +400,10 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">{s.title}</p>
                     </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-xs font-semibold text-[#6366F1]">{formatAirDate(date)}</p>
+                    <div className="shrink-0">
+                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#6366F1]/15 text-[#6366F1] leading-tight">
+                        {formatAirDate(date)}
+                      </span>
                     </div>
                   </button>
                 ))}
@@ -431,8 +433,8 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                             <span className="text-[10px] text-white/20 text-center">{s.title}</span>
                           </div>
                         )}
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 to-transparent px-1.5 pb-1.5 pt-5">
-                          <p className={`font-semibold text-[#6366F1] ${viewMode === 'big' ? 'text-[10px]' : 'text-[9px]'}`}>{formatAirDate(date)}</p>
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#6366F1]/90 text-white leading-tight backdrop-blur-sm">
+                          {formatAirDate(date)}
                         </div>
                       </div>
                       <p className={`text-white/60 leading-tight line-clamp-2 ${viewMode === 'big' ? 'text-[11px]' : 'text-[10px]'}`}>{s.title}</p>
