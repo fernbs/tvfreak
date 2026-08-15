@@ -50,14 +50,14 @@ function Checkbox({
         disabled
           ? 'bg-transparent border-white/6 cursor-not-allowed opacity-40'
           : checked
-            ? 'bg-[#FF9F0A] border-[#FF9F0A] hover:bg-[#D4840A]'
+            ? 'bg-[#BF5AF2] border-[#BF5AF2] hover:bg-[#A63FD9]'
             : indeterminate
-              ? 'bg-[rgba(255,159,10,0.18)] border-[rgba(255,159,10,0.45)] hover:border-[rgba(255,159,10,0.65)]'
+              ? 'bg-[rgba(191,90,242,0.18)] border-[rgba(191,90,242,0.45)] hover:border-[rgba(191,90,242,0.65)]'
               : 'bg-transparent border-white/18 hover:border-white/40 hover:bg-white/4',
       ].join(' ')}
     >
       {checked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-      {!checked && indeterminate && <Minus className="w-2.5 h-2.5 text-[#FF9F0A]" strokeWidth={3} />}
+      {!checked && indeterminate && <Minus className="w-2.5 h-2.5 text-[#BF5AF2]" strokeWidth={3} />}
     </button>
   )
 }
@@ -408,7 +408,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
                       {!isFuture && (
                         <div className="h-[3px] bg-white/7 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#FF9F0A] rounded-full transition-all duration-500"
+                            className="h-full bg-[#BF5AF2] rounded-full transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -498,7 +498,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
             <div className="flex gap-2">
               <button
                 onClick={() => confirmEpisodeModal(true)}
-                className="flex-1 px-3 py-2.5 bg-[#FF9F0A] hover:bg-[#D4840A] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="flex-1 px-3 py-2.5 bg-[#BF5AF2] hover:bg-[#A63FD9] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Mark all
               </button>
@@ -532,7 +532,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
             <div className="flex gap-2">
               <button
                 onClick={() => confirmSeasonModal(true)}
-                className="flex-1 px-3 py-2.5 bg-[#FF9F0A] hover:bg-[#D4840A] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="flex-1 px-3 py-2.5 bg-[#BF5AF2] hover:bg-[#A63FD9] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Mark all
               </button>

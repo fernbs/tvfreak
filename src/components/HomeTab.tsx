@@ -182,7 +182,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
       >
         <Loader2
           className={`w-5 h-5 transition-colors duration-150 ${
-            refreshing ? 'animate-spin text-[#FF9F0A]' : pullReady ? 'text-[#FF9F0A]' : 'text-[#48484A]'
+            refreshing ? 'animate-spin text-[#BF5AF2]' : pullReady ? 'text-[#BF5AF2]' : 'text-[#48484A]'
           }`}
           style={{
             opacity: refreshing ? 1 : Math.min(pullDistance / (PULL_THRESHOLD * 0.5), 1),
@@ -324,14 +324,14 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                           onClick={() => !isPast && handleDayClick(day)}
                           disabled={isPast && !hasEpisode}
                           className="flex flex-col items-center py-1 rounded-lg transition-colors"
-                          style={{ backgroundColor: isSelected ? 'rgba(255,159,10,0.18)' : undefined }}
+                          style={{ backgroundColor: isSelected ? 'rgba(191,90,242,0.18)' : undefined }}
                         >
                           <span
                             className={`text-sm leading-none font-medium ${
                               isSelected
-                                ? 'text-[#FF9F0A]'
+                                ? 'text-[#BF5AF2]'
                                 : isToday
-                                  ? 'text-[#FF9F0A]'
+                                  ? 'text-[#BF5AF2]'
                                   : isPast
                                     ? 'text-[#2C2C2E]'
                                     : 'text-[#8E8E93]'
@@ -341,7 +341,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                             {day}
                           </span>
                           <div className="h-1.5 mt-0.5 flex items-center justify-center">
-                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#FF9F0A]" />}
+                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#BF5AF2]" />}
                           </div>
                         </button>
                       )
@@ -401,7 +401,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                       <p className="text-sm font-medium text-[#F5F5F7] truncate">{s.title}</p>
                     </div>
                     <div className="shrink-0">
-                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(255,159,10,0.12)] text-[#FF9F0A] leading-tight">
+                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(191,90,242,0.12)] text-[#BF5AF2] leading-tight">
                         {formatAirDate(date)}
                       </span>
                     </div>
@@ -433,7 +433,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                             <span className="text-[10px] text-[#48484A] text-center">{s.title}</span>
                           </div>
                         )}
-                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF9F0A]/90 text-black leading-tight backdrop-blur-sm">
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#BF5AF2]/90 text-white leading-tight backdrop-blur-sm">
                           {formatAirDate(date)}
                         </div>
                       </div>

@@ -80,7 +80,7 @@ export function SeriesGrid({ series, loading, onSelect, viewMode = 'small' }: Pr
                 </div>
               </div>
               {s.imdbRating && (
-                <span className="text-xs shrink-0"><span className="text-[#FF9F0A]">★</span><span className="text-white"> {s.imdbRating}</span></span>
+                <span className="text-xs shrink-0"><span className="text-[#BF5AF2]">★</span><span className="text-white"> {s.imdbRating}</span></span>
               )}
             </button>
           )

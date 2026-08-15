@@ -104,7 +104,7 @@ export function SettingsModal({ onClose }: Props) {
                       title={p.provider_name}
                       className={`flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
                         isSelected
-                          ? 'bg-[rgba(255,159,10,0.15)] border-[rgba(255,159,10,0.35)] text-[#F5F5F7]'
+                          ? 'bg-[rgba(191,90,242,0.15)] border-[rgba(191,90,242,0.35)] text-[#F5F5F7]'
                           : 'bg-[#1C1C1E] border-white/8 text-[#48484A] active:bg-[#2C2C2E]'
                       }`}
                     >

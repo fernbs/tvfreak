@@ -68,7 +68,7 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
                 </div>
               </div>
               {m.imdbRating && (
-                <span className="text-xs shrink-0"><span className="text-[#FF9F0A]">★</span><span className="text-white"> {m.imdbRating}</span></span>
+                <span className="text-xs shrink-0"><span className="text-[#BF5AF2]">★</span><span className="text-white"> {m.imdbRating}</span></span>
               )}
             </button>
           )
@@ -110,7 +110,7 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
             {/* Rating */}
             {m.imdbRating && (
               <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
-                <span className="text-[#FF9F0A]">★</span>
+                <span className="text-[#BF5AF2]">★</span>
                 <span className="text-white"> {m.imdbRating}</span>
               </div>
             )}
@@ -192,7 +192,7 @@ export function LibraryTab({
             {duplicates.length > 0 && (
               <button
                 onClick={onShowDuplicates}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[rgba(255,159,10,0.08)] text-[#FF9F0A]/80 border border-[rgba(255,159,10,0.15)] active:bg-[rgba(255,159,10,0.15)] transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[rgba(191,90,242,0.08)] text-[#BF5AF2]/80 border border-[rgba(191,90,242,0.15)] active:bg-[rgba(191,90,242,0.15)] transition-colors"
               >
                 <GitMerge className="w-3.5 h-3.5" />
                 {duplicates.length}
@@ -201,7 +201,7 @@ export function LibraryTab({
             {!migrationDone && (
               <button
                 onClick={onShowMigration}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[rgba(255,159,10,0.1)] text-[#FF9F0A] border border-[rgba(255,159,10,0.2)] active:bg-[rgba(255,159,10,0.18)] transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[rgba(191,90,242,0.1)] text-[#BF5AF2] border border-[rgba(191,90,242,0.2)] active:bg-[rgba(191,90,242,0.18)] transition-colors"
               >
                 <Wand2 className="w-3.5 h-3.5" />
                 Restore
@@ -223,11 +223,11 @@ export function LibraryTab({
                 <span className={`text-sm font-semibold transition-colors ${isActive ? 'text-[#F5F5F7]' : 'text-[#48484A]'}`}>
                   {label}
                 </span>
-                <span className={`text-[11px] font-medium transition-colors ${isActive ? 'text-[#FF9F0A]' : 'text-[#48484A]'}`}>
+                <span className={`text-[11px] font-medium transition-colors ${isActive ? 'text-[#BF5AF2]' : 'text-[#48484A]'}`}>
                   {count}
                 </span>
                 {isActive && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-10 bg-[#FF9F0A] rounded-full" />
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-10 bg-[#BF5AF2] rounded-full" />
                 )}
               </button>
             )
@@ -270,7 +270,7 @@ export function LibraryTab({
                 onClick={() => setFilter(f.value)}
                 className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                   filter === f.value
-                    ? 'bg-[#FF9F0A] text-black'
+                    ? 'bg-[#BF5AF2] text-white'
                     : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
                 }`}
               >
@@ -287,7 +287,7 @@ export function LibraryTab({
                 onClick={() => setMovieFilter(val as MovieStatus | 'all')}
                 className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                   movieFilter === val
-                    ? 'bg-[#FF9F0A] text-black'
+                    ? 'bg-[#BF5AF2] text-white'
                     : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
                 }`}
               >

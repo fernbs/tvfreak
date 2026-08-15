@@ -95,16 +95,16 @@ export function BottomNav({ active, onChange }: Props) {
               className="absolute top-0 left-1/2 -translate-x-1/2 h-[2.5px] rounded-full transition-all duration-300"
               style={{
                 width: isActive ? 28 : 0,
-                backgroundColor: '#FF9F0A',
+                backgroundColor: '#BF5AF2',
                 opacity: isActive ? 1 : 0,
               }}
             />
             <Icon
-              className={`w-[22px] h-[22px] transition-all duration-200 ${isActive ? 'text-[#FF9F0A]' : 'text-[#48484A]'}`}
+              className={`w-[22px] h-[22px] transition-all duration-200 ${isActive ? 'text-[#BF5AF2]' : 'text-[#48484A]'}`}
               strokeWidth={isActive ? 2.5 : 1.8}
             />
             <span className={`text-[10px] font-medium tracking-wide transition-colors duration-200 ${
-              isActive ? 'text-[#FF9F0A]' : 'text-[#48484A]'
+              isActive ? 'text-[#BF5AF2]' : 'text-[#48484A]'
             }`}>
               {label}
             </span>

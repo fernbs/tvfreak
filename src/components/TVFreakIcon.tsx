@@ -18,7 +18,7 @@ export function TVFreakIcon({ size = 24, className }: Props) {
       {/* Alien head: wide cranium, narrow chin */}
       <path
         d="M50 9 C22 9 14 29 14 49 C14 68 26 88 50 91 C74 88 86 68 86 49 C86 29 78 9 50 9 Z"
-        fill="#FF9F0A"
+        fill="#BF5AF2"
       />
 
       {/* Left eye — large almond tilted inward */}

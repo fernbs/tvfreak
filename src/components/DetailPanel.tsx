@@ -365,7 +365,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                       onClick={e => { if (!imdbId) e.preventDefault() }}
                       className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                     >
-                      <span className="text-[#FF9F0A] text-xs">★</span>
+                      <span className="text-[#BF5AF2] text-xs">★</span>
                       <span className="text-xs text-white font-medium">{displayImdbRating}</span>
                     </a>
                   )}
@@ -396,7 +396,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                         {STATUS_CONFIG[series.status].label}
                       </div>
                       {nextEpDate && (
-                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-[rgba(255,159,10,0.1)] text-[#FF9F0A] border border-[rgba(255,159,10,0.15)]">
+                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-[rgba(191,90,242,0.1)] text-[#BF5AF2] border border-[rgba(191,90,242,0.15)]">
                           <Calendar className="w-3 h-3" />
                           {formatAirDate(nextEpDate)}
                         </div>
@@ -407,7 +407,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                       onClick={handleAddToLibrary}
                       disabled={adding}
                       className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white active:opacity-80 transition-opacity disabled:opacity-50"
-                      style={{ background: 'linear-gradient(180deg, #FF9F0A 0%, #D4840A 100%)', boxShadow: '0 4px 18px rgba(255,159,10,0.35)' }}
+                      style={{ background: 'linear-gradient(180deg, #BF5AF2 0%, #A63FD9 100%)', boxShadow: '0 4px 18px rgba(191,90,242,0.35)' }}
                     >
                       {adding ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -462,10 +462,10 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
 
               {/* Next episode */}
               {hasUpcoming && nextEp && (
-                <div className="mb-5 px-4 py-3.5 rounded-2xl bg-[rgba(255,159,10,0.07)] border border-[rgba(255,159,10,0.18)]">
+                <div className="mb-5 px-4 py-3.5 rounded-2xl bg-[rgba(191,90,242,0.07)] border border-[rgba(191,90,242,0.18)]">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-[#FF9F0A]" />
-                    <p className="text-[10px] text-[#FF9F0A] font-semibold uppercase tracking-widest">Next episode</p>
+                    <Calendar className="w-3.5 h-3.5 text-[#BF5AF2]" />
+                    <p className="text-[10px] text-[#BF5AF2] font-semibold uppercase tracking-widest">Next episode</p>
                   </div>
                   <p className="text-sm text-[#F5F5F7] font-medium">
                     S{String(nextEp.season_number).padStart(2, '0')} E{String(nextEp.episode_number).padStart(2, '0')} · {nextEp.name}
@@ -517,7 +517,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                           />
                           {(r.vote_average ?? 0) > 0 && (
                             <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-black/65">
-                              <span className="text-[9px] font-medium"><span className="text-[#FF9F0A]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                              <span className="text-[9px] font-medium"><span className="text-[#BF5AF2]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
                             </div>
                           )}
                         </div>

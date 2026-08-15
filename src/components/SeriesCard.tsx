@@ -67,7 +67,7 @@ export function SeriesCard({ series, onClick }: Props) {
 
       {/* Upcoming episode date badge */}
       {hasUpcoming && series.nextEpisodeDate && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF9F0A]/90 text-black leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#BF5AF2]/90 text-white leading-tight backdrop-blur-sm">
           {formatAirDate(series.nextEpisodeDate)}
         </div>
       )}
@@ -81,7 +81,7 @@ export function SeriesCard({ series, onClick }: Props) {
 
       {/* New episode aired badge */}
       {hasNewEpisode && !hasUpcoming && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF9F0A]/90 text-black leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#BF5AF2]/90 text-white leading-tight backdrop-blur-sm">
           New
         </div>
       )}
@@ -96,7 +96,7 @@ export function SeriesCard({ series, onClick }: Props) {
       {/* Rating */}
       {series.imdbRating && (
         <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
-          <span className="text-[#FF9F0A]">★</span>
+          <span className="text-[#BF5AF2]">★</span>
           <span className="text-white"> {series.imdbRating}</span>
         </div>
       )}

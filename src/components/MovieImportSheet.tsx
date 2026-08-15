@@ -58,10 +58,10 @@ export function MovieImportBanner({ onOpen, count }: BannerProps) {
   return (
     <button
       onClick={onOpen}
-      className="mx-4 mb-3 flex items-center gap-3 px-4 py-3 rounded-2xl bg-[rgba(255,159,10,0.1)] border border-[rgba(255,159,10,0.25)] active:bg-[rgba(255,159,10,0.18)] transition-colors text-left w-[calc(100%-2rem)]"
+      className="mx-4 mb-3 flex items-center gap-3 px-4 py-3 rounded-2xl bg-[rgba(191,90,242,0.1)] border border-[rgba(191,90,242,0.25)] active:bg-[rgba(191,90,242,0.18)] transition-colors text-left w-[calc(100%-2rem)]"
     >
-      <div className="w-9 h-9 rounded-xl bg-[rgba(255,159,10,0.15)] flex items-center justify-center shrink-0">
-        <Download className="w-4.5 h-4.5 text-[#FF9F0A]" />
+      <div className="w-9 h-9 rounded-xl bg-[rgba(191,90,242,0.15)] flex items-center justify-center shrink-0">
+        <Download className="w-4.5 h-4.5 text-[#BF5AF2]" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-[#F5F5F7]">Import your movie history</p>
@@ -168,7 +168,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/6">
           <div className="flex items-center gap-2.5">
-            <Film className="w-5 h-5 text-[#FF9F0A]" />
+            <Film className="w-5 h-5 text-[#BF5AF2]" />
             <span className="text-base font-bold text-[#F5F5F7]">
               {stage === 'summary' && 'Import Movie History'}
               {stage === 'bulk-importing' && 'Importing…'}
@@ -190,7 +190,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
 
         {!data && !error && (
           <div className="px-5 py-12 flex justify-center">
-            <div className="w-6 h-6 border-2 border-[#FF9F0A] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#BF5AF2] border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
@@ -210,7 +210,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
             {matched.length > 0 && (
               <button
                 onClick={handleBulkImport}
-                className="w-full py-3.5 rounded-2xl bg-[#FF9F0A] text-black text-sm font-bold mb-3 active:opacity-80 transition-opacity"
+                className="w-full py-3.5 rounded-2xl bg-[#BF5AF2] text-white text-sm font-bold mb-3 active:opacity-80 transition-opacity"
               >
                 Import all {matched.length.toLocaleString()} matched movies
               </button>
@@ -234,14 +234,14 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
         {/* ── Bulk importing stage ── */}
         {stage === 'bulk-importing' && (
           <div className="px-5 py-10 flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-2 border-[#FF9F0A] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#BF5AF2] border-t-transparent rounded-full animate-spin" />
             <p className="text-[#F5F5F7] text-base font-semibold">
               {bulkProgress} / {bulkTotal}
             </p>
             <p className="text-[#48484A] text-xs">Adding movies to your library…</p>
             <div className="w-full h-1 bg-white/6 rounded-full mt-2">
               <div
-                className="h-full bg-[#FF9F0A] rounded-full transition-all duration-200"
+                className="h-full bg-[#BF5AF2] rounded-full transition-all duration-200"
                 style={{ width: `${bulkTotal > 0 ? (bulkProgress / bulkTotal) * 100 : 0}%` }}
               />
             </div>
@@ -307,7 +307,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
             <p className="text-[#8E8E93] text-sm">Your movie history has been imported.</p>
             <button
               onClick={onClose}
-              className="mt-2 px-8 py-3 rounded-2xl bg-[#FF9F0A] text-black text-sm font-bold active:opacity-80 transition-opacity"
+              className="mt-2 px-8 py-3 rounded-2xl bg-[#BF5AF2] text-white text-sm font-bold active:opacity-80 transition-opacity"
             >
               Go to Library
             </button>
