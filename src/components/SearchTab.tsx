@@ -405,7 +405,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                       </div>
                     )}
                     {(r.vote_average ?? 0) > 0 && (
-                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60">
+                      <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/60" style={{ height: '16px' }}>
                         <span className="text-[10px] text-yellow-400 font-medium leading-none">★ {r.vote_average!.toFixed(1)}</span>
                       </div>
                     )}
