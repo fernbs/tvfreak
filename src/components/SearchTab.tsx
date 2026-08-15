@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown } from 'lucide-react'
+import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { TVFreakIcon } from './TVFreakIcon'
 import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE, searchMovie, getTrendingMovies, discoverMovies, getMovieStreamingProviders } from '../lib/tmdb'
 import { addSeries, addMovie } from '../lib/api'
@@ -39,6 +39,15 @@ const MOVIE_GENRES: { id: number; label: string }[] = [
   { id: 37,    label: 'Western' },
 ]
 
+function deduped(items: TmdbSearchResult[]): TmdbSearchResult[] {
+  const seen = new Set<number>()
+  return items.filter(r => {
+    if (seen.has(r.id)) return false
+    seen.add(r.id)
+    return true
+  })
+}
+
 interface Props {
   onSeriesAdded: () => void
   allSeries: Series[]
@@ -70,7 +79,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   const [hideInLibrary, setHideInLibrary] = useState(false)
   const [newItemIds, setNewItemIds] = useState<Set<number>>(new Set())
   const [mediaMode, setMediaMode] = useState<'tv' | 'movie'>('tv')
-  const [showPlatformPicker, setShowPlatformPicker] = useState(false)
+  const [showFilterSheet, setShowFilterSheet] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -109,7 +118,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     setTrending([])
     const fetchFn = mediaMode === 'tv' ? getTrending : getTrendingMovies
     Promise.all([fetchFn(1), fetchFn(2)]).then(([p1, p2]) => {
-      setTrending([...p1.results, ...p2.results])
+      setTrending(deduped([...p1.results, ...p2.results]))
       setTrendingTotalPages(p1.totalPages)
       setTrendingPage(Math.min(2, p1.totalPages))
     }).finally(() => setLoadingTrending(false))
@@ -140,7 +149,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
         if (mediaMode === 'tv') {
           if (hasQuery) {
             const [p1, p2] = await Promise.all([searchTv(query, 1, year), searchTv(query, 2, year)])
-            setResults([...p1.results, ...p2.results])
+            setResults(deduped([...p1.results, ...p2.results]))
             setTotalPages(p1.totalPages)
             setCurrentPage(Math.min(2, p1.totalPages))
           } else {
@@ -148,14 +157,14 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               getDiscoverByGenres(includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()),
               getDiscoverByGenres(includedGenres, excludedGenres, 2, sortBy, year, selectedProviders, getCountry()),
             ])
-            setResults([...p1.results, ...p2.results])
+            setResults(deduped([...p1.results, ...p2.results]))
             setTotalPages(p1.totalPages)
             setCurrentPage(Math.min(2, p1.totalPages))
           }
         } else {
           if (hasQuery) {
             const [p1, p2] = await Promise.all([searchMovie(query, 1, year), searchMovie(query, 2, year)])
-            setResults([...p1.results, ...p2.results])
+            setResults(deduped([...p1.results, ...p2.results]))
             setTotalPages(p1.totalPages)
             setCurrentPage(Math.min(2, p1.totalPages))
           } else {
@@ -163,7 +172,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               discoverMovies(includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()),
               discoverMovies(includedGenres, excludedGenres, 2, sortBy, year, selectedProviders, getCountry()),
             ])
-            setResults([...p1.results, ...p2.results])
+            setResults(deduped([...p1.results, ...p2.results]))
             setTotalPages(p1.totalPages)
             setCurrentPage(Math.min(2, p1.totalPages))
           }
@@ -203,7 +212,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
           : [trendFn(p1)]
         const pages = await Promise.all(fetches)
         freshItems = pages.flatMap(p => p.results)
-        setTrending(prev => [...prev, ...freshItems])
+        setTrending(prev => deduped([...prev, ...freshItems]))
         setTrendingTotalPages(pages[0].totalPages)
         setTrendingPage(fetches.length === 2 ? p2 : p1)
       } else {
@@ -216,7 +225,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
             : [searchFn(query, p1, year)]
           const pages = await Promise.all(fetches)
           freshItems = pages.flatMap(p => p.results)
-          setResults(prev => [...prev, ...freshItems])
+          setResults(prev => deduped([...prev, ...freshItems]))
           setTotalPages(pages[0].totalPages)
           setCurrentPage(fetches.length === 2 ? p2 : p1)
         } else {
@@ -227,7 +236,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
             : [discoverFn(includedGenres, excludedGenres, p1, sortBy, year, selectedProviders, getCountry())]
           const pages = await Promise.all(fetches)
           freshItems = pages.flatMap(p => p.results)
-          setResults(prev => [...prev, ...freshItems])
+          setResults(prev => deduped([...prev, ...freshItems]))
           setTotalPages(pages[0].totalPages)
           setCurrentPage(fetches.length === 2 ? p2 : p1)
         }
@@ -387,6 +396,21 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
       : 'text-[#48484A] active:text-[#8E8E93]'
     }`
 
+  const activeFilterCount = [
+    includedGenres.length > 0 || excludedGenres.length > 0,
+    selectedProviders.length > 0,
+    yearFilter.length === 4,
+    hideInLibrary,
+  ].filter(Boolean).length
+
+  function clearFilters() {
+    setIncludedGenres([])
+    setExcludedGenres([])
+    setSelectedProviders([])
+    setYearFilter('')
+    setHideInLibrary(false)
+  }
+
   function AddButton({ r }: { r: TmdbSearchResult }) {
     const inLib = libraryIds.has(r.id)
     if (inLib) {
@@ -456,103 +480,25 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
           </div>
         </div>
 
-        {/* Row 2: Filters */}
-        <div className="flex items-center gap-1.5 px-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-
-          {/* Genre select */}
-          <div className="relative shrink-0">
-            <select
-              value={includedGenres[0]?.toString() ?? ''}
-              onChange={e => {
-                const val = e.target.value
-                setIncludedGenres(val ? [parseInt(val)] : [])
-                setExcludedGenres([])
-              }}
-              style={{ fontSize: 13 }}
-              className={`appearance-none bg-[#1C1C1E] border rounded-lg pl-2.5 pr-6 py-[7px] text-[12px] font-medium outline-none transition-colors ${
-                includedGenres.length > 0
-                  ? 'border-[rgba(255,159,10,0.5)] text-[#FF9F0A]'
-                  : 'border-white/8 text-[#8E8E93]'
-              }`}
-            >
-              <option value="" className="bg-[#111111]">Genre</option>
-              {genres.map(g => (
-                <option key={g.id} value={String(g.id)} className="bg-[#111111] text-[#F5F5F7]">{g.label}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#48484A] pointer-events-none" />
-          </div>
-
-          {/* Platforms button — opens bottom sheet */}
-          {availableProviders.length > 0 && (
-            <button
-              onClick={() => setShowPlatformPicker(true)}
-              className={`shrink-0 flex items-center gap-1.5 border rounded-lg px-2.5 py-[7px] text-[12px] font-medium transition-colors ${
-                selectedProviders.length > 0
-                  ? 'bg-[#1C1C1E] border-[rgba(255,159,10,0.5)] text-[#FF9F0A]'
-                  : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
-              }`}
-            >
-              {selectedProviders.length > 0 ? (
-                <>
-                  {sortedProviders.filter(p => selectedProviders.includes(p.provider_id)).slice(0, 3).map(p => (
-                    <img key={p.provider_id} src={`${IMG_BASE}/w45${p.logo_path}`} alt="" className="w-4 h-4 rounded object-cover" />
-                  ))}
-                  {selectedProviders.length > 3 && <span>+{selectedProviders.length - 3}</span>}
-                </>
-              ) : 'Platforms'}
-              <ChevronDown className="w-3 h-3 shrink-0 text-[#48484A]" />
-            </button>
-          )}
-
-          {/* Sort */}
-          <div className="relative shrink-0">
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              style={{ fontSize: 13 }}
-              className="appearance-none bg-[#1C1C1E] border border-white/8 rounded-lg pl-2.5 pr-6 py-[7px] text-[12px] font-medium text-[#8E8E93] outline-none"
-            >
-              <option value="vote_average.desc" className="bg-[#111111]">Top Rated</option>
-              <option value="popularity.desc" className="bg-[#111111]">Popular</option>
-              <option value="first_air_date.desc" className="bg-[#111111]">Newest</option>
-              <option value="first_air_date.asc" className="bg-[#111111]">Oldest</option>
-            </select>
-            <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#48484A] pointer-events-none" />
-          </div>
-
-          {/* Year */}
-          <div className="relative shrink-0">
-            <select
-              value={yearFilter}
-              onChange={e => setYearFilter(e.target.value)}
-              style={{ fontSize: 13 }}
-              className={`appearance-none bg-[#1C1C1E] border rounded-lg pl-2.5 pr-6 py-[7px] text-[12px] font-medium outline-none transition-colors ${
-                yearFilter ? 'border-[rgba(255,159,10,0.5)] text-[#FF9F0A]' : 'border-white/8 text-[#8E8E93]'
-              }`}
-            >
-              <option value="" className="bg-[#111111]">Year</option>
-              {Array.from({ length: 2027 - 1950 + 1 }, (_, i) => 2027 - i).map(y => (
-                <option key={y} value={String(y)} className="bg-[#111111]">{y}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#48484A] pointer-events-none" />
-          </div>
-
-          {/* New only */}
+        {/* Row 2: Filters button + view toggle */}
+        <div className="flex items-center gap-2 px-4 pb-3">
           <button
-            onClick={() => setHideInLibrary(prev => !prev)}
-            className={`shrink-0 border rounded-lg px-2.5 py-[7px] text-[12px] font-medium transition-colors ${
-              hideInLibrary
-                ? 'bg-[rgba(255,159,10,0.12)] border-[rgba(255,159,10,0.35)] text-[#FF9F0A]'
+            onClick={() => setShowFilterSheet(true)}
+            className={`flex-1 flex items-center gap-2 border rounded-xl px-3 py-2 text-[12px] font-medium transition-colors ${
+              activeFilterCount > 0
+                ? 'bg-[rgba(255,159,10,0.08)] border-[rgba(255,159,10,0.35)] text-[#FF9F0A]'
                 : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
             }`}
           >
-            New
+            <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+            <span className="flex-1 text-left">Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-[#FF9F0A] text-black text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shrink-0">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
-
-          {/* View toggle */}
-          <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5 ml-auto shrink-0">
+          <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5 shrink-0">
             {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
               <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
                 <Icon className="w-3.5 h-3.5" />
@@ -705,60 +651,152 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
         )}
       </div>
 
-      {/* Platform picker — bottom sheet */}
-      {showPlatformPicker && (
+      {/* Unified filter sheet */}
+      {showFilterSheet && (
         <>
-          <div className="fixed inset-0 z-30" onClick={() => setShowPlatformPicker(false)} />
+          <div className="fixed inset-0 z-30" onClick={() => setShowFilterSheet(false)} />
           <div
-            className="fixed left-0 right-0 bottom-0 z-40 bg-[#1C1C1E] rounded-t-2xl shadow-2xl border-t border-white/8"
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+            className="fixed left-0 right-0 bottom-0 z-40 bg-[#1C1C1E] rounded-t-2xl shadow-2xl border-t border-white/8 overflow-y-auto"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)', maxHeight: '85vh' }}
           >
-            <div className="flex items-center justify-between px-4 pt-4 pb-3">
-              <span className="text-sm font-semibold text-[#F5F5F7]">Platforms</span>
+            {/* Header */}
+            <div className="sticky top-0 bg-[#1C1C1E] flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/6 z-10">
+              <span className="text-sm font-semibold text-[#F5F5F7]">Filters</span>
               <div className="flex items-center gap-3">
-                {selectedProviders.length > 0 && (
-                  <button
-                    onClick={() => setSelectedProviders([])}
-                    className="text-xs text-[#FF9F0A] font-medium"
-                  >
+                {activeFilterCount > 0 && (
+                  <button onClick={clearFilters} className="text-xs text-[#FF9F0A] font-medium">
                     Clear all
                   </button>
                 )}
                 <button
-                  onClick={() => setShowPlatformPicker(false)}
+                  onClick={() => setShowFilterSheet(false)}
                   className="w-7 h-7 flex items-center justify-center rounded-full bg-white/8"
                 >
                   <X className="w-3.5 h-3.5 text-[#8E8E93]" />
                 </button>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 px-4 pb-4">
-              {sortedProviders.map(p => {
-                const isSelected = selectedProviders.includes(p.provider_id)
-                return (
+
+            {/* Sort by */}
+            <div className="px-4 pt-4 pb-4">
+              <p className="text-[11px] font-semibold text-[#48484A] uppercase tracking-wide mb-2.5">Sort by</p>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { value: 'vote_average.desc', label: 'Top Rated' },
+                  { value: 'popularity.desc', label: 'Popular' },
+                  { value: 'first_air_date.desc', label: 'Newest' },
+                  { value: 'first_air_date.asc', label: 'Oldest' },
+                ] as const).map(o => (
                   <button
-                    key={p.provider_id}
-                    onClick={() => toggleProvider(p.provider_id)}
-                    className="flex flex-col items-center gap-1 transition-all active:opacity-70"
+                    key={o.value}
+                    onClick={() => setSortBy(o.value)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                      sortBy === o.value ? 'bg-[#FF9F0A] text-black' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                    }`}
                   >
-                    <div className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all ${
-                      isSelected ? 'border-[#FF9F0A]' : 'border-transparent opacity-40'
-                    }`}>
-                      <img
-                        src={`${IMG_BASE}/w92${p.logo_path}`}
-                        alt={p.provider_name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <span className={`text-[9px] text-center leading-tight max-w-[52px] truncate ${
-                      isSelected ? 'text-[#FF9F0A]' : 'text-[#48484A]'
-                    }`}>
-                      {p.provider_name}
-                    </span>
+                    {o.label}
                   </button>
-                )
-              })}
+                ))}
+              </div>
             </div>
+
+            {/* Genre */}
+            <div className="px-4 pt-2 pb-4 border-t border-white/6">
+              <p className="text-[11px] font-semibold text-[#48484A] uppercase tracking-wide mb-2.5">Genre</p>
+              <div className="flex flex-wrap gap-2">
+                {genres.map(g => {
+                  const isIncluded = includedGenres.includes(g.id)
+                  const isExcluded = excludedGenres.includes(g.id)
+                  return (
+                    <button
+                      key={g.id}
+                      onClick={() => toggleGenre(g.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border ${
+                        isIncluded
+                          ? 'bg-[rgba(255,159,10,0.12)] border-[rgba(255,159,10,0.4)] text-[#FF9F0A]'
+                          : isExcluded
+                          ? 'bg-[rgba(251,113,133,0.12)] border-[rgba(251,113,133,0.4)] text-[#FB7185]'
+                          : 'bg-[#2C2C2E] border-transparent text-[#8E8E93] active:bg-[#383838]'
+                      }`}
+                    >
+                      {isIncluded ? '✓ ' : isExcluded ? '✕ ' : ''}{g.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-[10px] text-[#48484A] mt-2.5">Tap once to include · tap again to exclude · tap again to clear</p>
+            </div>
+
+            {/* Year */}
+            <div className="px-4 pt-2 pb-4 border-t border-white/6 flex items-center justify-between">
+              <p className="text-[11px] font-semibold text-[#48484A] uppercase tracking-wide">Year</p>
+              <div className="relative">
+                <select
+                  value={yearFilter}
+                  onChange={e => setYearFilter(e.target.value)}
+                  className={`appearance-none bg-[#2C2C2E] border rounded-lg pl-3 pr-7 py-2 text-xs font-medium outline-none transition-colors ${
+                    yearFilter ? 'border-[rgba(255,159,10,0.4)] text-[#FF9F0A]' : 'border-white/8 text-[#8E8E93]'
+                  }`}
+                >
+                  <option value="" className="bg-[#111111]">Any year</option>
+                  {Array.from({ length: 2027 - 1950 + 1 }, (_, i) => 2027 - i).map(y => (
+                    <option key={y} value={String(y)} className="bg-[#111111]">{y}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#48484A] pointer-events-none" />
+              </div>
+            </div>
+
+            {/* New only */}
+            <div className="px-4 pt-2 pb-4 border-t border-white/6 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-[#F5F5F7]">New only</p>
+                <p className="text-[11px] text-[#48484A] mt-0.5">Hide titles already in your library</p>
+              </div>
+              <button
+                onClick={() => setHideInLibrary(prev => !prev)}
+                className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${hideInLibrary ? 'bg-[#FF9F0A]' : 'bg-[#2C2C2E]'}`}
+              >
+                <span className={`absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white shadow transition-all ${hideInLibrary ? 'left-[22px]' : 'left-[3px]'}`} />
+              </button>
+            </div>
+
+            {/* Platforms */}
+            {availableProviders.length > 0 && (
+              <div className="px-4 pt-2 pb-4 border-t border-white/6">
+                <div className="flex items-center justify-between mb-2.5">
+                  <p className="text-[11px] font-semibold text-[#48484A] uppercase tracking-wide">Platforms</p>
+                  {selectedProviders.length > 0 && (
+                    <button onClick={() => setSelectedProviders([])} className="text-[11px] text-[#FF9F0A] font-medium">
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {sortedProviders.map(p => {
+                    const isSelected = selectedProviders.includes(p.provider_id)
+                    return (
+                      <button
+                        key={p.provider_id}
+                        onClick={() => toggleProvider(p.provider_id)}
+                        className="flex flex-col items-center gap-1 transition-all active:opacity-70"
+                      >
+                        <div className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all ${
+                          isSelected ? 'border-[#FF9F0A]' : 'border-transparent opacity-40'
+                        }`}>
+                          <img src={`${IMG_BASE}/w92${p.logo_path}`} alt={p.provider_name} className="w-full h-full object-cover" />
+                        </div>
+                        <span className={`text-[9px] text-center leading-tight max-w-[52px] truncate ${
+                          isSelected ? 'text-[#FF9F0A]' : 'text-[#48484A]'
+                        }`}>
+                          {p.provider_name}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
