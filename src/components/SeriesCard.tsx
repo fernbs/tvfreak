@@ -41,13 +41,16 @@ export function SeriesCard({ series, onClick }: Props) {
         </div>
       )}
 
-      {/* Fingernail tip — bottom-left corner status indicator */}
+      {/* Crescent arc — bottom-left corner status indicator */}
       <div
-        className="absolute bottom-0 left-0 pointer-events-none"
+        className="absolute pointer-events-none"
         style={{
-          width: 28,
-          height: 28,
-          background: `linear-gradient(to top right, ${config.color} 0%, ${config.color} 48%, transparent 50%)`,
+          bottom: -13,
+          left: -13,
+          width: 34,
+          height: 34,
+          borderRadius: '50%',
+          border: `2.5px solid ${config.color}`,
         }}
       />
 

@@ -100,11 +100,11 @@ export function BottomNav({ active, onChange }: Props) {
               }}
             />
             <Icon
-              className={`w-[22px] h-[22px] transition-all duration-200 ${isActive ? 'text-white' : 'text-[#48484A]'}`}
+              className={`w-[22px] h-[22px] transition-all duration-200 ${isActive ? 'text-[#FF9F0A]' : 'text-[#48484A]'}`}
               strokeWidth={isActive ? 2.5 : 1.8}
             />
             <span className={`text-[10px] font-medium tracking-wide transition-colors duration-200 ${
-              isActive ? 'text-white' : 'text-[#48484A]'
+              isActive ? 'text-[#FF9F0A]' : 'text-[#48484A]'
             }`}>
               {label}
             </span>
