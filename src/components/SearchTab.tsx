@@ -47,6 +47,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
   const [selectedProviders, setSelectedProviders] = useState<number[]>(getDefaultProviders)
   const [hideInLibrary, setHideInLibrary] = useState(false)
+  const [newItemIds, setNewItemIds] = useState<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -135,6 +136,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     try {
       const year = yearFilter.length === 4 ? yearFilter : undefined
       const hasQuery = query.trim().length > 0
+      let freshItems: TmdbSearchResult[] = []
       if (showTrending) {
         const p1 = trendingPage + 1
         const p2 = trendingPage + 2
@@ -142,7 +144,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           ? [getTrending(p1), getTrending(p2)]
           : [getTrending(p1)]
         const pages = await Promise.all(fetches)
-        setTrending(prev => [...prev, ...pages.flatMap(p => p.results)])
+        freshItems = pages.flatMap(p => p.results)
+        setTrending(prev => [...prev, ...freshItems])
         setTrendingTotalPages(pages[0].totalPages)
         setTrendingPage(fetches.length === 2 ? p2 : p1)
       } else {
@@ -153,7 +156,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             ? [searchTv(query, p1, year), searchTv(query, p2, year)]
             : [searchTv(query, p1, year)]
           const pages = await Promise.all(fetches)
-          setResults(prev => [...prev, ...pages.flatMap(p => p.results)])
+          freshItems = pages.flatMap(p => p.results)
+          setResults(prev => [...prev, ...freshItems])
           setTotalPages(pages[0].totalPages)
           setCurrentPage(fetches.length === 2 ? p2 : p1)
         } else {
@@ -162,11 +166,13 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                getDiscoverByGenres(includedGenres, excludedGenres, p2, sortBy, year, selectedProviders, getCountry())]
             : [getDiscoverByGenres(includedGenres, excludedGenres, p1, sortBy, year, selectedProviders, getCountry())]
           const pages = await Promise.all(fetches)
-          setResults(prev => [...prev, ...pages.flatMap(p => p.results)])
+          freshItems = pages.flatMap(p => p.results)
+          setResults(prev => [...prev, ...freshItems])
           setTotalPages(pages[0].totalPages)
           setCurrentPage(fetches.length === 2 ? p2 : p1)
         }
       }
+      if (freshItems.length > 0) setNewItemIds(new Set(freshItems.map(r => r.id)))
     } finally { setLoadingMore(false) }
   }
 
@@ -180,11 +186,17 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     if (!sentinel || !container) return
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) handleLoadMoreRef.current() },
-      { root: container, rootMargin: '0px 0px 300px 0px', threshold: 0 }
+      { root: container, rootMargin: '0px 0px 100px 0px', threshold: 0 }
     )
     observer.observe(sentinel)
     return () => observer.disconnect()
   }, [hasMore, loadingMore])
+
+  useEffect(() => {
+    if (newItemIds.size === 0) return
+    const t = setTimeout(() => setNewItemIds(new Set()), 700)
+    return () => clearTimeout(t)
+  }, [newItemIds])
 
   const libraryIds = new Set(allSeries.map(s => s.tmdbId).filter(Boolean))
 
@@ -446,7 +458,11 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
         ) : viewMode === 'list' ? (
           <div className="pb-6">
             {visibleResults.map(r => (
-              <div key={r.id} className="flex items-center gap-3 px-4 border-b border-white/4">
+              <div
+                key={r.id}
+                className="flex items-center gap-3 px-4 border-b border-white/4"
+                style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
+              >
                 <button
                   onClick={() => onSelect(seriesForPreview(r))}
                   className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
@@ -479,6 +495,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                   key={r.id}
                   onClick={() => onSelect(seriesForPreview(r))}
                   className="relative text-left active:opacity-70 transition-opacity"
+                  style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
                 >
                   <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1E1E1E] mb-1.5 relative">
                     {r.poster_path ? (
