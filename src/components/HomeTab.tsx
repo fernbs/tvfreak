@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Tv, Calendar, Loader2, ChevronLeft, ChevronRight, Grid2X2, Grid3X3, List, Settings } from 'lucide-react'
+import { Calendar, Loader2, ChevronLeft, ChevronRight, Grid2X2, Grid3X3, List, Settings } from 'lucide-react'
 import { AnimatePresence } from 'framer-motion'
 import type { Series } from '../types'
 import { SeriesGrid } from './SeriesGrid'
@@ -7,6 +7,7 @@ import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
 import { useViewMode } from '../lib/useViewMode'
 import { SettingsModal } from './SettingsModal'
+import { TVFreakIcon } from './TVFreakIcon'
 
 const PULL_THRESHOLD = 72
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -198,7 +199,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
       >
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <Tv className="w-5 h-5 text-[#6366F1]" />
+            <TVFreakIcon size={22} />
             <span className="text-lg font-bold tracking-tight text-white">TVFREAK</span>
           </div>
           <button
