@@ -16,7 +16,7 @@ const tabs = [
 
 export function BottomNav({ active, onChange }: Props) {
   return (
-    <nav className="fixed left-0 right-0 flex bg-[#0D0D0D] border-t border-white/8 z-10" style={{ bottom: 'calc(0px - env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <nav className="fixed left-0 right-0 flex bg-[#0D0D0D] border-t border-white/8 z-10" style={{ bottom: 'calc(0px - var(--sab))', paddingBottom: 'var(--sab)' }}>
       {tabs.map(({ id, icon: Icon, label }) => (
         <button
           key={id}

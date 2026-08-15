@@ -31,6 +31,31 @@ export default function App() {
   const [showMigration, setShowMigration] = useState(false)
   const [migrationDone, setMigrationDone] = useState(() => localStorage.getItem(MIGRATION_KEY) === 'true')
 
+  // iOS PWA: env(safe-area-inset-bottom) is 0 on first CSS parse and only
+  // resolves after a rotation triggers a reflow. Poll via rAF until the probe
+  // element reports a real height, then write it to --sab so the nav uses it.
+  useEffect(() => {
+    const probe = document.createElement('div')
+    probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none'
+    document.documentElement.appendChild(probe)
+    let rafId: number
+    let tries = 0
+    const tick = () => {
+      const h = probe.offsetHeight
+      if (h > 0 || tries++ > 30) {
+        document.documentElement.style.setProperty('--sab', h + 'px')
+        document.documentElement.removeChild(probe)
+      } else {
+        rafId = requestAnimationFrame(tick)
+      }
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => {
+      cancelAnimationFrame(rafId)
+      if (probe.parentNode) probe.parentNode.removeChild(probe)
+    }
+  }, [])
+
   // Auto-dismiss migration banner if data already exists in the DB
   useEffect(() => {
     if (allSeries.length > 0 && !migrationDone) {
