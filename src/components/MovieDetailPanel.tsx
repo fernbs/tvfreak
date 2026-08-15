@@ -1,0 +1,321 @@
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Loader2, Plus } from 'lucide-react'
+import { getMovieDetails, getMovieRecommendations, getMovieWatchProviders, getMovieExternalIds, getImdbRating, posterUrl, IMG_BASE } from '../lib/tmdb'
+import { getCountry } from '../lib/settings'
+import { addMovie, updateMovie, deleteMovie } from '../lib/api'
+import type { Movie, MovieStatus, TmdbMovieDetail, TmdbSearchResult, WatchProvider } from '../types'
+import { MOVIE_STATUS_CONFIG } from '../types'
+import { toast } from 'sonner'
+
+interface Props {
+  movie: Movie | null
+  onClose: () => void
+  onUpdated: () => void
+  onSelect: (m: Movie) => void
+}
+
+function recToMovie(r: TmdbSearchResult): Movie {
+  return {
+    tmdbId: r.id,
+    title: r.name,
+    status: 'plantowatch',
+    posterPath: r.poster_path ?? null,
+    overview: r.overview ?? null,
+    releaseDate: r.first_air_date ?? null,
+    runtime: null,
+    notes: '',
+    imdbRating: (r.vote_average ?? 0) > 0 ? r.vote_average!.toFixed(1) : null,
+    addedAt: new Date(),
+    updatedAt: new Date(),
+  }
+}
+
+function formatRuntime(mins: number | null): string {
+  if (!mins) return ''
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return h > 0 ? `${h}h ${m > 0 ? `${m}m` : ''}`.trim() : `${m}m`
+}
+
+export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props) {
+  const [detail, setDetail] = useState<TmdbMovieDetail | null>(null)
+  const [loadingDetail, setLoadingDetail] = useState(false)
+  const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
+  const [providers, setProviders] = useState<{ flatrate: WatchProvider[]; free: WatchProvider[] }>({ flatrate: [], free: [] })
+  const [saving, setSaving] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [displayRating, setDisplayRating] = useState<string | null>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
+
+  const isOpen = movie !== null
+  const isInLibrary = Boolean(movie?.id)
+
+  useEffect(() => {
+    if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); return }
+    setLoadingDetail(true)
+    setDetail(null)
+    setRecommendations([])
+    setDisplayRating(movie.imdbRating ?? null)
+
+    Promise.all([
+      getMovieDetails(movie.tmdbId),
+      getMovieRecommendations(movie.tmdbId),
+      getMovieWatchProviders(movie.tmdbId, getCountry()),
+    ]).then(([d, recs, prov]) => {
+      setDetail(d)
+      setRecommendations(recs.slice(0, 12))
+      setProviders({ flatrate: prov.flatrate, free: prov.free })
+      if (d && (d.vote_average ?? 0) > 0 && !movie.imdbRating) {
+        setDisplayRating(d.vote_average!.toFixed(1))
+      }
+      // Fetch IMDB rating via OMDB
+      if (movie.tmdbId) {
+        getMovieExternalIds(movie.tmdbId).then(ext => {
+          if (ext.imdb_id) {
+            getImdbRating(ext.imdb_id).then(r => { if (r) setDisplayRating(r) })
+          }
+        })
+      }
+    }).finally(() => setLoadingDetail(false))
+  }, [movie?.tmdbId])
+
+  useEffect(() => {
+    if (isOpen) bodyRef.current?.scrollTo(0, 0)
+  }, [isOpen, movie?.id])
+
+  async function handleStatusChange(status: MovieStatus) {
+    if (!movie?.id) return
+    setSaving(true)
+    try {
+      await updateMovie(movie.id, { status })
+      toast.success(`Moved to ${MOVIE_STATUS_CONFIG[status].label}`)
+      onUpdated()
+    } finally { setSaving(false) }
+  }
+
+  async function handleAdd() {
+    if (!movie) return
+    setAdding(true)
+    try {
+      const id = await addMovie({
+        tmdbId: movie.tmdbId,
+        title: movie.title,
+        status: 'plantowatch',
+        posterPath: detail?.poster_path ?? movie.posterPath,
+        overview: detail?.overview ?? movie.overview,
+        releaseDate: detail?.release_date ?? movie.releaseDate,
+        runtime: detail?.runtime ?? null,
+        notes: '',
+        imdbRating: displayRating,
+        addedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      toast.success(`"${movie.title}" added to watchlist`)
+      onUpdated()
+      onSelect({ ...movie, id, status: 'plantowatch', imdbRating: displayRating })
+    } finally { setAdding(false) }
+  }
+
+  async function handleDelete() {
+    if (!movie?.id) return
+    if (!confirm(`Remove "${movie.title}" from your library?`)) return
+    setDeleting(true)
+    try {
+      await deleteMovie(movie.id)
+      toast.success(`"${movie.title}" removed`)
+      onUpdated()
+      onClose()
+    } finally { setDeleting(false) }
+  }
+
+  const poster = posterUrl(detail?.poster_path ?? movie?.posterPath ?? null, 'w500')
+  const releaseYear = (detail?.release_date ?? movie?.releaseDate ?? '').slice(0, 4)
+  const runtime = formatRuntime(detail?.runtime ?? movie?.runtime ?? null)
+  const currentStatus = movie?.status ?? 'plantowatch'
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="movie-backdrop"
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+
+          {/* Panel */}
+          <motion.div
+            key="movie-panel"
+            className="fixed inset-x-0 bottom-0 z-50 flex flex-col bg-[#111111] rounded-t-3xl overflow-hidden"
+            style={{ maxHeight: '94dvh' }}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-10 h-[3px] rounded-full bg-white/20" />
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/8 active:bg-white/15"
+            >
+              <X className="w-4 h-4 text-[#8E8E93]" />
+            </button>
+
+            {/* Scrollable body */}
+            <div ref={bodyRef} className="flex-1 overflow-y-auto overscroll-contain">
+
+              {/* Hero — poster + title */}
+              <div className="px-4 pt-2 pb-4">
+                <div className="flex gap-4">
+                  {/* Poster */}
+                  <div className="w-[100px] h-[150px] rounded-2xl overflow-hidden bg-[#1C1C1E] shrink-0">
+                    {poster && <img src={poster} alt={movie?.title} className="w-full h-full object-cover" />}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 pt-1">
+                    <h2 className="text-xl font-bold text-[#F5F5F7] leading-tight">{movie?.title}</h2>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {releaseYear && <span className="text-sm text-[#8E8E93]">{releaseYear}</span>}
+                      {runtime && <span className="text-sm text-[#8E8E93]">{runtime}</span>}
+                      {displayRating && (
+                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs">
+                          <span className="text-[#FF9F0A]">★</span>
+                          <span className="text-white font-medium">{displayRating}</span>
+                        </span>
+                      )}
+                    </div>
+                    {detail?.genres && detail.genres.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {detail.genres.slice(0, 3).map(g => (
+                          <span key={g.id} className="text-[10px] text-[#48484A] bg-white/5 px-1.5 py-0.5 rounded-md">{g.name}</span>
+                        ))}
+                      </div>
+                    )}
+                    {loadingDetail && <Loader2 className="w-4 h-4 text-[#48484A] animate-spin mt-2" />}
+                  </div>
+                </div>
+
+                {/* Status selector */}
+                {isInLibrary && (
+                  <div className="flex gap-2 mt-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                    {(Object.entries(MOVIE_STATUS_CONFIG) as [MovieStatus, { label: string; color: string }][]).map(([s, cfg]) => (
+                      <button
+                        key={s}
+                        onClick={() => handleStatusChange(s)}
+                        disabled={saving}
+                        className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                          currentStatus === s
+                            ? ''
+                            : 'bg-transparent border-white/10 text-[#48484A]'
+                        }`}
+                        style={currentStatus === s ? {
+                          backgroundColor: cfg.color + '20',
+                          borderColor: cfg.color + '50',
+                          color: cfg.color,
+                        } : {}}
+                      >
+                        {cfg.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add to watchlist button (not in library yet) */}
+                {!isInLibrary && (
+                  <button
+                    onClick={handleAdd}
+                    disabled={adding}
+                    className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#FF9F0A] text-black text-sm font-semibold active:opacity-80 transition-opacity disabled:opacity-50"
+                  >
+                    {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Add to Watchlist
+                  </button>
+                )}
+              </div>
+
+              {/* Overview */}
+              {(detail?.overview || movie?.overview) && (
+                <div className="px-4 mb-4">
+                  <p className="text-sm text-[#8E8E93] leading-relaxed">{detail?.overview ?? movie?.overview}</p>
+                </div>
+              )}
+
+              {/* Watch providers */}
+              {(providers.flatrate.length > 0 || providers.free.length > 0) && (
+                <div className="px-4 mb-5">
+                  <p className="text-[10px] text-[#48484A] mb-2.5 uppercase tracking-widest font-semibold">Where to watch</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {[...providers.flatrate, ...providers.free].slice(0, 8).map(p => (
+                      <div key={p.provider_id} className="w-9 h-9 rounded-xl overflow-hidden bg-[#1C1C1E]">
+                        <img src={`${IMG_BASE}/w92${p.logo_path}`} alt={p.provider_name} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {recommendations.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-[10px] text-[#48484A] mb-2.5 uppercase tracking-widest font-semibold px-4">More like this</p>
+                  <div className="flex gap-2.5 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: 'none' }}>
+                    {recommendations.map(r => (
+                      <button
+                        key={r.id}
+                        onClick={() => onSelect(recToMovie(r))}
+                        className="shrink-0 w-[72px] text-left active:opacity-70 transition-opacity"
+                      >
+                        <div className="w-[72px] h-[108px] rounded-xl overflow-hidden bg-[#1C1C1E] mb-1.5 relative">
+                          {r.poster_path ? (
+                            <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center p-1">
+                              <span className="text-[8px] text-[#48484A] text-center">{r.name}</span>
+                            </div>
+                          )}
+                          {(r.vote_average ?? 0) > 0 && (
+                            <div className="absolute top-1 left-1 px-1 rounded bg-black/65">
+                              <span className="text-[9px]"><span className="text-[#FF9F0A]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[9px] text-[#8E8E93] leading-tight line-clamp-2">{r.name}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Delete button */}
+              {isInLibrary && (
+                <div className="px-4 pb-10">
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="w-full py-2.5 rounded-xl border border-rose-500/20 text-rose-400 text-sm font-medium active:opacity-70 transition-opacity disabled:opacity-50"
+                  >
+                    {deleting ? 'Removing...' : 'Remove from library'}
+                  </button>
+                </div>
+              )}
+
+              {!isInLibrary && <div className="pb-10" />}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+}

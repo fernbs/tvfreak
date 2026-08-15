@@ -158,3 +158,108 @@ export async function getImdbRating(imdbId: string): Promise<string | null> {
     return null
   }
 }
+
+// ── Movie functions ──────────────────────────────────────────────────────────
+
+function mapMovieResult(r: Record<string, unknown>): import('../types').TmdbSearchResult {
+  return {
+    id: r.id as number,
+    name: r.title as string,
+    poster_path: (r.poster_path as string | null) ?? null,
+    overview: (r.overview as string) ?? '',
+    first_air_date: (r.release_date as string) ?? '',
+    vote_average: r.vote_average as number | undefined,
+    popularity: r.popularity as number | undefined,
+  }
+}
+
+export async function searchMovie(query: string, page = 1, year?: string): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
+  if (!query.trim()) return { results: [], totalPages: 0 }
+  const params = new URLSearchParams({ query, language: 'en-US', page: String(page) })
+  if (year) params.set('primary_release_year', year)
+  const res = await fetch(`${BASE_URL}/search/movie?${params}`, { headers: headers() })
+  if (!res.ok) return { results: [], totalPages: 0 }
+  const data = await res.json()
+  return { results: (data.results ?? []).map(mapMovieResult), totalPages: data.total_pages ?? 1 }
+}
+
+export async function getTrendingMovies(page = 1): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
+  const res = await fetch(`${BASE_URL}/trending/movie/week?language=en-US&page=${page}`, { headers: headers() })
+  if (!res.ok) return { results: [], totalPages: 1 }
+  const data = await res.json()
+  return { results: (data.results ?? []).map(mapMovieResult), totalPages: data.total_pages ?? 1 }
+}
+
+export async function discoverMovies(
+  includedIds: number[],
+  excludedIds: number[] = [],
+  page = 1,
+  sortBy = 'vote_average.desc',
+  year?: string,
+  providerIds: number[] = [],
+  region?: string,
+): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
+  const params = new URLSearchParams({ sort_by: sortBy, language: 'en-US', page: String(page) })
+  if (sortBy === 'vote_average.desc') params.set('vote_count.gte', '200')
+  if (includedIds.length > 0) params.set('with_genres', includedIds.join(','))
+  if (excludedIds.length > 0) params.set('without_genres', excludedIds.join(','))
+  if (year) params.set('primary_release_year', year)
+  if (providerIds.length > 0) {
+    params.set('with_watch_providers', providerIds.join('|'))
+    params.set('watch_monetization_types', 'flatrate|free')
+    if (region) params.set('watch_region', region)
+  }
+  const res = await fetch(`${BASE_URL}/discover/movie?${params}`, { headers: headers() })
+  if (!res.ok) return { results: [], totalPages: 0 }
+  const data = await res.json()
+  return { results: (data.results ?? []).map(mapMovieResult), totalPages: data.total_pages ?? 1 }
+}
+
+export async function getMovieDetails(tmdbId: number): Promise<import('../types').TmdbMovieDetail | null> {
+  const res = await fetch(`${BASE_URL}/movie/${tmdbId}?language=en-US`, { headers: headers() })
+  if (!res.ok) return null
+  return res.json()
+}
+
+export async function getMovieRecommendations(tmdbId: number, page = 1): Promise<import('../types').TmdbSearchResult[]> {
+  const res = await fetch(`${BASE_URL}/movie/${tmdbId}/recommendations?language=en-US&page=${page}`, { headers: headers() })
+  if (!res.ok) return []
+  const data = await res.json()
+  return (data.results ?? []).map(mapMovieResult)
+}
+
+export async function getMovieWatchProviders(
+  tmdbId: number,
+  countryCode: string,
+): Promise<{ flatrate: import('../types').WatchProvider[]; free: import('../types').WatchProvider[]; link: string | null }> {
+  try {
+    const res = await fetch(`${BASE_URL}/movie/${tmdbId}/watch/providers`, { headers: headers() })
+    if (!res.ok) return { flatrate: [], free: [], link: null }
+    const data = await res.json()
+    const country = data.results?.[countryCode] ?? {}
+    return { flatrate: country.flatrate ?? [], free: country.free ?? [], link: country.link ?? null }
+  } catch {
+    return { flatrate: [], free: [], link: null }
+  }
+}
+
+export async function getMovieStreamingProviders(countryCode: string): Promise<import('../types').WatchProvider[]> {
+  const res = await fetch(`${BASE_URL}/watch/providers/movie?language=en-US&watch_region=${countryCode}`, { headers: headers() })
+  if (!res.ok) return []
+  const data = await res.json()
+  const results: (import('../types').WatchProvider & { display_priorities?: Record<string, number> })[] = data.results ?? []
+  return results
+    .sort((a, b) => {
+      const pa = a.display_priorities?.[countryCode] ?? 999
+      const pb = b.display_priorities?.[countryCode] ?? 999
+      return pa - pb
+    })
+    .slice(0, 25)
+}
+
+export async function getMovieExternalIds(tmdbId: number): Promise<{ imdb_id: string | null }> {
+  const res = await fetch(`${BASE_URL}/movie/${tmdbId}/external_ids`, { headers: headers() })
+  if (!res.ok) return { imdb_id: null }
+  const data = await res.json()
+  return { imdb_id: data.imdb_id ?? null }
+}

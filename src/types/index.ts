@@ -113,3 +113,40 @@ export const STATUS_CONFIG: Record<SeriesStatus, {
     textClass: 'text-amber-300',
   },
 }
+
+export type MovieStatus = 'completed' | 'watching' | 'plantowatch' | 'dropped'
+
+export interface Movie {
+  id?: number
+  tmdbId: number | null
+  title: string
+  status: MovieStatus
+  posterPath: string | null
+  overview: string | null
+  releaseDate: string | null
+  runtime: number | null
+  notes: string
+  imdbRating: string | null
+  addedAt: Date
+  updatedAt: Date
+}
+
+export interface TmdbMovieDetail {
+  id: number
+  title: string
+  poster_path: string | null
+  backdrop_path: string | null
+  overview: string
+  release_date: string
+  runtime: number | null
+  vote_average?: number
+  status?: string
+  genres?: { id: number; name: string }[]
+}
+
+export const MOVIE_STATUS_CONFIG: Record<MovieStatus, { label: string; color: string }> = {
+  watching:    { label: 'Watching',  color: '#38BDF8' },
+  completed:   { label: 'Watched',   color: '#34D399' },
+  dropped:     { label: 'Dropped',   color: '#FB7185' },
+  plantowatch: { label: 'Watchlist', color: '#FBBF24' },
+}

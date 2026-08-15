@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration } from './lib/api'
+import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration, getAllMovies } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
 import { getTvDetails, getSeasonEpisodes } from './lib/tmdb'
 import { toast } from 'sonner'
-import type { Series } from './types'
+import type { Series, Movie } from './types'
 import { BottomNav } from './components/BottomNav'
 import type { Tab } from './components/BottomNav'
 import { HomeTab } from './components/HomeTab'
@@ -13,6 +13,7 @@ import { LibraryTab } from './components/LibraryTab'
 import { SearchTab } from './components/SearchTab'
 import { StatsTab } from './components/StatsTab'
 import { DetailPanel } from './components/DetailPanel'
+import { MovieDetailPanel } from './components/MovieDetailPanel'
 import { ImportBanner } from './components/ImportBanner'
 import { DuplicateModal } from './components/DuplicateModal'
 import { MigrationModal, MIGRATION_KEY } from './components/MigrationModal'
@@ -25,6 +26,8 @@ export default function App() {
   const [importing, setImporting] = useState(false)
   const [importProgress, setImportProgress] = useState({ done: 0, total: 0 })
   const [selected, setSelected] = useState<Series | null>(null)
+  const [allMovies, setAllMovies] = useState<Movie[]>([])
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
 
   const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([])
   const [showDuplicates, setShowDuplicates] = useState(false)
@@ -51,6 +54,13 @@ export default function App() {
     }
   }, [])
 
+  const loadMovies = useCallback(async () => {
+    try {
+      const data = await getAllMovies()
+      setAllMovies(data)
+    } catch { /* non-fatal */ }
+  }, [])
+
   useEffect(() => {
     async function init() {
       // Preload DB migration state once so all per-device jobs can check it.
@@ -69,13 +79,14 @@ export default function App() {
       }
       try { await deduplicateSeries() } catch { /* non-fatal */ }
       await loadSeries()
+      loadMovies()
       try {
         const dupes = await getDuplicates()
         setDuplicates(dupes)
       } catch { /* non-fatal */ }
     }
     init()
-  }, [loadSeries])
+  }, [loadSeries, loadMovies])
 
   const refreshNextEpisodeDates = useCallback(async () => {
     const all = await getAllSeries()
@@ -438,6 +449,19 @@ export default function App() {
     await loadSeries()
   }
 
+  async function handleMovieUpdated() {
+    const data = await getAllMovies()
+    setAllMovies(data)
+    if (selectedMovie?.id) {
+      const fresh = data.find(m => m.id === selectedMovie.id)
+      if (fresh) setSelectedMovie(fresh)
+    }
+  }
+
+  async function handleMovieAdded() {
+    await loadMovies()
+  }
+
   async function handleDuplicateResolved() {
     await loadSeries()
     const dupes = await getDuplicates()
@@ -474,10 +498,19 @@ export default function App() {
             onShowDuplicates={() => setShowDuplicates(true)}
             migrationDone={migrationDone}
             onShowMigration={() => setShowMigration(true)}
+            allMovies={allMovies}
+            onMovieSelect={setSelectedMovie}
           />
         )}
         {tab === 'search' && (
-          <SearchTab onSeriesAdded={handleSeriesAdded} allSeries={allSeries} onSelect={setSelected} />
+          <SearchTab
+            onSeriesAdded={handleSeriesAdded}
+            allSeries={allSeries}
+            onSelect={setSelected}
+            allMovies={allMovies}
+            onMovieAdded={handleMovieAdded}
+            onMovieSelect={setSelectedMovie}
+          />
         )}
         {tab === 'stats' && (
           <StatsTab allSeries={allSeries} />
@@ -493,6 +526,13 @@ export default function App() {
         onClose={() => setSelected(null)}
         onUpdated={handleSeriesUpdated}
         onSelect={setSelected}
+      />
+
+      <MovieDetailPanel
+        movie={selectedMovie}
+        onClose={() => setSelectedMovie(null)}
+        onUpdated={handleMovieUpdated}
+        onSelect={setSelectedMovie}
       />
 
       {importing && (

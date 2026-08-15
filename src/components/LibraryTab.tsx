@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { SlidersHorizontal, GitMerge, Wand2, Grid2X2, Grid3X3, List } from 'lucide-react'
+import { SlidersHorizontal, GitMerge, Wand2, Grid2X2, Grid3X3, List, Film } from 'lucide-react'
 import { TVFreakIcon } from './TVFreakIcon'
-import type { Series, SeriesStatus } from '../types'
+import type { Series, SeriesStatus, Movie, MovieStatus } from '../types'
+import { MOVIE_STATUS_CONFIG } from '../types'
 import type { DuplicateGroup } from '../lib/api'
 import { SeriesGrid } from './SeriesGrid'
 import { useViewMode } from '../lib/useViewMode'
@@ -16,6 +17,104 @@ interface Props {
   onShowDuplicates: () => void
   migrationDone: boolean
   onShowMigration: () => void
+  allMovies: Movie[]
+  onMovieSelect: (m: Movie) => void
+}
+
+function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; loading: boolean; onSelect: (m: Movie) => void; viewMode: string }) {
+  if (loading) {
+    return (
+      <div className={`pt-2 ${viewMode === 'big' ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-3 gap-2.5'}`}>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="aspect-[2/3] rounded-2xl bg-[#111111] animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+  if (movies.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-center">
+        <Film className="w-8 h-8 text-[#48484A] mb-3" />
+        <p className="text-[#8E8E93] text-base font-medium">No films yet</p>
+        <p className="text-[#48484A] text-sm mt-1">Search to add films to your watchlist</p>
+      </div>
+    )
+  }
+  if (viewMode === 'list') {
+    return (
+      <div className="space-y-2 pt-2">
+        {movies.map(m => {
+          const cfg = MOVIE_STATUS_CONFIG[m.status]
+          const poster = m.posterPath ? `https://image.tmdb.org/t/p/w185${m.posterPath}` : null
+          return (
+            <button
+              key={m.id ?? m.tmdbId}
+              onClick={() => onSelect(m)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 bg-[#111111] rounded-xl border border-white/7 active:bg-[#1C1C1E] transition-colors text-left"
+            >
+              <div className="w-[3px] self-stretch rounded-full shrink-0" style={{ backgroundColor: cfg.color }} />
+              <div className="w-9 h-[52px] rounded-lg overflow-hidden bg-[#1C1C1E] shrink-0">
+                {poster && <img src={poster} alt={m.title} className="w-full h-full object-cover" loading="lazy" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[#F5F5F7] truncate">{m.title}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0"
+                    style={{ backgroundColor: cfg.color + '25', color: cfg.color }}>
+                    {cfg.label}
+                  </span>
+                  {m.releaseDate && <span className="text-[10px] text-[#48484A]">{m.releaseDate.slice(0, 4)}</span>}
+                </div>
+              </div>
+              {m.imdbRating && (
+                <span className="text-xs shrink-0"><span className="text-[#FF9F0A]">★</span><span className="text-white"> {m.imdbRating}</span></span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+  return (
+    <div className={`pt-2 ${viewMode === 'big' ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-3 gap-2.5'}`}>
+      {movies.map(m => {
+        const cfg = MOVIE_STATUS_CONFIG[m.status]
+        const poster = m.posterPath ? `https://image.tmdb.org/t/p/w342${m.posterPath}` : null
+        return (
+          <div
+            key={m.id ?? m.tmdbId}
+            onClick={() => onSelect(m)}
+            className="relative aspect-[2/3] rounded-2xl overflow-hidden cursor-pointer group select-none"
+            style={{ transform: 'translateZ(0)' }}
+          >
+            {poster ? (
+              <img src={poster} alt={m.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.06]" draggable={false} />
+            ) : (
+              <div className="w-full h-full bg-[#1C1C1E] flex items-center justify-center p-3">
+                <span className="text-xs text-[#48484A] text-center leading-snug font-medium">{m.title}</span>
+              </div>
+            )}
+            {/* Status fingernail */}
+            <div
+              className="absolute bottom-0 left-0 pointer-events-none"
+              style={{ width: 28, height: 28, background: `linear-gradient(to top right, ${cfg.color} 0%, ${cfg.color} 48%, transparent 50%)` }}
+            />
+            {/* Rating */}
+            {m.imdbRating && (
+              <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
+                <span className="text-[#FF9F0A]">★</span>
+                <span className="text-white"> {m.imdbRating}</span>
+              </div>
+            )}
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
+              <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{m.title}</p>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 const FILTERS: { label: string; value: SeriesStatus | 'all' }[] = [
@@ -30,10 +129,13 @@ export function LibraryTab({
   series, loading, onSelect,
   duplicates, onShowDuplicates,
   migrationDone, onShowMigration,
+  allMovies, onMovieSelect,
 }: Props) {
   const [filter, setFilter] = useState<SeriesStatus | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('title')
   const [viewMode, setViewMode] = useViewMode()
+  const [mediaMode, setMediaMode] = useState<'tv' | 'movie'>('tv')
+  const [movieFilter, setMovieFilter] = useState<MovieStatus | 'all'>('all')
 
   function sorted(list: Series[]): Series[] {
     return [...list].sort((a, b) => {
@@ -49,6 +151,14 @@ export function LibraryTab({
   }
 
   const filtered = sorted(filter === 'all' ? series : series.filter(s => s.status === filter))
+
+  const filteredMovies = [...allMovies]
+    .filter(m => movieFilter === 'all' || m.status === movieFilter)
+    .sort((a, b) => {
+      if (sort === 'title') return a.title.localeCompare(b.title)
+      if (sort === 'added') return b.addedAt.getTime() - a.addedAt.getTime()
+      return b.updatedAt.getTime() - a.updatedAt.getTime()
+    })
 
   const viewToggleClasses = (mode: string) =>
     `p-1.5 rounded-lg transition-colors ${viewMode === mode
@@ -69,7 +179,7 @@ export function LibraryTab({
             <TVFreakIcon size={24} />
             <h1 className="text-xl font-bold text-[#F5F5F7]">
               Library
-              <span className="ml-2 text-sm font-normal text-[#48484A]">{filtered.length}</span>
+              <span className="ml-2 text-sm font-normal text-[#48484A]">{mediaMode === 'tv' ? filtered.length : filteredMovies.length}</span>
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -94,6 +204,21 @@ export function LibraryTab({
           </div>
         </div>
 
+        {/* TV / Films toggle */}
+        <div className="flex bg-[#1C1C1E] rounded-[10px] p-0.5 mb-3">
+          {(['tv', 'movie'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => setMediaMode(mode)}
+              className={`flex-1 py-1.5 rounded-[8px] text-xs font-semibold transition-colors ${
+                mediaMode === mode ? 'bg-[#2C2C2E] text-[#F5F5F7]' : 'text-[#48484A]'
+              }`}
+            >
+              {mode === 'tv' ? 'TV Shows' : 'Films'}
+            </button>
+          ))}
+        </div>
+
         {/* Controls row */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
@@ -106,7 +231,9 @@ export function LibraryTab({
               <option value="title" className="bg-[#111111]">A-Z</option>
               <option value="added" className="bg-[#111111]">Added</option>
               <option value="updated" className="bg-[#111111]">Updated</option>
-              <option value="nextEpisode" className="bg-[#111111]">Next episode</option>
+              {mediaMode === 'tv' && (
+                <option value="nextEpisode" className="bg-[#111111]">Next episode</option>
+              )}
             </select>
           </div>
 
@@ -120,26 +247,49 @@ export function LibraryTab({
         </div>
 
         {/* Filter pills — Apple-style solid chips */}
-        <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {FILTERS.map(f => (
-            <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
-              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                filter === f.value
-                  ? 'bg-[#FF9F0A] text-black'
-                  : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        {mediaMode === 'tv' && (
+          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {FILTERS.map(f => (
+              <button
+                key={f.value}
+                onClick={() => setFilter(f.value)}
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                  filter === f.value
+                    ? 'bg-[#FF9F0A] text-black'
+                    : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {mediaMode === 'movie' && (
+          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {([['all', 'All'], ['plantowatch', 'Watchlist'], ['watching', 'Watching'], ['completed', 'Watched'], ['dropped', 'Dropped']] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setMovieFilter(val as MovieStatus | 'all')}
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                  movieFilter === val
+                    ? 'bg-[#FF9F0A] text-black'
+                    : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 min-h-0">
-        <SeriesGrid series={filtered} loading={loading} onSelect={onSelect} viewMode={viewMode} />
+        {mediaMode === 'tv' ? (
+          <SeriesGrid series={filtered} loading={loading} onSelect={onSelect} viewMode={viewMode} />
+        ) : (
+          <MovieGrid movies={filteredMovies} loading={false} onSelect={onMovieSelect} viewMode={viewMode} />
+        )}
       </div>
     </div>
   )

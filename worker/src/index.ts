@@ -8,6 +8,11 @@ const ALLOWED_SERIES_FIELDS = new Set([
   'addedAt', 'updatedAt', 'nextEpisodeDate', 'nextEpisodeName', 'imdbRating', 'futureDates',
 ])
 
+const ALLOWED_MOVIE_FIELDS = new Set([
+  'tmdbId', 'title', 'status', 'posterPath', 'overview',
+  'releaseDate', 'runtime', 'notes', 'addedAt', 'updatedAt', 'imdbRating',
+])
+
 const STATUS_PRIORITY: Record<string, number> = {
   watching: 3,
   completed: 2,
@@ -314,6 +319,74 @@ export default {
           activityByDate: activityResult.results,
           topSeries: topResult.results,
         }, 200, cors)
+      }
+
+      // ── Movies ──────────────────────────────────────────────────────────
+      // Auto-create movies table on first use (idempotent)
+      async function ensureMovies() {
+        await env.DB.exec(`
+          CREATE TABLE IF NOT EXISTS movies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tmdbId INTEGER,
+            title TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'plantowatch',
+            posterPath TEXT,
+            overview TEXT,
+            releaseDate TEXT,
+            runtime INTEGER,
+            notes TEXT NOT NULL DEFAULT '',
+            imdbRating TEXT,
+            addedAt TEXT NOT NULL,
+            updatedAt TEXT NOT NULL
+          )
+        `)
+      }
+
+      if (path === '/api/movies' && method === 'GET') {
+        await ensureMovies()
+        const { results } = await env.DB.prepare('SELECT * FROM movies ORDER BY title ASC').all()
+        return json(results, 200, cors)
+      }
+
+      if (path === '/api/movies' && method === 'POST') {
+        await ensureMovies()
+        const body = await request.json() as Record<string, unknown>
+        const result = await env.DB.prepare(
+          `INSERT INTO movies (tmdbId, title, status, posterPath, overview, releaseDate, runtime, notes, imdbRating, addedAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+          body.tmdbId ?? null, body.title, body.status ?? 'plantowatch',
+          body.posterPath ?? null, body.overview ?? null, body.releaseDate ?? null,
+          body.runtime ?? null, body.notes ?? '', body.imdbRating ?? null,
+          body.addedAt, body.updatedAt,
+        ).run()
+        return json({ id: result.meta.last_row_id }, 201, cors)
+      }
+
+      const movieIdMatch = path.match(/^\/api\/movies\/(\d+)$/)
+      if (movieIdMatch) {
+        const id = parseInt(movieIdMatch[1])
+        await ensureMovies()
+
+        if (method === 'GET') {
+          const row = await env.DB.prepare('SELECT * FROM movies WHERE id = ?').bind(id).first()
+          if (!row) return json({ error: 'Not found' }, 404, cors)
+          return json(row, 200, cors)
+        }
+
+        if (method === 'PATCH') {
+          const body = await request.json() as Record<string, unknown>
+          const filtered = Object.fromEntries(Object.entries(body).filter(([k]) => ALLOWED_MOVIE_FIELDS.has(k)))
+          if (Object.keys(filtered).length === 0) return json({ error: 'No valid fields' }, 400, cors)
+          const fields = Object.keys(filtered).map(k => `${k} = ?`).join(', ')
+          await env.DB.prepare(`UPDATE movies SET ${fields} WHERE id = ?`).bind(...Object.values(filtered), id).run()
+          return json({ ok: true }, 200, cors)
+        }
+
+        if (method === 'DELETE') {
+          await env.DB.prepare('DELETE FROM movies WHERE id = ?').bind(id).run()
+          return json({ ok: true }, 200, cors)
+        }
       }
 
       return json({ error: 'Not found' }, 404, cors)

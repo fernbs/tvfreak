@@ -194,3 +194,51 @@ export async function resolveDuplicate(keepId: number, removeId: number): Promis
     body: JSON.stringify({ keepId, removeId }),
   })
 }
+
+// ── Movie CRUD ───────────────────────────────────────────────────────────────
+
+function parseMovie(row: Record<string, unknown>): import('../types').Movie {
+  return {
+    ...row,
+    imdbRating: (row.imdbRating as string | null) ?? null,
+    addedAt: new Date(row.addedAt as string),
+    updatedAt: new Date(row.updatedAt as string),
+  } as import('../types').Movie
+}
+
+export async function getAllMovies(): Promise<import('../types').Movie[]> {
+  try {
+    const res = await fetch(`${BASE}/api/movies`)
+    if (!res.ok) return []
+    const data: Record<string, unknown>[] = await res.json()
+    return data.map(parseMovie)
+  } catch { return [] }
+}
+
+export async function addMovie(movie: Omit<import('../types').Movie, 'id'>): Promise<number> {
+  const res = await fetch(`${BASE}/api/movies`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...movie,
+      addedAt: movie.addedAt.toISOString(),
+      updatedAt: movie.updatedAt.toISOString(),
+    }),
+  })
+  const data: { id: number } = await res.json()
+  return data.id
+}
+
+export async function updateMovie(id: number, changes: Partial<import('../types').Movie>): Promise<void> {
+  const body: Record<string, unknown> = { ...changes, updatedAt: new Date().toISOString() }
+  if (body.addedAt instanceof Date) body.addedAt = (body.addedAt as Date).toISOString()
+  await fetch(`${BASE}/api/movies/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+export async function deleteMovie(id: number): Promise<void> {
+  await fetch(`${BASE}/api/movies/${id}`, { method: 'DELETE' })
+}

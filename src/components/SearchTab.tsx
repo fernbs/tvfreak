@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown, BookmarkCheck } from 'lucide-react'
 import { TVFreakIcon } from './TVFreakIcon'
-import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
-import { addSeries } from '../lib/api'
-import type { TmdbSearchResult, Series, WatchProvider } from '../types'
+import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE, searchMovie, getTrendingMovies, discoverMovies, getMovieStreamingProviders } from '../lib/tmdb'
+import { addSeries, addMovie } from '../lib/api'
+import type { TmdbSearchResult, Series, Movie, WatchProvider } from '../types'
 import { useViewMode } from '../lib/useViewMode'
 import { getCountry, getDefaultProviders } from '../lib/settings'
 import { toast } from 'sonner'
@@ -21,13 +21,34 @@ const GENRES: { id: number; label: string }[] = [
   { id: 37,    label: 'Western' },
 ]
 
+const MOVIE_GENRES: { id: number; label: string }[] = [
+  { id: 28,    label: 'Action' },
+  { id: 12,    label: 'Adventure' },
+  { id: 16,    label: 'Animation' },
+  { id: 35,    label: 'Comedy' },
+  { id: 80,    label: 'Crime' },
+  { id: 99,    label: 'Documentary' },
+  { id: 18,    label: 'Drama' },
+  { id: 14,    label: 'Fantasy' },
+  { id: 27,    label: 'Horror' },
+  { id: 9648,  label: 'Mystery' },
+  { id: 10749, label: 'Romance' },
+  { id: 878,   label: 'Sci-Fi' },
+  { id: 53,    label: 'Thriller' },
+  { id: 10752, label: 'War' },
+  { id: 37,    label: 'Western' },
+]
+
 interface Props {
   onSeriesAdded: () => void
   allSeries: Series[]
   onSelect: (series: Series) => void
+  allMovies: Movie[]
+  onMovieAdded: () => void
+  onMovieSelect: (movie: Movie) => void
 }
 
-export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
+export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMovieAdded, onMovieSelect }: Props) {
   const [query, setQuery] = useState('')
   const [includedGenres, setIncludedGenres] = useState<number[]>([])
   const [excludedGenres, setExcludedGenres] = useState<number[]>([])
@@ -48,10 +69,26 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const [selectedProviders, setSelectedProviders] = useState<number[]>(getDefaultProviders)
   const [hideInLibrary, setHideInLibrary] = useState(false)
   const [newItemIds, setNewItemIds] = useState<Set<number>>(new Set())
+  const [mediaMode, setMediaMode] = useState<'tv' | 'movie'>('tv')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const handleLoadMoreRef = useRef<() => void>(() => {})
+
+  const genres = mediaMode === 'tv' ? GENRES : MOVIE_GENRES
+
+  function switchMediaMode(mode: 'tv' | 'movie') {
+    if (mode === mediaMode) return
+    setMediaMode(mode)
+    setIncludedGenres([])
+    setExcludedGenres([])
+    setQuery('')
+    setYearFilter('')
+    setResults([])
+    setTrending([])
+    setTrendingPage(1)
+    setCurrentPage(1)
+  }
 
   const noQuery = !query.trim()
   const noGenreFilter = includedGenres.length === 0 && excludedGenres.length === 0
@@ -68,13 +105,16 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
 
   useEffect(() => {
     setLoadingTrending(true)
-    Promise.all([getTrending(1), getTrending(2)]).then(([p1, p2]) => {
+    setTrending([])
+    const fetchFn = mediaMode === 'tv' ? getTrending : getTrendingMovies
+    Promise.all([fetchFn(1), fetchFn(2)]).then(([p1, p2]) => {
       setTrending([...p1.results, ...p2.results])
       setTrendingTotalPages(p1.totalPages)
       setTrendingPage(Math.min(2, p1.totalPages))
     }).finally(() => setLoadingTrending(false))
-    getStreamingProviders(getCountry()).then(setAvailableProviders)
-  }, [])
+    const providerFn = mediaMode === 'tv' ? getStreamingProviders : getMovieStreamingProviders
+    providerFn(getCountry()).then(setAvailableProviders)
+  }, [mediaMode])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -96,23 +136,40 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       setCurrentPage(1)
       const year = yearFilter.length === 4 ? yearFilter : undefined
       try {
-        if (hasQuery) {
-          const [p1, p2] = await Promise.all([searchTv(query, 1, year), searchTv(query, 2, year)])
-          setResults([...p1.results, ...p2.results])
-          setTotalPages(p1.totalPages)
-          setCurrentPage(Math.min(2, p1.totalPages))
+        if (mediaMode === 'tv') {
+          if (hasQuery) {
+            const [p1, p2] = await Promise.all([searchTv(query, 1, year), searchTv(query, 2, year)])
+            setResults([...p1.results, ...p2.results])
+            setTotalPages(p1.totalPages)
+            setCurrentPage(Math.min(2, p1.totalPages))
+          } else {
+            const [p1, p2] = await Promise.all([
+              getDiscoverByGenres(includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()),
+              getDiscoverByGenres(includedGenres, excludedGenres, 2, sortBy, year, selectedProviders, getCountry()),
+            ])
+            setResults([...p1.results, ...p2.results])
+            setTotalPages(p1.totalPages)
+            setCurrentPage(Math.min(2, p1.totalPages))
+          }
         } else {
-          const [p1, p2] = await Promise.all([
-            getDiscoverByGenres(includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()),
-            getDiscoverByGenres(includedGenres, excludedGenres, 2, sortBy, year, selectedProviders, getCountry()),
-          ])
-          setResults([...p1.results, ...p2.results])
-          setTotalPages(p1.totalPages)
-          setCurrentPage(Math.min(2, p1.totalPages))
+          if (hasQuery) {
+            const [p1, p2] = await Promise.all([searchMovie(query, 1, year), searchMovie(query, 2, year)])
+            setResults([...p1.results, ...p2.results])
+            setTotalPages(p1.totalPages)
+            setCurrentPage(Math.min(2, p1.totalPages))
+          } else {
+            const [p1, p2] = await Promise.all([
+              discoverMovies(includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()),
+              discoverMovies(includedGenres, excludedGenres, 2, sortBy, year, selectedProviders, getCountry()),
+            ])
+            setResults([...p1.results, ...p2.results])
+            setTotalPages(p1.totalPages)
+            setCurrentPage(Math.min(2, p1.totalPages))
+          }
         }
       } finally { setSearching(false) }
     }, hasQuery ? 400 : 200)
-  }, [query, includedGenres, excludedGenres, sortBy, yearFilter, selectedProviders])
+  }, [query, includedGenres, excludedGenres, sortBy, yearFilter, selectedProviders, mediaMode])
 
   function toggleGenre(id: number) {
     if (includedGenres.includes(id)) {
@@ -139,9 +196,10 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
       if (showTrending) {
         const p1 = trendingPage + 1
         const p2 = trendingPage + 2
+        const trendFn = mediaMode === 'tv' ? getTrending : getTrendingMovies
         const fetches = p2 <= trendingTotalPages
-          ? [getTrending(p1), getTrending(p2)]
-          : [getTrending(p1)]
+          ? [trendFn(p1), trendFn(p2)]
+          : [trendFn(p1)]
         const pages = await Promise.all(fetches)
         freshItems = pages.flatMap(p => p.results)
         setTrending(prev => [...prev, ...freshItems])
@@ -151,19 +209,21 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
         const p1 = currentPage + 1
         const p2 = currentPage + 2
         if (hasQuery) {
+          const searchFn = mediaMode === 'tv' ? searchTv : searchMovie
           const fetches = p2 <= totalPages
-            ? [searchTv(query, p1, year), searchTv(query, p2, year)]
-            : [searchTv(query, p1, year)]
+            ? [searchFn(query, p1, year), searchFn(query, p2, year)]
+            : [searchFn(query, p1, year)]
           const pages = await Promise.all(fetches)
           freshItems = pages.flatMap(p => p.results)
           setResults(prev => [...prev, ...freshItems])
           setTotalPages(pages[0].totalPages)
           setCurrentPage(fetches.length === 2 ? p2 : p1)
         } else {
+          const discoverFn = mediaMode === 'tv' ? getDiscoverByGenres : discoverMovies
           const fetches = p2 <= totalPages
-            ? [getDiscoverByGenres(includedGenres, excludedGenres, p1, sortBy, year, selectedProviders, getCountry()),
-               getDiscoverByGenres(includedGenres, excludedGenres, p2, sortBy, year, selectedProviders, getCountry())]
-            : [getDiscoverByGenres(includedGenres, excludedGenres, p1, sortBy, year, selectedProviders, getCountry())]
+            ? [discoverFn(includedGenres, excludedGenres, p1, sortBy, year, selectedProviders, getCountry()),
+               discoverFn(includedGenres, excludedGenres, p2, sortBy, year, selectedProviders, getCountry())]
+            : [discoverFn(includedGenres, excludedGenres, p1, sortBy, year, selectedProviders, getCountry())]
           const pages = await Promise.all(fetches)
           freshItems = pages.flatMap(p => p.results)
           setResults(prev => [...prev, ...freshItems])
@@ -196,7 +256,9 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     return () => clearTimeout(t)
   }, [newItemIds])
 
-  const libraryIds = new Set(allSeries.map(s => s.tmdbId).filter(Boolean))
+  const libraryIds = new Set(
+    (mediaMode === 'tv' ? allSeries : allMovies).map(s => s.tmdbId).filter(Boolean) as number[]
+  )
 
   function seriesForPreview(result: TmdbSearchResult): Series {
     const existing = allSeries.find(s => s.tmdbId === result.id)
@@ -220,29 +282,65 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     }
   }
 
+  function movieForPreview(result: TmdbSearchResult): Movie {
+    const existing = allMovies.find(m => m.tmdbId === result.id)
+    if (existing) return existing
+    return {
+      tmdbId: result.id,
+      title: result.name,
+      status: 'plantowatch',
+      posterPath: result.poster_path,
+      overview: result.overview,
+      releaseDate: result.first_air_date ?? null,
+      runtime: null,
+      notes: '',
+      imdbRating: (result.vote_average ?? 0) > 0 ? result.vote_average!.toFixed(1) : null,
+      addedAt: new Date(),
+      updatedAt: new Date(),
+    }
+  }
+
   async function handleAdd(result: TmdbSearchResult) {
     if (libraryIds.has(result.id)) { toast.error('Already in your library'); return }
     setAddingId(result.id)
     try {
-      await addSeries({
-        tmdbId: result.id,
-        title: result.name,
-        status: 'watching',
-        posterPath: result.poster_path,
-        overview: result.overview,
-        firstAirDate: result.first_air_date,
-        lastAirDate: null,
-        numberOfSeasons: result.number_of_seasons ?? null,
-        notes: '',
-        nextEpisodeDate: null,
-        nextEpisodeName: null,
-        imdbRating: null,
-        futureDates: null,
-        addedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      toast.success(`"${result.name}" added to library`)
-      onSeriesAdded()
+      if (mediaMode === 'tv') {
+        await addSeries({
+          tmdbId: result.id,
+          title: result.name,
+          status: 'watching',
+          posterPath: result.poster_path,
+          overview: result.overview,
+          firstAirDate: result.first_air_date,
+          lastAirDate: null,
+          numberOfSeasons: result.number_of_seasons ?? null,
+          notes: '',
+          nextEpisodeDate: null,
+          nextEpisodeName: null,
+          imdbRating: null,
+          futureDates: null,
+          addedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        toast.success(`"${result.name}" added to library`)
+        onSeriesAdded()
+      } else {
+        await addMovie({
+          tmdbId: result.id,
+          title: result.name,
+          status: 'plantowatch',
+          posterPath: result.poster_path,
+          overview: result.overview,
+          releaseDate: result.first_air_date ?? null,
+          runtime: null,
+          notes: '',
+          imdbRating: null,
+          addedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        toast.success(`"${result.name}" added to watchlist`)
+        onMovieAdded()
+      }
     } finally { setAddingId(null) }
   }
 
@@ -266,8 +364,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     sectionLabel = ''
   } else if (!noGenreFilter || !noProviderFilter) {
     const genreParts = [
-      ...includedGenres.map(id => GENRES.find(g => g.id === id)?.label ?? ''),
-      ...excludedGenres.map(id => `not ${GENRES.find(g => g.id === id)?.label ?? ''}`),
+      ...includedGenres.map(id => genres.find(g => g.id === id)?.label ?? ''),
+      ...excludedGenres.map(id => `not ${genres.find(g => g.id === id)?.label ?? ''}`),
     ].filter(Boolean)
     const providerParts = selectedProviders
       .map(id => availableProviders.find(p => p.provider_id === id)?.provider_name ?? '')
@@ -340,6 +438,21 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           </div>
         </div>
 
+        {/* TV Shows / Films toggle */}
+        <div className="flex bg-[#1C1C1E] rounded-[10px] p-0.5 mb-3">
+          {(['tv', 'movie'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => switchMediaMode(mode)}
+              className={`flex-1 py-1.5 rounded-[8px] text-xs font-semibold transition-colors ${
+                mediaMode === mode ? 'bg-[#2C2C2E] text-[#F5F5F7]' : 'text-[#48484A]'
+              }`}
+            >
+              {mode === 'tv' ? 'TV Shows' : 'Films'}
+            </button>
+          ))}
+        </div>
+
         {/* Search bar — hero element */}
         <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#1C1C1E] border border-white/8 focus-within:border-white/20 transition-colors mb-3">
           {searching && query.trim() ? (
@@ -364,7 +477,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
 
         {/* Genre chips */}
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          {GENRES.map(g => {
+          {genres.map(g => {
             const isIncluded = includedGenres.includes(g.id)
             const isExcluded = excludedGenres.includes(g.id)
             return (
@@ -459,7 +572,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                 return (
                   <button
                     key={r.id}
-                    onClick={() => onSelect(seriesForPreview(r))}
+                    onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
                     className="shrink-0 w-[88px] text-left active:opacity-70 transition-opacity"
                     style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
                   >
@@ -525,7 +638,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                     style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
                   >
                     <button
-                      onClick={() => onSelect(seriesForPreview(r))}
+                      onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
                       className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
                     >
                       <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#1C1C1E]">
@@ -552,7 +665,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
                 {(showTrending ? visibleResults : visibleResults).map(r => (
                   <button
                     key={r.id}
-                    onClick={() => onSelect(seriesForPreview(r))}
+                    onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
                     className="relative text-left active:opacity-70 transition-opacity"
                     style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
                   >
