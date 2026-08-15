@@ -124,7 +124,7 @@ export function DuplicateModal({ groups, onClose, onResolved }: Props) {
                         <button
                           onClick={() => handleKeep(s.id!, otherIds[0], originalGroupIndex)}
                           disabled={resolving !== null}
-                          className="w-full py-1.5 bg-[#FF8C00] hover:bg-[#E07000] disabled:opacity-50 text-white text-xs font-medium rounded-xl transition-colors"
+                          className="w-full py-1.5 bg-[#FF9F0A] hover:bg-[#D4840A] disabled:opacity-50 text-white text-xs font-medium rounded-xl transition-colors"
                         >
                           {resolving === s.id ? 'Keeping...' : 'Keep this'}
                         </button>

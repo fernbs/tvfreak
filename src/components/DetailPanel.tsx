@@ -407,7 +407,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                       onClick={handleAddToLibrary}
                       disabled={adding}
                       className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white active:opacity-80 transition-opacity disabled:opacity-50"
-                      style={{ background: 'linear-gradient(180deg, #FF9F0A 0%, #E07000 100%)', boxShadow: '0 4px 18px rgba(255,159,10,0.35)' }}
+                      style={{ background: 'linear-gradient(180deg, #FF9F0A 0%, #D4840A 100%)', boxShadow: '0 4px 18px rgba(255,159,10,0.35)' }}
                     >
                       {adding ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

@@ -11,10 +11,10 @@
   --color-border: rgba(255, 255, 255, 0.07);
   --color-border-strong: rgba(255, 255, 255, 0.14);
 
-  /* Accent - amber, used sparingly on active/CTA elements only */
+  /* Accent - orange, used sparingly on active/CTA elements only */
   --color-accent: #FF9F0A;
-  --color-accent-fill: #FF8C00;
-  --color-accent-hover: #E07000;
+  --color-accent-fill: #FF9F0A;
+  --color-accent-hover: #D4840A;
   --color-accent-subtle: rgba(255, 159, 10, 0.15);
 
   /* Gold - ratings */

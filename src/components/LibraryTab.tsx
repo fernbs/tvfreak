@@ -99,10 +99,10 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
             <div
               className="absolute pointer-events-none"
               style={{
-                bottom: -13,
-                left: -13,
-                width: 34,
-                height: 34,
+                bottom: -22,
+                left: -22,
+                width: 44,
+                height: 44,
                 borderRadius: '50%',
                 border: `2.5px solid ${cfg.color}`,
               }}
@@ -192,7 +192,7 @@ export function LibraryTab({
             {duplicates.length > 0 && (
               <button
                 onClick={onShowDuplicates}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-500/8 text-amber-400/80 border border-amber-500/15 active:bg-amber-500/15 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[rgba(255,159,10,0.08)] text-[#FF9F0A]/80 border border-[rgba(255,159,10,0.15)] active:bg-[rgba(255,159,10,0.15)] transition-colors"
               >
                 <GitMerge className="w-3.5 h-3.5" />
                 {duplicates.length}

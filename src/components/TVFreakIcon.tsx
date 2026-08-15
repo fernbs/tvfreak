@@ -15,33 +15,27 @@ export function TVFreakIcon({ size = 24, className }: Props) {
       {/* Background */}
       <rect width="100" height="100" rx="22" fill="#0D0D0D" />
 
-      {/* TV bezel */}
-      <rect x="10" y="20" width="80" height="58" rx="9" fill="#1A1A1A" />
-      <rect x="10" y="20" width="80" height="58" rx="9" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
-
-      {/* Screen */}
-      <rect x="16" y="26" width="68" height="46" rx="6" fill="#070707" />
-
-      {/* Eye — iris (orange) */}
-      <circle cx="40" cy="49" r="13" fill="#FF6B00" />
-      {/* Pupil */}
-      <circle cx="40" cy="49" r="5.5" fill="#070707" />
-      {/* Shine */}
-      <circle cx="45" cy="44" r="2.5" fill="rgba(255,255,255,0.75)" />
-
-      {/* Lightning bolt — the FREAK element */}
+      {/* Alien head: wide cranium, narrow chin */}
       <path
-        d="M68 28 L59 48 L65 48 L56 72"
-        fill="none"
-        stroke="#FF6B00"
-        strokeWidth="4.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M50 9 C22 9 14 29 14 49 C14 68 26 88 50 91 C74 88 86 68 86 49 C86 29 78 9 50 9 Z"
+        fill="#FF9F0A"
       />
 
-      {/* TV stand legs */}
-      <rect x="43" y="78" width="14" height="5" rx="2.5" fill="#1A1A1A" />
-      <rect x="35" y="83" width="30" height="5" rx="2.5" fill="#1A1A1A" />
+      {/* Left eye — large almond tilted inward */}
+      <ellipse cx="34" cy="53" rx="13.5" ry="9" fill="#0D0D0D" transform="rotate(-10, 34, 53)" />
+
+      {/* Right eye */}
+      <ellipse cx="66" cy="53" rx="13.5" ry="9" fill="#0D0D0D" transform="rotate(10, 66, 53)" />
+
+      {/* Left eye specular highlight */}
+      <ellipse cx="29" cy="48" rx="4.5" ry="2.5" fill="rgba(255,255,255,0.38)" transform="rotate(-10, 29, 48)" />
+
+      {/* Right eye specular highlight */}
+      <ellipse cx="61" cy="48" rx="4.5" ry="2.5" fill="rgba(255,255,255,0.38)" transform="rotate(10, 61, 48)" />
+
+      {/* Tiny nostrils */}
+      <circle cx="46" cy="71" r="2.5" fill="rgba(0,0,0,0.22)" />
+      <circle cx="54" cy="71" r="2.5" fill="rgba(0,0,0,0.22)" />
     </svg>
   )
 }

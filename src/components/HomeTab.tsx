@@ -433,7 +433,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
                             <span className="text-[10px] text-[#48484A] text-center">{s.title}</span>
                           </div>
                         )}
-                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF8C00]/90 text-white leading-tight backdrop-blur-sm">
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF9F0A]/90 text-black leading-tight backdrop-blur-sm">
                           {formatAirDate(date)}
                         </div>
                       </div>

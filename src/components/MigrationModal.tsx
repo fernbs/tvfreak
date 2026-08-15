@@ -163,7 +163,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
               </p>
               <button
                 onClick={runMigration}
-                className="w-full py-2.5 bg-[#FF8C00] hover:bg-[#E07000] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="w-full py-2.5 bg-[#FF9F0A] hover:bg-[#D4840A] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Start migration
               </button>
@@ -178,7 +178,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
               </div>
               <div className="w-full h-[3px] bg-white/7 rounded-full overflow-hidden mb-4">
                 <div
-                  className="h-full bg-[#FF8C00] rounded-full transition-all duration-300"
+                  className="h-full bg-[#FF9F0A] rounded-full transition-all duration-300"
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -212,7 +212,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
               <p className="text-xs text-[#48484A] mb-5">{errorMsg}</p>
               <button
                 onClick={() => setStep('confirm')}
-                className="px-4 py-2 bg-[#FF8C00] hover:bg-[#E07000] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="px-4 py-2 bg-[#FF9F0A] hover:bg-[#D4840A] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Try again
               </button>

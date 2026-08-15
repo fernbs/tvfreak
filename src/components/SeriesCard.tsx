@@ -45,10 +45,10 @@ export function SeriesCard({ series, onClick }: Props) {
       <div
         className="absolute pointer-events-none"
         style={{
-          bottom: -13,
-          left: -13,
-          width: 34,
-          height: 34,
+          bottom: -22,
+          left: -22,
+          width: 44,
+          height: 44,
           borderRadius: '50%',
           border: `2.5px solid ${config.color}`,
         }}
@@ -67,7 +67,7 @@ export function SeriesCard({ series, onClick }: Props) {
 
       {/* Upcoming episode date badge */}
       {hasUpcoming && series.nextEpisodeDate && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF8C00]/90 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF9F0A]/90 text-black leading-tight backdrop-blur-sm">
           {formatAirDate(series.nextEpisodeDate)}
         </div>
       )}
@@ -81,7 +81,7 @@ export function SeriesCard({ series, onClick }: Props) {
 
       {/* New episode aired badge */}
       {hasNewEpisode && !hasUpcoming && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF8C00]/90 text-white leading-tight backdrop-blur-sm">
+        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FF9F0A]/90 text-black leading-tight backdrop-blur-sm">
           New
         </div>
       )}

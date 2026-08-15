@@ -415,7 +415,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     const inLib = libraryIds.has(r.id)
     if (inLib) {
       return (
-        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#FF8C00]/80">
+        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#FF9F0A]/80">
           <span className="text-[9px] text-white font-bold">✓</span>
         </div>
       )
@@ -543,7 +543,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                         </div>
                       )}
                       {inLib && (
-                        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#FF8C00]/80">
+                        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#FF9F0A]/80">
                           <span className="text-[9px] text-white font-bold">✓</span>
                         </div>
                       )}

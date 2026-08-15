@@ -14,7 +14,7 @@ function heatColor(count: number): string {
   if (count === 0) return '#1C1C1E'
   if (count <= 2) return '#7A3B0A'
   if (count <= 5) return '#B85C0A'
-  return '#FF8C00'
+  return '#FF9F0A'
 }
 
 function buildWeeks(activityByDate: { date: string; count: number }[]) {
@@ -212,7 +212,7 @@ export function StatsTab({ allSeries }: Props) {
                 </div>
                 <div className="flex items-center gap-1.5 mt-3 justify-end">
                   <span className="text-[9px] text-[#48484A]">Less</span>
-                  {['#1C1C1E', '#7A3B0A', '#B85C0A', '#FF8C00'].map(c => (
+                  {['#1C1C1E', '#7A3B0A', '#B85C0A', '#FF9F0A'].map(c => (
                     <div key={c} style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: c }} />
                   ))}
                   <span className="text-[9px] text-[#48484A]">More</span>
@@ -242,7 +242,7 @@ export function StatsTab({ allSeries }: Props) {
                         </div>
                         <div className="h-[3px] bg-white/7 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#FF8C00] rounded-full transition-all duration-500"
+                            className="h-full bg-[#FF9F0A] rounded-full transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
