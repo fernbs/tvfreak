@@ -132,10 +132,12 @@ export function DetailPanel({ series, onClose, onUpdated }: Props) {
     if (!series?.tmdbId) return
     setAdding(true)
     try {
+      const todayDate = new Date().toISOString().slice(0, 10)
+      const hasReleasedEpisodes = !!(series.firstAirDate && series.firstAirDate <= todayDate && detail?.last_episode_to_air)
       await addSeries({
         tmdbId: series.tmdbId,
         title: series.title,
-        status: 'watching',
+        status: hasReleasedEpisodes ? 'watching' : 'plantowatch',
         posterPath: series.posterPath,
         overview: detail?.overview ?? series.overview,
         firstAirDate: series.firstAirDate,

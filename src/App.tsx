@@ -77,7 +77,7 @@ export default function App() {
     const toRefresh = all.filter(s =>
       s.tmdbId && s.id &&
       (s.status === 'watching' || s.status === 'plantowatch') &&
-      (!s.nextEpisodeDate || new Date(s.nextEpisodeDate) <= now)
+      (!s.nextEpisodeDate || new Date(s.nextEpisodeDate) <= now || !s.futureDates)
     )
     if (toRefresh.length === 0) { await loadSeries(); return }
     const todayStr = new Date().toISOString().slice(0, 10)
@@ -89,14 +89,20 @@ export default function App() {
 
         // Collect all known future dates: next episode + upcoming season premieres + individual episode dates
         const futureDatesSet = new Set<string>()
+        // Include future seasons AND the currently-airing season (which may have unreleased episodes)
+        const activeSeasonNumber = detail.next_episode_to_air?.season_number ?? null
         const upcomingSeasons = detail.seasons.filter(
-          season => season.season_number > 0 && (!season.air_date || season.air_date > todayStr)
+          season => season.season_number > 0 && (
+            !season.air_date ||
+            season.air_date > todayStr ||
+            season.season_number === activeSeasonNumber
+          )
         )
-        // Season premiere dates
+        // Season premiere dates (future only)
         for (const season of upcomingSeasons) {
           if (season.air_date && season.air_date > todayStr) futureDatesSet.add(season.air_date)
         }
-        // Fetch individual episode dates for upcoming seasons (run in parallel per series)
+        // Fetch individual episode dates for upcoming + active seasons (run in parallel per series)
         const episodeLists = await Promise.all(
           upcomingSeasons.map(season => getSeasonEpisodes(detail.id, season.season_number).catch(() => []))
         )
@@ -193,7 +199,17 @@ export default function App() {
             }
             return sum + season.episode_count
           }, 0)
-          if (totalEpisodes === 0) continue
+          if (totalEpisodes === 0) {
+            // No episodes have aired yet — series should be pending, not watching
+            const nextEp = detail.next_episode_to_air
+            if (nextEp) {
+              await updateSeries(s.id!, { status: 'plantowatch', nextEpisodeDate: nextEp.air_date, nextEpisodeName: nextEp.name })
+            } else {
+              await updateSeries(s.id!, { status: 'plantowatch' })
+            }
+            changed = true
+            continue
+          }
           const airedSeasonNumbers = new Set(airedSeasons.map(s => s.season_number))
           const watchedCount = watched.filter(w => w.seasonNumber > 0 && airedSeasonNumbers.has(w.seasonNumber)).length
           if (watchedCount >= totalEpisodes) {
@@ -480,6 +496,47 @@ export default function App() {
       localStorage.setItem('tvfreak-unmark-2026-v2', 'true')
     }
     unmark2026SeasonsV2()
+  }, [loading, loadSeries])
+
+  // Once-ever: flip 'watching' series that have no released episodes yet to 'plantowatch'
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-pending-fix-v1')) return
+    async function fixWatchingNothingAired() {
+      const all = await getAllSeries()
+      const watching = all.filter(s => s.tmdbId && s.id && s.status === 'watching')
+      let changed = false
+      const today = new Date().toISOString().slice(0, 10)
+      for (const s of watching) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if (!detail) continue
+          const airedSeasons = detail.seasons
+            .filter(season => season.season_number > 0)
+            .filter(season => season.air_date != null && season.air_date <= today)
+          const activeSeasonNumber = detail.last_episode_to_air?.season_number ?? null
+          const totalEpisodes = airedSeasons.reduce((sum, season) => {
+            if (activeSeasonNumber && season.season_number === activeSeasonNumber && detail.last_episode_to_air) {
+              return sum + detail.last_episode_to_air.episode_number
+            }
+            return sum + season.episode_count
+          }, 0)
+          if (totalEpisodes === 0) {
+            const nextEp = detail.next_episode_to_air
+            if (nextEp) {
+              await updateSeries(s.id!, { status: 'plantowatch', nextEpisodeDate: nextEp.air_date, nextEpisodeName: nextEp.name })
+            } else {
+              await updateSeries(s.id!, { status: 'plantowatch' })
+            }
+            changed = true
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 300))
+      }
+      localStorage.setItem('tvfreak-pending-fix-v1', 'true')
+      if (changed) await loadSeries()
+    }
+    fixWatchingNothingAired()
   }, [loading, loadSeries])
 
   async function handleSeriesUpdated() {
