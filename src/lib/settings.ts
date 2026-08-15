@@ -6,6 +6,16 @@ export function setCountry(code: string): void {
   localStorage.setItem('tvfreak-country', code)
 }
 
+export function getDefaultProviders(): number[] {
+  try {
+    return JSON.parse(localStorage.getItem('tvfreak-default-providers') ?? '[]')
+  } catch { return [] }
+}
+
+export function setDefaultProviders(ids: number[]): void {
+  localStorage.setItem('tvfreak-default-providers', JSON.stringify(ids))
+}
+
 export const COUNTRIES: { code: string; name: string }[] = [
   { code: 'AR', name: 'Argentina' },
   { code: 'AU', name: 'Australia' },

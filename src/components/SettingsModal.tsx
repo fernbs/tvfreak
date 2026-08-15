@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { X, ChevronDown } from 'lucide-react'
-import { getCountry, setCountry, COUNTRIES } from '../lib/settings'
+import { getCountry, setCountry, COUNTRIES, getDefaultProviders, setDefaultProviders } from '../lib/settings'
+import { getStreamingProviders, IMG_BASE } from '../lib/tmdb'
+import type { WatchProvider } from '../types'
 
 interface Props {
   onClose: () => void
@@ -9,10 +11,24 @@ interface Props {
 
 export function SettingsModal({ onClose }: Props) {
   const [country, setLocalCountry] = useState(getCountry)
+  const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
+  const [defaultProviderIds, setLocalDefaultProviders] = useState<number[]>(getDefaultProviders)
+
+  useEffect(() => {
+    getStreamingProviders(country).then(setAvailableProviders)
+  }, [country])
 
   function handleCountryChange(code: string) {
     setLocalCountry(code)
     setCountry(code)
+  }
+
+  function toggleDefaultProvider(id: number) {
+    const next = defaultProviderIds.includes(id)
+      ? defaultProviderIds.filter(p => p !== id)
+      : [...defaultProviderIds, id]
+    setLocalDefaultProviders(next)
+    setDefaultProviders(next)
   }
 
   return (
@@ -53,7 +69,7 @@ export function SettingsModal({ onClose }: Props) {
         </div>
 
         {/* Content */}
-        <div className="px-5 pb-4 space-y-4">
+        <div className="px-5 pb-4 space-y-5">
           <div>
             <p className="text-xs text-white/30 uppercase tracking-wider font-medium mb-2">Your country</p>
             <p className="text-xs text-white/35 mb-3">Used to show streaming platforms available in your region.</p>
@@ -73,6 +89,33 @@ export function SettingsModal({ onClose }: Props) {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
             </div>
           </div>
+
+          {availableProviders.length > 0 && (
+            <div>
+              <p className="text-xs text-white/30 uppercase tracking-wider font-medium mb-1">Default platforms in search</p>
+              <p className="text-xs text-white/35 mb-3">Selected platforms will be pre-applied every time you open Search. Leave all off to show everything.</p>
+              <div className="flex flex-wrap gap-2">
+                {availableProviders.map(p => {
+                  const isSelected = defaultProviderIds.includes(p.provider_id)
+                  return (
+                    <button
+                      key={p.provider_id}
+                      onClick={() => toggleDefaultProvider(p.provider_id)}
+                      title={p.provider_name}
+                      className={`flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
+                        isSelected
+                          ? 'bg-[#6366F1]/20 border-[#6366F1]/60 text-white'
+                          : 'bg-white/5 border-white/8 text-white/40 active:bg-white/10'
+                      }`}
+                    >
+                      <img src={`${IMG_BASE}/w45${p.logo_path}`} alt={p.provider_name} className="w-5 h-5 rounded-sm object-cover shrink-0" />
+                      <span className="text-[11px] font-medium whitespace-nowrap">{p.provider_name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </>

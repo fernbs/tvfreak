@@ -5,7 +5,7 @@ import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, post
 import { addSeries } from '../lib/api'
 import type { TmdbSearchResult, Series, WatchProvider } from '../types'
 import { useViewMode } from '../lib/useViewMode'
-import { getCountry } from '../lib/settings'
+import { getCountry, getDefaultProviders } from '../lib/settings'
 import { toast } from 'sonner'
 
 const GENRES: { id: number; label: string }[] = [
@@ -45,7 +45,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const [trendingPage, setTrendingPage] = useState(1)
   const [trendingTotalPages, setTrendingTotalPages] = useState(1)
   const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
-  const [selectedProviders, setSelectedProviders] = useState<number[]>([])
+  const [selectedProviders, setSelectedProviders] = useState<number[]>(getDefaultProviders)
   const [hideInLibrary, setHideInLibrary] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -83,8 +83,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           setTotalPages(tp)
         } else {
           const { results: r, totalPages: tp } = await getDiscoverByGenres(
-            includedGenres, excludedGenres, 1, sortBy, year,
-            selectedProviders, selectedProviders.length > 0 ? getCountry() : undefined
+            includedGenres, excludedGenres, 1, sortBy, year, selectedProviders
           )
           setResults(r)
           setTotalPages(tp)
@@ -128,8 +127,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
           setTotalPages(tp)
         } else {
           const { results: r, totalPages: tp } = await getDiscoverByGenres(
-            includedGenres, excludedGenres, nextPage, sortBy, year,
-            selectedProviders, selectedProviders.length > 0 ? getCountry() : undefined
+            includedGenres, excludedGenres, nextPage, sortBy, year, selectedProviders
           )
           setResults(prev => [...prev, ...r])
           setTotalPages(tp)
