@@ -64,8 +64,9 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
     const hasQuery = query.trim().length > 0
     const hasGenreFilter = includedGenres.length > 0 || excludedGenres.length > 0
     const hasProviderFilter = selectedProviders.length > 0
+    const hasYearFilter = yearFilter.length === 4
 
-    if (!hasQuery && !hasGenreFilter && !hasProviderFilter) {
+    if (!hasQuery && !hasGenreFilter && !hasProviderFilter && !hasYearFilter) {
       setResults([])
       setCurrentPage(1)
       setTotalPages(1)
@@ -200,7 +201,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
   const noQuery = !query.trim()
   const noGenreFilter = includedGenres.length === 0 && excludedGenres.length === 0
   const noProviderFilter = selectedProviders.length === 0
-  const showTrending = noQuery && noGenreFilter && noProviderFilter
+  const noYearFilter = yearFilter.length !== 4
+  const showTrending = noQuery && noGenreFilter && noProviderFilter && noYearFilter
   const displayResults = applySort(showTrending ? trending : results)
   const visibleResults = hideInLibrary ? displayResults.filter(r => !libraryIds.has(r.id)) : displayResults
   const isLoading = showTrending ? loadingTrending : searching
@@ -348,6 +350,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect }: Props) {
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
+              style={{ fontSize: 16 }}
               className="w-full bg-[#1E1E1E] border border-white/8 rounded-xl px-3 pr-7 py-1.5 text-xs text-white/70 outline-none appearance-none"
             >
               <option value="vote_average.desc">Top Rated</option>
