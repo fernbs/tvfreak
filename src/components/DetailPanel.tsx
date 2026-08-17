@@ -53,6 +53,9 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const [providers, setProviders] = useState<WatchProvider[]>([])
   const [watchLink, setWatchLink] = useState<string | null>(null)
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const recsScrollRef = useRef<HTMLDivElement>(null)
+  const recsSentinelRef = useRef<HTMLDivElement>(null)
+  const handleLoadMoreRecsRef = useRef<() => void>(() => {})
 
   useEffect(() => {
     if (!series) {
@@ -140,6 +143,19 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose, moreModal])
 
+  useEffect(() => {
+    if (!hasMoreRecs || loadingMoreRecs) return
+    const sentinel = recsSentinelRef.current
+    const container = recsScrollRef.current
+    if (!sentinel || !container) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) handleLoadMoreRecsRef.current() },
+      { root: container, rootMargin: '0px 150px 0px 0px', threshold: 0 }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMoreRecs, loadingMoreRecs])
+
   async function changeStatus(status: SeriesStatus) {
     if (!series?.id) return
     await updateSeries(series.id, { status })
@@ -224,6 +240,8 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
       setLoadingMoreRecs(false)
     }
   }
+
+  handleLoadMoreRecsRef.current = handleLoadMoreRecs
 
   const poster = posterUrl(series?.posterPath ?? null, 'w500')
   const nextEp = detail?.next_episode_to_air as TmdbNextEpisode | null | undefined
@@ -501,7 +519,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                   <p className="text-[10px] text-[#48484A] mb-2.5 uppercase tracking-widest font-semibold">
                     More like {series.title.split(' ').slice(0, 2).join(' ')}
                   </p>
-                  <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                  <div ref={recsScrollRef} className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                     {recommendations.map(r => (
                       <button
                         key={r.id}
@@ -524,24 +542,12 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                         <p className="text-[10px] text-[#8E8E93] leading-tight line-clamp-2 text-center">{r.name}</p>
                       </button>
                     ))}
-                    {hasMoreRecs && (
-                      <div className="shrink-0 w-[72px] flex flex-col items-center justify-center">
-                        <button
-                          onClick={handleLoadMoreRecs}
-                          disabled={loadingMoreRecs}
-                          className="w-[72px] h-[108px] rounded-xl bg-[#1C1C1E] border border-white/8 flex flex-col items-center justify-center gap-1.5 active:bg-[#2C2C2E] transition-colors disabled:opacity-50"
-                        >
-                          {loadingMoreRecs ? (
-                            <Loader2 className="w-4 h-4 text-[#48484A] animate-spin" />
-                          ) : (
-                            <>
-                              <span className="text-lg text-[#48484A]">+</span>
-                              <span className="text-[9px] text-[#48484A] font-medium">More</span>
-                            </>
-                          )}
-                        </button>
+                    {loadingMoreRecs && (
+                      <div className="shrink-0 flex items-center justify-center" style={{ width: 72, height: 108 }}>
+                        <Loader2 className="w-4 h-4 text-[#48484A] animate-spin" />
                       </div>
                     )}
+                    {hasMoreRecs && <div ref={recsSentinelRef} className="shrink-0 w-4" />}
                   </div>
                 </div>
               )}

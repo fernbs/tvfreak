@@ -26,7 +26,8 @@ export default function App() {
   const [workerError, setWorkerError] = useState(false)
   const [importing, setImporting] = useState(false)
   const [importProgress, setImportProgress] = useState({ done: 0, total: 0 })
-  const [selected, setSelected] = useState<Series | null>(null)
+  const [seriesStack, setSeriesStack] = useState<Series[]>([])
+  const selected = seriesStack[seriesStack.length - 1] ?? null
   const [allMovies, setAllMovies] = useState<Movie[]>([])
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
 
@@ -439,14 +440,21 @@ export default function App() {
     fixWatchingNothingAired()
   }, [loading, loadSeries])
 
+  function openSeries(s: Series) { setSeriesStack([s]) }
+  function pushSeries(s: Series) { setSeriesStack(prev => [...prev, s]) }
+  function popSeries() { setSeriesStack(prev => prev.slice(0, -1)) }
+
   async function handleSeriesUpdated() {
     const data = await getAllSeries()
     setAllSeries(data)
     setLoading(false)
-    if (selected?.id) {
-      const fresh = data.find(s => s.id === selected.id)
-      if (fresh) setSelected(fresh)
-    }
+    setSeriesStack(prev => {
+      if (prev.length === 0) return prev
+      const top = prev[prev.length - 1]
+      if (!top?.id) return prev
+      const fresh = data.find(s => s.id === top.id)
+      return fresh ? [...prev.slice(0, -1), fresh] : prev
+    })
   }
 
   async function handleSeriesAdded() {
@@ -491,13 +499,13 @@ export default function App() {
       {/* Tab content */}
       <main className="flex-1 overflow-hidden min-h-0">
         {tab === 'home' && (
-          <HomeTab series={allSeries} loading={loading} onSelect={setSelected} onRefresh={refreshNextEpisodeDates} />
+          <HomeTab series={allSeries} loading={loading} onSelect={openSeries} onRefresh={refreshNextEpisodeDates} />
         )}
         {tab === 'library' && (
           <LibraryTab
             series={allSeries}
             loading={loading}
-            onSelect={setSelected}
+            onSelect={openSeries}
             duplicates={duplicates}
             onShowDuplicates={() => setShowDuplicates(true)}
             migrationDone={migrationDone}
@@ -513,7 +521,7 @@ export default function App() {
           <SearchTab
             onSeriesAdded={handleSeriesAdded}
             allSeries={allSeries}
-            onSelect={setSelected}
+            onSelect={openSeries}
             allMovies={allMovies}
             onMovieAdded={handleMovieAdded}
             onMovieSelect={setSelectedMovie}
@@ -530,9 +538,9 @@ export default function App() {
       {/* Overlays */}
       <DetailPanel
         series={selected}
-        onClose={() => setSelected(null)}
+        onClose={popSeries}
         onUpdated={handleSeriesUpdated}
-        onSelect={setSelected}
+        onSelect={pushSeries}
       />
 
       <MovieDetailPanel
