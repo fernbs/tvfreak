@@ -1,4 +1,4 @@
-const CACHE = 'tvfreak-v1'
+const CACHE = 'tvfreak-v3'
 
 self.addEventListener('install', () => self.skipWaiting())
 
@@ -16,13 +16,13 @@ self.addEventListener('fetch', e => {
 
   const url = new URL(request.url)
 
-  // Only intercept same-origin requests (not TMDB, OMDB, Cloudflare, etc.)
+  // Only intercept same-origin requests
   if (url.origin !== self.location.origin) return
 
-  // HTML navigation: network first so the app always loads the latest version
+  // HTML navigation: bypass HTTP/CDN cache entirely so the app always loads fresh
   if (request.mode === 'navigate') {
     e.respondWith(
-      fetch(request)
+      fetch(new Request(request, { cache: 'no-store' }))
         .then(res => {
           caches.open(CACHE).then(c => c.put(request, res.clone()))
           return res
@@ -46,7 +46,7 @@ self.addEventListener('fetch', e => {
     return
   }
 
-  // Everything else (manifest, icons, etc.): network first with cache fallback
+  // Everything else: network first with cache fallback
   e.respondWith(
     fetch(request)
       .then(res => {
