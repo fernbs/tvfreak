@@ -14,6 +14,7 @@ export function SeriesCard({ series, onClick }: Props) {
   const now = new Date()
   const hasUpcoming = series.nextEpisodeDate && new Date(series.nextEpisodeDate) > now
   const isComplete = series.status === 'completed' && !hasUpcoming
+  const cornerColor = isComplete ? '#6B7280' : config.color
   const hasNewEpisode =
     series.nextEpisodeDate &&
     new Date(series.nextEpisodeDate) <= now &&
@@ -44,7 +45,7 @@ export function SeriesCard({ series, onClick }: Props) {
       {/* Bottom-left corner status gradient */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: `radial-gradient(circle at 0% 100%, ${config.color}99 0%, transparent 38%)` }}
+        style={{ background: `radial-gradient(circle at 0% 100%, ${cornerColor}99 0%, transparent 38%)` }}
       />
       {/* Bottom-left corner border arc */}
       <div
@@ -54,8 +55,8 @@ export function SeriesCard({ series, onClick }: Props) {
           left: 0,
           width: 16,
           height: 16,
-          borderLeft: `2px solid ${config.color}`,
-          borderBottom: `2px solid ${config.color}`,
+          borderLeft: `2px solid ${cornerColor}`,
+          borderBottom: `2px solid ${cornerColor}`,
           borderBottomLeftRadius: 16,
         }}
       />

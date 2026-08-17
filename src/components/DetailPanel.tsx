@@ -432,9 +432,9 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={e => { if (!imdbId) e.preventDefault() }}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
+                        className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                       >
-                        <span className="bg-[#F5C518] text-black font-black px-[3px] py-px rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
+                        <span className="bg-[#F5C518] text-black font-black px-[3px] py-[2px] rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
                         <span className="text-xs font-medium leading-none" style={{ color: displayImdbRating ? 'white' : '#8E8E93' }}>{displayImdbRating ?? 'N/A'}</span>
                       </a>
                       {ratingsLoaded && rtRating && (
@@ -442,7 +442,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                           href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(series.title)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
+                          className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                         >
                           {parseInt(rtRating) >= 60 ? (
                             <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
@@ -585,8 +585,8 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                 </div>
               )}
 
-              {/* "New episodes coming soon" banner */}
-              {series.status === 'plantowatch' && inLibrary && (
+              {/* "New episodes coming soon" banner — only when we know the next episode date */}
+              {series.status === 'plantowatch' && inLibrary && !!nextEpDate && (
                 <div
                   className="mb-5 relative overflow-hidden rounded-2xl px-5 py-4"
                   style={{
@@ -598,22 +598,17 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     className="absolute inset-0 pointer-events-none"
                     style={{ background: `radial-gradient(ellipse at 0% 60%, rgba(var(--accent-rgb),0.22) 0%, transparent 65%)` }}
                   />
-                  <p className="relative text-[10px] font-bold uppercase tracking-[0.14em] mb-1" style={{ color: `rgba(var(--accent-rgb),0.65)` }}>
-                    Hang tight
+                  <p className="relative text-xl font-extrabold text-[#F5F5F7] leading-tight">
+                    New episodes coming soon
                   </p>
-                  <p className="relative text-[22px] font-extrabold text-[#F5F5F7] leading-tight">
-                    New episodes<br />coming soon
+                  <p className="relative mt-1.5 text-sm font-semibold" style={{ color: `var(--color-accent)` }}>
+                    {formatAirDate(nextEpDate)}
                   </p>
-                  {nextEpDate && (
-                    <p className="relative mt-2 text-sm font-semibold" style={{ color: `var(--color-accent)` }}>
-                      {formatAirDate(nextEpDate)}
-                    </p>
-                  )}
                 </div>
               )}
 
-              {/* "That's all, freaks." banner */}
-              {(series.status === 'completed' || detail?.status === 'Ended' || detail?.status === 'Canceled') && inLibrary && (
+              {/* "That's all, freaks." banner — only when user has marked series as completed */}
+              {series.status === 'completed' && inLibrary && (
                 <div
                   className="mb-5 relative overflow-hidden rounded-2xl px-5 py-4"
                   style={{
@@ -629,7 +624,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     {detail?.status === 'Canceled' ? 'Cancelled' : 'Series complete'}
                   </p>
                   <p className="relative text-[22px] font-extrabold italic text-[#F5F5F7] leading-tight">
-                    That's all,<br />freaks.
+                    That's all, freaks.
                   </p>
                 </div>
               )}
@@ -676,7 +671,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                             loading="lazy"
                           />
                           {(r.vote_average ?? 0) > 0 && (
-                            <div className="absolute top-1 left-1 px-1 rounded bg-black/65 flex items-center gap-px">
+                            <div className="absolute top-1 left-1 px-1 py-[2px] rounded bg-black/65 flex items-center gap-px">
                               <span className="text-[var(--color-accent)] leading-none" style={{ fontSize: '9px' }}>★</span>
                               <span className="text-white font-semibold leading-none" style={{ fontSize: '9px' }}>{r.vote_average!.toFixed(1)}</span>
                             </div>
