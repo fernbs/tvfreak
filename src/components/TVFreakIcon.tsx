@@ -12,30 +12,29 @@ export function TVFreakIcon({ size = 24, className }: Props) {
       viewBox="0 0 100 100"
       className={className}
     >
-      {/* Background */}
-      <rect width="100" height="100" rx="22" fill="#0D0D0D" />
-
-      {/* Alien head: wide cranium, narrow chin */}
-      <path
-        d="M50 9 C22 9 14 29 14 49 C14 68 26 88 50 91 C74 88 86 68 86 49 C86 29 78 9 50 9 Z"
-        fill="var(--color-accent)"
-      />
-
-      {/* Left eye — large almond tilted inward */}
-      <ellipse cx="34" cy="53" rx="13.5" ry="9" fill="#0D0D0D" transform="rotate(-10, 34, 53)" />
-
-      {/* Right eye */}
-      <ellipse cx="66" cy="53" rx="13.5" ry="9" fill="#0D0D0D" transform="rotate(10, 66, 53)" />
-
-      {/* Left eye specular highlight */}
-      <ellipse cx="29" cy="48" rx="4.5" ry="2.5" fill="rgba(255,255,255,0.38)" transform="rotate(-10, 29, 48)" />
-
-      {/* Right eye specular highlight */}
-      <ellipse cx="61" cy="48" rx="4.5" ry="2.5" fill="rgba(255,255,255,0.38)" transform="rotate(10, 61, 48)" />
-
-      {/* Tiny nostrils */}
-      <circle cx="46" cy="71" r="2.5" fill="rgba(0,0,0,0.22)" />
-      <circle cx="54" cy="71" r="2.5" fill="rgba(0,0,0,0.22)" />
+      <rect width="100" height="100" rx="22" fill="#0D0D0D"/>
+      <g fill="var(--color-accent)">
+        {/* Row 0: cols 2-8 */}
+        <rect x="22" y="10" width="56" height="8"/>
+        {/* Row 1: cols 1-9 */}
+        <rect x="14" y="18" width="72" height="8"/>
+        {/* Rows 2-3: cols 0-10 */}
+        <rect x="6" y="26" width="88" height="16"/>
+        {/* Rows 4-5: eye sockets empty at cols 2-3 and 7-8 */}
+        <rect x="6" y="42" width="16" height="16"/>
+        <rect x="38" y="42" width="24" height="16"/>
+        <rect x="78" y="42" width="16" height="16"/>
+        {/* Rows 6-7: full width */}
+        <rect x="6" y="58" width="88" height="16"/>
+        {/* Row 8: cols 1-9 */}
+        <rect x="14" y="74" width="72" height="8"/>
+        {/* Row 9: teeth at cols 1,3,5,7,9 */}
+        <rect x="14" y="82" width="8" height="8"/>
+        <rect x="30" y="82" width="8" height="8"/>
+        <rect x="46" y="82" width="8" height="8"/>
+        <rect x="62" y="82" width="8" height="8"/>
+        <rect x="78" y="82" width="8" height="8"/>
+      </g>
     </svg>
   )
 }

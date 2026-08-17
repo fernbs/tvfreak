@@ -121,13 +121,17 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
     if (!movie) return
     setAdding(true)
     try {
+      const todayDate = new Date().toISOString().slice(0, 10)
+      const releaseDate = detail?.release_date ?? movie.releaseDate
+      const isFutureMovie = !releaseDate || releaseDate > todayDate
+      const addStatus = isFutureMovie ? 'plantowatch' : 'watching'
       const id = await addMovie({
         tmdbId: movie.tmdbId,
         title: movie.title,
-        status: 'plantowatch',
+        status: addStatus,
         posterPath: detail?.poster_path ?? movie.posterPath,
         overview: detail?.overview ?? movie.overview,
-        releaseDate: detail?.release_date ?? movie.releaseDate,
+        releaseDate,
         runtime: detail?.runtime ?? null,
         notes: '',
         imdbRating: displayRating,
@@ -136,7 +140,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
       })
       toast.success(`"${movie.title}" added to watchlist`)
       onUpdated()
-      onSelect({ ...movie, id, status: 'plantowatch', imdbRating: displayRating })
+      onSelect({ ...movie, id, status: addStatus, imdbRating: displayRating })
     } finally { setAdding(false) }
   }
 

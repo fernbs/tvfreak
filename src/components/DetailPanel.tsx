@@ -217,11 +217,11 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
     setAdding(true)
     try {
       const todayDate = new Date().toISOString().slice(0, 10)
-      const hasReleasedEpisodes = !!(series.firstAirDate && series.firstAirDate <= todayDate && detail?.last_episode_to_air)
+      const isFutureShow = !series.firstAirDate || series.firstAirDate > todayDate
       await addSeries({
         tmdbId: series.tmdbId,
         title: series.title,
-        status: hasReleasedEpisodes ? 'watching' : 'plantowatch',
+        status: isFutureShow ? 'plantowatch' : 'watching',
         posterPath: series.posterPath,
         overview: detail?.overview ?? series.overview,
         firstAirDate: series.firstAirDate,
@@ -437,25 +437,21 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                         <span className="bg-[#F5C518] text-black font-black px-[3px] py-px rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
                         <span className="text-xs font-medium leading-none" style={{ color: displayImdbRating ? 'white' : '#8E8E93' }}>{displayImdbRating ?? 'N/A'}</span>
                       </a>
-                      {ratingsLoaded && (
+                      {ratingsLoaded && rtRating && (
                         <a
                           href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(series.title)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                         >
-                          {rtRating ? (
-                            parseInt(rtRating) >= 60 ? (
-                              <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
-                            ) : (
-                              <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
-                                <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
-                              </svg>
-                            )
+                          {parseInt(rtRating) >= 60 ? (
+                            <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
                           ) : (
-                            <span className="text-[#8E8E93] text-[10px] font-bold leading-none">RT</span>
+                            <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
+                              <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
+                            </svg>
                           )}
-                          <span className="text-xs font-medium leading-none" style={{ color: rtRating ? 'white' : '#8E8E93' }}>{rtRating ?? 'N/A'}</span>
+                          <span className="text-xs font-medium text-white leading-none">{rtRating}</span>
                         </a>
                       )}
                       {mcRating && (
