@@ -1,8 +1,10 @@
-import { useState, type ReactNode } from 'react'
-import { SlidersHorizontal, GitMerge, Wand2, Film, X } from 'lucide-react'
-import type { Series, SeriesStatus, Movie, MovieStatus } from '../types'
+import { useState, useEffect, type ReactNode } from 'react'
+import { SlidersHorizontal, GitMerge, Wand2, Film, X, Loader2 } from 'lucide-react'
+import type { Series, SeriesStatus, Movie, MovieStatus, WatchProvider } from '../types'
 import { MOVIE_STATUS_CONFIG } from '../types'
 import type { DuplicateGroup } from '../lib/api'
+import { getStreamingProviders, getMovieStreamingProviders, IMG_BASE } from '../lib/tmdb'
+import { getDefaultProviders, getCountry } from '../lib/settings'
 import { SeriesGrid } from './SeriesGrid'
 import type { ViewMode } from '../lib/useViewMode'
 
@@ -148,6 +150,20 @@ export function LibraryTab({
   const [movieFilter, setMovieFilter] = useState<MovieStatus | 'all'>('all')
   const [minRating, setMinRating] = useState<number | null>(null)
   const [showFilterSheet, setShowFilterSheet] = useState(false)
+  const [filterPlatforms, setFilterPlatforms] = useState<number[]>(getDefaultProviders)
+  const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
+  const [loadingProviders, setLoadingProviders] = useState(false)
+
+  useEffect(() => {
+    const country = getCountry()
+    setLoadingProviders(true)
+    const fetchFn = mediaMode === 'tv' ? getStreamingProviders : getMovieStreamingProviders
+    fetchFn(country).then(providers => {
+      setAvailableProviders(providers)
+      const available = new Set(providers.map((p: WatchProvider) => p.provider_id))
+      setFilterPlatforms(getDefaultProviders().filter(id => available.has(id)))
+    }).finally(() => setLoadingProviders(false))
+  }, [mediaMode])
 
   function sorted(list: Series[]): Series[] {
     return [...list].sort((a, b) => {
@@ -255,7 +271,7 @@ export function LibraryTab({
 
           <button
             onClick={() => setShowFilterSheet(true)}
-            className={`relative flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+            className={`ml-auto relative flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
               activeFilterCount > 0
                 ? 'bg-[rgba(191,90,242,0.08)] border-[rgba(191,90,242,0.25)] text-[#BF5AF2]'
                 : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
@@ -348,6 +364,40 @@ export function LibraryTab({
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Platforms */}
+            <div className="px-4 pt-2 pb-4 border-t border-white/6">
+              <p className="text-[11px] font-semibold text-[#48484A] uppercase tracking-wide mb-2.5">Platforms</p>
+              {loadingProviders ? (
+                <div className="flex items-center gap-2 py-1">
+                  <Loader2 className="w-3.5 h-3.5 text-[#48484A] animate-spin" />
+                  <span className="text-xs text-[#48484A]">Loading...</span>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableProviders.map(p => {
+                    const selected = filterPlatforms.includes(p.provider_id)
+                    return (
+                      <button
+                        key={p.provider_id}
+                        onClick={() => {
+                          setFilterPlatforms(prev => {
+                            const next = selected ? prev.filter(id => id !== p.provider_id) : [...prev, p.provider_id]
+                            localStorage.setItem('tvfreak-default-providers', JSON.stringify(next))
+                            return next
+                          })
+                        }}
+                        className={`w-9 h-9 rounded-xl overflow-hidden border-2 transition-all ${
+                          selected ? 'border-[#BF5AF2]' : 'border-transparent opacity-40'
+                        }`}
+                      >
+                        <img src={`${IMG_BASE}/original${p.logo_path}`} alt={p.provider_name} className="w-full h-full object-cover" />
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </>

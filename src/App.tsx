@@ -32,7 +32,7 @@ const TAB_TITLES: Record<Tab, string> = {
   discover: 'Discover',
 }
 
-const GRID_TABS: Tab[] = ['search', 'library']
+const GRID_TABS: Tab[] = ['home', 'search', 'library']
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('home')
@@ -548,7 +548,7 @@ export default function App() {
       {/* Tab content */}
       <main className="flex-1 overflow-hidden min-h-0">
         {tab === 'home' && (
-          <HomeTab series={allSeries} loading={loading} onSelect={openSeries} onRefresh={refreshNextEpisodeDates} />
+          <HomeTab series={allSeries} loading={loading} onSelect={openSeries} onRefresh={refreshNextEpisodeDates} viewMode={viewMode} />
         )}
         {tab === 'library' && (
           <LibraryTab

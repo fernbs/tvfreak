@@ -434,12 +434,12 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
         <div className="flex items-center gap-2 px-4 pt-2 pb-3">
 
           {/* TV / Films segment */}
-          <div className="flex bg-[#1C1C1E] rounded-lg p-0.5 shrink-0">
+          <div className="flex bg-[#1C1C1E] rounded-lg p-0.5 h-8 shrink-0">
             {(['tv', 'movie'] as const).map(mode => (
               <button
                 key={mode}
                 onClick={() => switchMediaMode(mode)}
-                className={`px-3 py-[5px] rounded-[6px] text-[11px] font-semibold transition-colors ${
+                className={`flex items-center px-3 rounded-[6px] text-[11px] font-semibold transition-colors ${
                   mediaMode === mode ? 'bg-[#2C2C2E] text-[#F5F5F7]' : 'text-[#48484A]'
                 }`}
               >

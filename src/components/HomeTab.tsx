@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { Calendar, Loader2, ChevronLeft, ChevronRight, ChevronDown, Grid2X2, Grid3X3, List, Tv } from 'lucide-react'
+import { Calendar, Loader2, ChevronLeft, ChevronRight, ChevronDown, Tv } from 'lucide-react'
 import type { Series } from '../types'
 import { SeriesGrid } from './SeriesGrid'
 import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
-import { useViewMode } from '../lib/useViewMode'
+import type { ViewMode } from '../lib/useViewMode'
 
 const PULL_THRESHOLD = 72
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -14,6 +14,7 @@ interface Props {
   loading: boolean
   onSelect: (s: Series) => void
   onRefresh: () => Promise<void>
+  viewMode: ViewMode
 }
 
 function toDateStr(d: Date): string {
@@ -27,9 +28,8 @@ function addMonths(date: Date, n: number): Date {
   return d
 }
 
-export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
+export function HomeTab({ series, loading, onSelect, onRefresh, viewMode }: Props) {
   const [view, setView] = useState<'watching' | 'upcoming'>('watching')
-  const [viewMode, setViewMode] = useViewMode()
   const [pullDistance, setPullDistance] = useState(0)
   const [pullReady, setPullReady] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -160,11 +160,6 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
     setCalOpen(false)
   }
 
-  const viewToggleClasses = (mode: string) =>
-    `p-1.5 rounded-lg transition-colors ${viewMode === mode
-      ? 'bg-[#2C2C2E] text-[#F5F5F7]'
-      : 'text-[#48484A] active:text-[#8E8E93]'
-    }`
 
   return (
     <div className="flex flex-col h-full">
@@ -230,18 +225,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
               <p className="text-xs text-[#2C2C2E] mt-1">Series you're mid-way through will appear here.</p>
             </div>
           ) : (
-            <>
-              <div className="flex justify-end pt-2 pb-1">
-                <div className="flex items-center gap-0.5 bg-white/5 rounded-xl p-0.5">
-                  {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
-                    <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
-                      <Icon className="w-3.5 h-3.5" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <SeriesGrid series={watchingNow} loading={false} onSelect={onSelect} viewMode={viewMode} />
-            </>
+            <SeriesGrid series={watchingNow} loading={false} onSelect={onSelect} viewMode={viewMode} />
           )
         ) : (
           <div>
@@ -332,27 +316,16 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
             </div>
 
             {/* Episode list header */}
-            <div className="flex items-center justify-between mb-2">
-              {selectedDate ? (
-                <>
-                  <p className="text-xs text-[#48484A] uppercase tracking-wider font-medium">
-                    {new Date(selectedDate + 'T12:00:00').toLocaleDateString('default', { weekday: 'long', day: 'numeric', month: 'long' })}
-                  </p>
-                  <button onClick={() => setSelectedDate(null)} className="text-[10px] text-[#48484A] active:text-[#8E8E93]">
-                    Clear
-                  </button>
-                </>
-              ) : (
-                <div />
-              )}
-              <div className="flex items-center gap-0.5 bg-white/5 rounded-xl p-0.5">
-                {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
-                  <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
-                    <Icon className="w-3.5 h-3.5" />
-                  </button>
-                ))}
+            {selectedDate && (
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-[#48484A] uppercase tracking-wider font-medium">
+                  {new Date(selectedDate + 'T12:00:00').toLocaleDateString('default', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+                <button onClick={() => setSelectedDate(null)} className="text-[10px] text-[#48484A] active:text-[#8E8E93]">
+                  Clear
+                </button>
               </div>
-            </div>
+            )}
 
             {listItems.length === 0 ? (
               <div className="py-10 text-center">
