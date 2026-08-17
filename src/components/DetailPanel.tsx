@@ -602,7 +602,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                 </div>
               )}
 
-              {/* "New episodes coming soon" banner — only when we know the next episode date */}
+              {/* "New episodes coming soon" banners — date known vs TBA */}
               {series.status === 'plantowatch' && inLibrary && !!nextEpDate && (
                 <div
                   className="mb-5 relative overflow-hidden rounded-2xl px-5 py-4"
@@ -620,6 +620,26 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                   </p>
                   <p className="relative mt-1.5 text-sm font-semibold" style={{ color: `var(--color-accent)` }}>
                     {formatAirDate(nextEpDate)}
+                  </p>
+                </div>
+              )}
+              {series.status === 'plantowatch' && inLibrary && !nextEpDate && (
+                <div
+                  className="mb-5 relative overflow-hidden rounded-2xl px-5 py-4"
+                  style={{
+                    background: `linear-gradient(135deg, rgba(var(--accent-rgb),0.18) 0%, rgba(var(--accent-rgb),0.06) 100%)`,
+                    border: `1px solid rgba(var(--accent-rgb),0.22)`,
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: `radial-gradient(ellipse at 0% 60%, rgba(var(--accent-rgb),0.22) 0%, transparent 65%)` }}
+                  />
+                  <p className="relative text-[10px] font-bold uppercase tracking-[0.14em] mb-1" style={{ color: `rgba(var(--accent-rgb),0.65)` }}>
+                    On its way
+                  </p>
+                  <p className="relative text-xl font-extrabold text-[#F5F5F7] leading-tight">
+                    New episodes coming soon
                   </p>
                 </div>
               )}
