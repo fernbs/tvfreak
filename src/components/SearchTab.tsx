@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown, SlidersHorizontal } from 'lucide-react'
-import { TVFreakIcon } from './TVFreakIcon'
 import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE, searchMovie, getTrendingMovies, discoverMovies, getMovieStreamingProviders } from '../lib/tmdb'
 import { addSeries, addMovie } from '../lib/api'
 import type { TmdbSearchResult, Series, Movie, WatchProvider } from '../types'
@@ -439,12 +438,9 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
       {/* Sticky header — 2 rows */}
       <div className="shrink-0 bg-black z-10">
 
-        {/* Row 1: Icon + TV/Films + Search */}
-        <div
-          className="flex items-center gap-2 px-4 pb-2"
-          style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
-        >
-          <TVFreakIcon size={22} className="shrink-0" />
+        {/* Row 1: TV/Films + Search */}
+        <div className="flex items-center gap-2 px-4 pb-2 pt-2">
+
           {/* TV / Films segment */}
           <div className="flex bg-[#1C1C1E] rounded-lg p-0.5 shrink-0">
             {(['tv', 'movie'] as const).map(mode => (

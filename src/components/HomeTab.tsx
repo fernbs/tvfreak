@@ -1,13 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { Calendar, Loader2, ChevronLeft, ChevronRight, ChevronDown, Grid2X2, Grid3X3, List, Settings, Tv } from 'lucide-react'
-import { AnimatePresence } from 'framer-motion'
+import { Calendar, Loader2, ChevronLeft, ChevronRight, ChevronDown, Grid2X2, Grid3X3, List, Tv } from 'lucide-react'
 import type { Series } from '../types'
 import { SeriesGrid } from './SeriesGrid'
 import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
 import { useViewMode } from '../lib/useViewMode'
-import { SettingsModal } from './SettingsModal'
-import { TVFreakIcon } from './TVFreakIcon'
 
 const PULL_THRESHOLD = 72
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -32,7 +29,6 @@ function addMonths(date: Date, n: number): Date {
 
 export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
   const [view, setView] = useState<'watching' | 'upcoming'>('watching')
-  const [showSettings, setShowSettings] = useState(false)
   const [viewMode, setViewMode] = useViewMode()
   const [pullDistance, setPullDistance] = useState(0)
   const [pullReady, setPullReady] = useState(false)
@@ -192,24 +188,8 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
         />
       </div>
 
-      {/* Sticky header */}
-      <div
-        className="shrink-0 px-4 pb-3 bg-black"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
-      >
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <TVFreakIcon size={24} />
-            <span className="text-xl font-bold tracking-tight text-[#F5F5F7]">TVFREAK</span>
-          </div>
-          <button
-            onClick={() => setShowSettings(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-xl active:bg-white/5 transition-colors"
-          >
-            <Settings className="w-[18px] h-[18px] text-[#48484A]" />
-          </button>
-        </div>
-
+      {/* Sticky sub-header */}
+      <div className="shrink-0 px-4 pb-3 bg-black">
         {/* Segmented control */}
         <div className="flex bg-white/5 rounded-2xl p-1 gap-1">
           <button
@@ -455,9 +435,6 @@ export function HomeTab({ series, loading, onSelect, onRefresh }: Props) {
         )}
       </div>
 
-      <AnimatePresence>
-        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-      </AnimatePresence>
     </div>
   )
 }

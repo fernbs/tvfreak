@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
+import { Settings } from 'lucide-react'
 import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration, getAllMovies, deduplicateMovies } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
@@ -19,9 +20,20 @@ import { ImportBanner } from './components/ImportBanner'
 import { DuplicateModal } from './components/DuplicateModal'
 import { MigrationModal, MIGRATION_KEY } from './components/MigrationModal'
 import { MovieImportBanner, MovieImportSheet, useMovieImport } from './components/MovieImportSheet'
+import { SettingsModal } from './components/SettingsModal'
+import { TVFreakIcon } from './components/TVFreakIcon'
+
+const TAB_TITLES: Record<Tab, string> = {
+  home: 'TVFREAK',
+  library: 'Library',
+  search: 'Search',
+  stats: 'Stats',
+  discover: 'Discover',
+}
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('home')
+  const [showSettings, setShowSettings] = useState(false)
   const [allSeries, setAllSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(true)
   const [workerError, setWorkerError] = useState(false)
@@ -483,6 +495,23 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden">
+      {/* Global persistent header */}
+      <div
+        className="shrink-0 flex items-center justify-between px-4 pb-3 bg-black"
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
+      >
+        <div className="flex items-center gap-2">
+          <TVFreakIcon size={24} />
+          <span className="text-xl font-bold tracking-tight text-[#F5F5F7]">{TAB_TITLES[tab]}</span>
+        </div>
+        <button
+          onClick={() => setShowSettings(true)}
+          className="w-8 h-8 flex items-center justify-center rounded-xl active:bg-white/5 transition-colors"
+        >
+          <Settings className="w-[18px] h-[18px] text-[#48484A]" />
+        </button>
+      </div>
+
       {/* Worker unreachable banner */}
       {workerError && !loading && (
         <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-rose-500/8 border-b border-rose-500/15">
@@ -569,6 +598,10 @@ export default function App() {
           onImportDone={() => { movieImport.onImportDone(); loadMovies() }}
         />
       )}
+
+      <AnimatePresence>
+        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showDuplicates && (

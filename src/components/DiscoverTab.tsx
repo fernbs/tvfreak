@@ -6,7 +6,6 @@ import { getDefaultProviders, getCountry } from '../lib/settings'
 import { addSeries, addMovie } from '../lib/api'
 import type { TmdbSearchResult, Series, Movie } from '../types'
 import { toast } from 'sonner'
-import { TVFreakIcon } from './TVFreakIcon'
 
 const TV_GENRES = [
   { id: 18,    label: 'Drama' },
@@ -371,15 +370,7 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
 
     return (
       <div className="flex flex-col h-full bg-black">
-        <div
-          className="shrink-0 px-4 pb-4 bg-black"
-          style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
-        >
-          <div className="flex items-center gap-2 mb-6">
-            <TVFreakIcon size={24} />
-            <h1 className="text-xl font-bold text-[#F5F5F7]">Discover</h1>
-          </div>
-
+        <div className="shrink-0 px-4 pb-4 bg-black pt-2">
           <div className="flex bg-white/5 rounded-2xl p-1 gap-1">
             {(['tv', 'movie'] as const).map(mode => (
               <button
@@ -476,10 +467,7 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
 
   return (
     <div className="flex flex-col h-full bg-black">
-      <div
-        className="shrink-0 flex items-center justify-between px-4 pb-2"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
-      >
+      <div className="shrink-0 flex items-center justify-between px-4 py-2">
         <button
           onClick={() => setPhase('setup')}
           className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#1C1C1E] border border-white/8 text-[#8E8E93]"

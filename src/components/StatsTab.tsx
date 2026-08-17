@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
-import { TVFreakIcon } from './TVFreakIcon'
 import { getAppStats } from '../lib/api'
 import type { AppStats } from '../lib/api'
 import type { Series } from '../types'
@@ -103,18 +102,7 @@ export function StatsTab({ allSeries }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div
-        className="shrink-0 bg-black px-4 pb-3"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
-      >
-        <div className="flex items-center gap-2">
-          <TVFreakIcon size={24} />
-          <h1 className="text-xl font-bold text-[#F5F5F7]">Stats</h1>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8 min-h-0">
+      <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-2 min-h-0">
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="w-6 h-6 text-[#48484A] animate-spin" />

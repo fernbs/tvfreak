@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from 'react'
 import { SlidersHorizontal, GitMerge, Wand2, Grid2X2, Grid3X3, List, Film } from 'lucide-react'
-import { TVFreakIcon } from './TVFreakIcon'
 import type { Series, SeriesStatus, Movie, MovieStatus } from '../types'
 import { MOVIE_STATUS_CONFIG } from '../types'
 import type { DuplicateGroup } from '../lib/api'
@@ -184,60 +183,51 @@ export function LibraryTab({
   return (
     <div className="flex flex-col h-full">
       {/* Sticky header */}
-      <div
-        className="shrink-0 bg-black px-4 pb-3 z-10"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
-      >
-        {/* Title row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <TVFreakIcon size={24} />
-            <h1 className="text-xl font-bold text-[#F5F5F7]">Library</h1>
+      <div className="shrink-0 bg-black px-4 pb-3 z-10">
+        {/* Series / Films tab bar — action buttons sit on the right */}
+        <div className="flex items-end border-b border-white/6 mb-3 -mx-4 px-4">
+          <div className="flex flex-1">
+            {([['tv', 'Series', series.length], ['movie', 'Films', allMovies.length]] as const).map(([mode, label, count]) => {
+              const isActive = mediaMode === mode
+              return (
+                <button
+                  key={mode}
+                  onClick={() => setMediaMode(mode)}
+                  className="flex-1 flex flex-col items-center pb-2.5 pt-1 relative transition-colors"
+                >
+                  <span className={`text-sm font-semibold transition-colors ${isActive ? 'text-[#F5F5F7]' : 'text-[#48484A]'}`}>
+                    {label}
+                  </span>
+                  <span className={`text-[11px] font-medium transition-colors ${isActive ? 'text-[#BF5AF2]' : 'text-[#48484A]'}`}>
+                    {count}
+                  </span>
+                  {isActive && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-10 bg-[#BF5AF2] rounded-full" />
+                  )}
+                </button>
+              )
+            })}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 pb-2.5">
             {duplicates.length > 0 && (
               <button
                 onClick={onShowDuplicates}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[rgba(191,90,242,0.08)] text-[#BF5AF2]/80 border border-[rgba(191,90,242,0.15)] active:bg-[rgba(191,90,242,0.15)] transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-[rgba(191,90,242,0.08)] text-[#BF5AF2]/80 border border-[rgba(191,90,242,0.15)] active:bg-[rgba(191,90,242,0.15)] transition-colors"
               >
-                <GitMerge className="w-3.5 h-3.5" />
+                <GitMerge className="w-3 h-3" />
                 {duplicates.length}
               </button>
             )}
             {!migrationDone && (
               <button
                 onClick={onShowMigration}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[rgba(191,90,242,0.1)] text-[#BF5AF2] border border-[rgba(191,90,242,0.2)] active:bg-[rgba(191,90,242,0.18)] transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-[rgba(191,90,242,0.1)] text-[#BF5AF2] border border-[rgba(191,90,242,0.2)] active:bg-[rgba(191,90,242,0.18)] transition-colors"
               >
-                <Wand2 className="w-3.5 h-3.5" />
+                <Wand2 className="w-3 h-3" />
                 Restore
               </button>
             )}
           </div>
-        </div>
-
-        {/* Series / Films tab bar */}
-        <div className="flex border-b border-white/6 mb-3 -mx-4 px-4">
-          {([['tv', 'Series', series.length], ['movie', 'Films', allMovies.length]] as const).map(([mode, label, count]) => {
-            const isActive = mediaMode === mode
-            return (
-              <button
-                key={mode}
-                onClick={() => setMediaMode(mode)}
-                className="flex-1 flex flex-col items-center pb-2.5 pt-1 relative transition-colors"
-              >
-                <span className={`text-sm font-semibold transition-colors ${isActive ? 'text-[#F5F5F7]' : 'text-[#48484A]'}`}>
-                  {label}
-                </span>
-                <span className={`text-[11px] font-medium transition-colors ${isActive ? 'text-[#BF5AF2]' : 'text-[#48484A]'}`}>
-                  {count}
-                </span>
-                {isActive && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-10 bg-[#BF5AF2] rounded-full" />
-                )}
-              </button>
-            )
-          })}
         </div>
 
         {/* Controls row */}
