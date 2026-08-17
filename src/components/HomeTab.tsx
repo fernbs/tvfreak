@@ -84,7 +84,12 @@ export function HomeTab({ series, loading, onSelect, onRefresh, viewMode }: Prop
         setPullReady(false)
         setPullDistance(0)
         pullDistanceRef.current = 0
-        try { await onRefresh() } finally {
+        try {
+          await Promise.race([
+            onRefresh(),
+            new Promise<void>(resolve => setTimeout(resolve, 12000)),
+          ])
+        } finally {
           refreshingRef.current = false
           setRefreshing(false)
         }

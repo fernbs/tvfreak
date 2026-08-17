@@ -133,7 +133,8 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
           <div
             key={m.id ?? m.tmdbId}
             onClick={() => onSelect(m)}
-            className="relative aspect-[2/3] rounded-2xl overflow-hidden cursor-pointer select-none active:opacity-75 transition-opacity"
+            className="relative aspect-[2/3] rounded-2xl overflow-hidden cursor-pointer group select-none"
+            style={{ transform: 'translateZ(0)' }}
           >
             {poster ? (
               <img src={poster} alt={m.title} loading="lazy" className="w-full h-full object-cover" draggable={false} />
