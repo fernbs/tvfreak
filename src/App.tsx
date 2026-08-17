@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration, getAllMovies } from './lib/api'
+import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration, getAllMovies, deduplicateMovies } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
 import { getTvDetails, getSeasonEpisodes } from './lib/tmdb'
@@ -81,6 +81,7 @@ export default function App() {
         finally { setImporting(false) }
       }
       try { await deduplicateSeries() } catch { /* non-fatal */ }
+      try { await deduplicateMovies() } catch { /* non-fatal */ }
       await loadSeries()
       loadMovies()
       try {

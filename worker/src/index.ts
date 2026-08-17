@@ -363,14 +363,21 @@ export default {
         return json({ id: result.meta.last_row_id }, 201, cors)
       }
 
-      // POST /api/movies/batch — insert many movies in one D1 batch call
+      // POST /api/movies/batch — insert many movies in one D1 batch call, skipping duplicates
       if (path === '/api/movies/batch' && method === 'POST') {
         await ensureMovies()
         const body = await request.json() as { movies: Record<string, unknown>[] }
         if (!Array.isArray(body.movies) || body.movies.length === 0) {
           return json({ inserted: 0 }, 200, cors)
         }
-        const stmts = body.movies.map(m =>
+        // Load existing tmdbIds so we never insert a duplicate
+        const { results: existing } = await env.DB.prepare(
+          'SELECT tmdbId FROM movies WHERE tmdbId IS NOT NULL'
+        ).all()
+        const existingIds = new Set(existing.map(r => r.tmdbId as number))
+        const toInsert = body.movies.filter(m => !m.tmdbId || !existingIds.has(m.tmdbId as number))
+        if (toInsert.length === 0) return json({ inserted: 0 }, 200, cors)
+        const stmts = toInsert.map(m =>
           env.DB.prepare(
             `INSERT INTO movies (tmdbId, title, status, posterPath, overview, releaseDate, runtime, notes, imdbRating, addedAt, updatedAt)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -383,6 +390,29 @@ export default {
         )
         await env.DB.batch(stmts)
         return json({ inserted: stmts.length }, 201, cors)
+      }
+
+      // POST /api/movies/deduplicate — remove duplicate movies by tmdbId, keeping the oldest entry
+      if (path === '/api/movies/deduplicate' && method === 'POST') {
+        await ensureMovies()
+        const { results } = await env.DB.prepare(
+          'SELECT id, tmdbId FROM movies WHERE tmdbId IS NOT NULL ORDER BY id ASC'
+        ).all()
+        const seen = new Map<number, number>()
+        const toDelete: number[] = []
+        for (const row of results) {
+          const tid = row.tmdbId as number
+          if (seen.has(tid)) {
+            toDelete.push(row.id as number)
+          } else {
+            seen.set(tid, row.id as number)
+          }
+        }
+        if (toDelete.length > 0) {
+          const stmts = toDelete.map(id => env.DB.prepare('DELETE FROM movies WHERE id = ?').bind(id))
+          await env.DB.batch(stmts)
+        }
+        return json({ deleted: toDelete.length }, 200, cors)
       }
 
       const movieIdMatch = path.match(/^\/api\/movies\/(\d+)$/)

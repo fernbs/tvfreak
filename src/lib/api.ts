@@ -230,6 +230,12 @@ export async function addMovie(movie: Omit<import('../types').Movie, 'id'>): Pro
   return data.id
 }
 
+export async function deduplicateMovies(): Promise<number> {
+  const res = await fetch(`${BASE}/api/movies/deduplicate`, { method: 'POST' })
+  const data: { deleted: number } = await res.json()
+  return data.deleted
+}
+
 export async function addMoviesBatch(movies: import('../types').Movie[]): Promise<{ inserted: number }> {
   const res = await fetch(`${BASE}/api/movies/batch`, {
     method: 'POST',

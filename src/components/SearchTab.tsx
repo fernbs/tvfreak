@@ -98,6 +98,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     setTrending([])
     setTrendingPage(1)
     setCurrentPage(1)
+    scrollRef.current?.scrollTo({ top: 0 })
   }
 
   const noQuery = !query.trim()
@@ -144,6 +145,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     debounceRef.current = setTimeout(async () => {
       setSearching(true)
       setCurrentPage(1)
+      scrollRef.current?.scrollTo({ top: 0 })
       const year = yearFilter.length === 4 ? yearFilter : undefined
       try {
         if (mediaMode === 'tv') {
