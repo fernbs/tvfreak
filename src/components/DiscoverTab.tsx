@@ -223,21 +223,19 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
     [genres, genreStates]
   )
 
-  // Load providers when mediaMode or country changes (setup phase only)
+  // Load providers when mediaMode changes, seeding selection from settings each time
   useEffect(() => {
-    if (phase !== 'setup') return
     const country = getCountry()
     setLoadingProviders(true)
     const fetchFn = mediaMode === 'tv' ? getStreamingProviders : getMovieStreamingProviders
     fetchFn(country)
       .then(providers => {
         setAvailableProviders(providers)
-        // Pre-select only providers that are available in this mode
         const available = new Set(providers.map(p => p.provider_id))
-        setSelectedProviders(prev => prev.filter(id => available.has(id)))
+        setSelectedProviders(getDefaultProviders().filter(id => available.has(id)))
       })
       .finally(() => setLoadingProviders(false))
-  }, [mediaMode, phase])
+  }, [mediaMode])
 
   // Keep library ID ref current
   useEffect(() => {
