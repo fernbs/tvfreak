@@ -37,7 +37,13 @@ const GRID_TABS: Tab[] = ['home', 'search', 'library']
 export default function App() {
   const [tab, setTab] = useState<Tab>('home')
   const [showSettings, setShowSettings] = useState(false)
-  const [viewMode, setViewMode] = useViewMode()
+  const [homeViewMode, setHomeViewMode] = useViewMode('tvfreak-view-mode-home')
+  const [libraryViewMode, setLibraryViewMode] = useViewMode('tvfreak-view-mode-library')
+  const [searchViewMode, setSearchViewMode] = useViewMode('tvfreak-view-mode-search')
+  const viewModeMap = { home: homeViewMode, library: libraryViewMode, search: searchViewMode } as const
+  const setViewModeMap = { home: setHomeViewMode, library: setLibraryViewMode, search: setSearchViewMode } as const
+  const viewMode = viewModeMap[tab as keyof typeof viewModeMap] ?? homeViewMode
+  const setViewMode = setViewModeMap[tab as keyof typeof setViewModeMap] ?? setHomeViewMode
   const [allSeries, setAllSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(true)
   const [workerError, setWorkerError] = useState(false)

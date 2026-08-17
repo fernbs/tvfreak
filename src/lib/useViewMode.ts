@@ -2,17 +2,15 @@ import { useState } from 'react'
 
 export type ViewMode = 'big' | 'small' | 'list'
 
-const STORAGE_KEY = 'tvfreak-view-mode'
-
-export function useViewMode() {
+export function useViewMode(storageKey: string) {
   const [mode, setMode] = useState<ViewMode>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
+    const saved = localStorage.getItem(storageKey)
     return saved === 'big' || saved === 'small' || saved === 'list' ? saved : 'small'
   })
 
   function persist(m: ViewMode) {
     setMode(m)
-    localStorage.setItem(STORAGE_KEY, m)
+    localStorage.setItem(storageKey, m)
   }
 
   return [mode, persist] as const
