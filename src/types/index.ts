@@ -85,33 +85,11 @@ export interface TmdbShowDetail {
 export const STATUS_CONFIG: Record<SeriesStatus, {
   label: string
   color: string
-  bgClass: string
-  textClass: string
 }> = {
-  watching: {
-    label: 'Watching',
-    color: '#5AC8FA',
-    bgClass: 'bg-cyan-400/12',
-    textClass: 'text-cyan-300',
-  },
-  completed: {
-    label: 'Completed',
-    color: '#30D158',
-    bgClass: 'bg-green-400/12',
-    textClass: 'text-green-400',
-  },
-  dropped: {
-    label: 'Dropped',
-    color: '#FF375F',
-    bgClass: 'bg-rose-500/12',
-    textClass: 'text-rose-400',
-  },
-  plantowatch: {
-    label: 'Pending',
-    color: '#FFD60A',
-    bgClass: 'bg-yellow-400/12',
-    textClass: 'text-yellow-300',
-  },
+  watching:    { label: 'Watching',  color: '#5AC8FA' },
+  completed:   { label: 'Completed', color: '#30D158' },
+  dropped:     { label: 'Dropped',   color: '#FF375F' },
+  plantowatch: { label: 'Pending',   color: '#FFD60A' },
 }
 
 export type MovieStatus = 'completed' | 'watching' | 'plantowatch' | 'dropped'

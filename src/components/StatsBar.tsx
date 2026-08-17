@@ -36,14 +36,14 @@ export function StatsBar({ series, activeFilter, onFilter }: Props) {
           <button
             key={status}
             onClick={() => onFilter(status)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              activeFilter === status
-                ? `${config.bgClass} ${config.textClass}`
-                : 'text-white/50 hover:text-white hover:bg-white/5'
-            }`}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+            style={activeFilter === status
+              ? { color: config.color, backgroundColor: config.color + '22' }
+              : { color: 'rgba(255,255,255,0.5)' }
+            }
           >
             {config.label}
-            <span className="ml-1.5 text-white/40 text-xs">{counts[status]}</span>
+            <span className="ml-1.5 opacity-50 text-xs">{counts[status]}</span>
           </button>
         )
       )}

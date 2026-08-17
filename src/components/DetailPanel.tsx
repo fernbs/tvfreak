@@ -263,7 +263,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const isComplete = series?.status === 'completed' && !nextEp
   const hasUpcoming = !!nextEp
   const inLibrary = !!series?.id
-  const displayImdbRating = series?.imdbRating ?? localImdbRating
+  const displayImdbRating = series?.imdbRating ?? localImdbRating ?? ((detail?.vote_average ?? 0) > 0 ? detail!.vote_average!.toFixed(1) : null)
 
   const startYear = series?.firstAirDate?.slice(0, 4)
   const endYear = series?.lastAirDate?.slice(0, 4)
@@ -455,7 +455,10 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                   {/* Status / Add to library */}
                   {inLibrary ? (
                     <div className="mt-3 flex flex-wrap gap-1.5 items-center">
-                      <div className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${STATUS_CONFIG[series.status].bgClass} ${STATUS_CONFIG[series.status].textClass}`}>
+                      <div
+                        className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
+                        style={{ color: STATUS_CONFIG[series.status].color, backgroundColor: STATUS_CONFIG[series.status].color + '22' }}
+                      >
                         {STATUS_CONFIG[series.status].label}
                       </div>
                       {nextEpDate && (
@@ -658,9 +661,10 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                         onClick={async () => { await changeStatus(status); setMoreModal(false) }}
                         className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
                           series.status === status
-                            ? `${cfg.bgClass} ${cfg.textClass} border-transparent`
+                            ? 'border-transparent'
                             : 'border-white/8 text-[#48484A] hover:border-white/18 hover:text-[#8E8E93]'
                         }`}
+                        style={series.status === status ? { color: cfg.color, backgroundColor: cfg.color + '22' } : {}}
                       >
                         {cfg.label}
                       </button>

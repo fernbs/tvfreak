@@ -582,7 +582,7 @@ export default function App() {
           />
         )}
         {tab === 'stats' && (
-          <StatsTab allSeries={allSeries} />
+          <StatsTab allSeries={allSeries} allMovies={allMovies} />
         )}
         {tab === 'discover' && (
           <DiscoverTab

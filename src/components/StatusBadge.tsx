@@ -10,7 +10,8 @@ export function StatusBadge({ status, className = '' }: Props) {
   const config = STATUS_CONFIG[status]
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.bgClass} ${config.textClass} ${className}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${className}`}
+      style={{ color: config.color, backgroundColor: config.color + '22' }}
     >
       {config.label}
     </span>
