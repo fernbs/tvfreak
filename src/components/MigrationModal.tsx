@@ -124,7 +124,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/6">
-          <Wand2 className="w-4 h-4 text-[#BF5AF2] shrink-0" />
+          <Wand2 className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
           <h2 className="text-sm font-semibold text-[#F5F5F7] flex-1">Restore watch history from colours</h2>
           {step !== 'running' && (
             <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#1C1C1E] border border-white/8 text-[#8E8E93] transition-colors">
@@ -163,7 +163,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
               </p>
               <button
                 onClick={runMigration}
-                className="w-full py-2.5 bg-[#BF5AF2] hover:bg-[#A63FD9] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="w-full py-2.5 bg-[var(--color-accent)] hover:bg-[#A63FD9] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Start migration
               </button>
@@ -178,7 +178,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
               </div>
               <div className="w-full h-[3px] bg-white/7 rounded-full overflow-hidden mb-4">
                 <div
-                  className="h-full bg-[#BF5AF2] rounded-full transition-all duration-300"
+                  className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300"
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -212,7 +212,7 @@ export function MigrationModal({ onClose, onDone }: Props) {
               <p className="text-xs text-[#48484A] mb-5">{errorMsg}</p>
               <button
                 onClick={() => setStep('confirm')}
-                className="px-4 py-2 bg-[#BF5AF2] hover:bg-[#A63FD9] text-white text-sm font-medium rounded-2xl transition-colors"
+                className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[#A63FD9] text-white text-sm font-medium rounded-2xl transition-colors"
               >
                 Try again
               </button>

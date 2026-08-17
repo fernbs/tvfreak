@@ -367,7 +367,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     const inLib = libraryIds.has(r.id)
     if (inLib) {
       return (
-        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#BF5AF2]/80">
+        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[var(--color-accent)]/80">
           <span className="text-[9px] text-white font-bold">✓</span>
         </div>
       )
@@ -376,7 +376,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
       <button
         onClick={e => { e.stopPropagation(); handleAdd(r) }}
         disabled={addingId === r.id}
-        className="absolute bottom-1.5 right-1.5 w-7 h-7 flex items-center justify-center rounded-lg bg-black/80 text-[#BF5AF2] border border-white/15 active:bg-[rgba(191,90,242,0.5)] transition-colors disabled:opacity-50"
+        className="absolute bottom-1.5 right-1.5 w-7 h-7 flex items-center justify-center rounded-lg bg-black/80 text-[var(--color-accent)] border border-white/15 active:bg-[rgba(var(--accent-rgb),0.5)] transition-colors disabled:opacity-50"
       >
         {addingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
       </button>
@@ -418,7 +418,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               onChange={e => setQuery(e.target.value)}
               placeholder={mediaMode === 'tv' ? 'Search TV shows...' : 'Search films...'}
               style={{ fontSize: 15 }}
-              className="flex-1 bg-transparent text-[#F5F5F7] placeholder:text-[#48484A] outline-none py-[5px] min-w-0"
+              className="flex-1 bg-transparent text-[#F5F5F7] placeholder:text-[#48484A] outline-none py-[3px] min-w-0"
             />
             {query && (
               <button onClick={() => setQuery('')} className="shrink-0 p-1">
@@ -432,13 +432,13 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
             onClick={() => setShowFilterSheet(true)}
             className={`relative shrink-0 w-8 h-8 flex items-center justify-center rounded-xl border transition-colors ${
               activeFilterCount > 0
-                ? 'bg-[rgba(191,90,242,0.12)] border-[rgba(191,90,242,0.35)] text-[#BF5AF2]'
+                ? 'bg-[rgba(var(--accent-rgb),0.12)] border-[rgba(var(--accent-rgb),0.35)] text-[var(--color-accent)]'
                 : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             {activeFilterCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#BF5AF2] text-white text-[9px] font-bold min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 bg-[var(--color-accent)] text-white text-[9px] font-bold min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
@@ -452,7 +452,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
         {/* Section label (filter-only browse) */}
         {sectionLabel && (
           <div className="flex items-center gap-2 px-4 pt-3 pb-1">
-            <SectionIcon className="w-4.5 h-4.5 text-[#BF5AF2] shrink-0" />
+            <SectionIcon className="w-4.5 h-4.5 text-[var(--color-accent)] shrink-0" />
             <h2 className="text-sm font-bold text-[#F5F5F7] flex-1 truncate">{sectionLabel}</h2>
             {isLoading && <Loader2 className="w-3.5 h-3.5 text-[#48484A] animate-spin shrink-0" />}
           </div>
@@ -495,7 +495,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-xs text-[#48484A]">{r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}</p>
                       {(r.vote_average ?? 0) > 0 && (
-                        <span className="text-xs"><span className="text-[#BF5AF2]">★</span><span className="text-[#8E8E93]"> {r.vote_average!.toFixed(1)}</span></span>
+                        <span className="text-xs"><span className="text-[var(--color-accent)]">★</span><span className="text-[#8E8E93]"> {r.vote_average!.toFixed(1)}</span></span>
                       )}
                     </div>
                   </div>
@@ -526,7 +526,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                   )}
                   {(r.vote_average ?? 0) > 0 && (
                     <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
-                      <span className="text-[10px] font-medium leading-none"><span className="text-[#BF5AF2]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                      <span className="text-[10px] font-medium leading-none"><span className="text-[var(--color-accent)]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
                     </div>
                   )}
                   <AddButton r={r} />
@@ -557,7 +557,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               <span className="text-sm font-semibold text-[#F5F5F7]">Filters</span>
               <div className="flex items-center gap-3">
                 {activeFilterCount > 0 && (
-                  <button onClick={clearFilters} className="text-xs text-[#BF5AF2] font-medium">
+                  <button onClick={clearFilters} className="text-xs text-[var(--color-accent)] font-medium">
                     Clear all
                   </button>
                 )}
@@ -584,7 +584,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                     key={o.value}
                     onClick={() => setSortBy(o.value)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                      sortBy === o.value ? 'bg-[#BF5AF2] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                      sortBy === o.value ? 'bg-[var(--color-accent)] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
                     }`}
                   >
                     {o.label}
@@ -606,7 +606,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                       onClick={() => toggleGenre(g.id)}
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border ${
                         isIncluded
-                          ? 'bg-[rgba(191,90,242,0.12)] border-[rgba(191,90,242,0.4)] text-[#BF5AF2]'
+                          ? 'bg-[rgba(var(--accent-rgb),0.12)] border-[rgba(var(--accent-rgb),0.4)] text-[var(--color-accent)]'
                           : isExcluded
                           ? 'bg-[rgba(251,113,133,0.12)] border-[rgba(251,113,133,0.4)] text-[#FB7185]'
                           : 'bg-[#2C2C2E] border-transparent text-[#8E8E93] active:bg-[#383838]'
@@ -628,7 +628,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                   value={yearFilter}
                   onChange={e => setYearFilter(e.target.value)}
                   className={`appearance-none bg-[#2C2C2E] border rounded-lg pl-3 pr-7 py-2 text-xs font-medium outline-none transition-colors ${
-                    yearFilter ? 'border-[rgba(191,90,242,0.4)] text-[#BF5AF2]' : 'border-white/8 text-[#8E8E93]'
+                    yearFilter ? 'border-[rgba(var(--accent-rgb),0.4)] text-[var(--color-accent)]' : 'border-white/8 text-[#8E8E93]'
                   }`}
                 >
                   <option value="" className="bg-[#111111]">Any year</option>
@@ -648,7 +648,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               </div>
               <button
                 onClick={() => setHideInLibrary(prev => !prev)}
-                className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${hideInLibrary ? 'bg-[#BF5AF2]' : 'bg-[#2C2C2E]'}`}
+                className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${hideInLibrary ? 'bg-[var(--color-accent)]' : 'bg-[#2C2C2E]'}`}
               >
                 <span className={`absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white shadow transition-all ${hideInLibrary ? 'left-[22px]' : 'left-[3px]'}`} />
               </button>
@@ -660,7 +660,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                 <div className="flex items-center justify-between mb-2.5">
                   <p className="text-[11px] font-semibold text-[#48484A] uppercase tracking-wide">Platforms</p>
                   {selectedProviders.length > 0 && (
-                    <button onClick={() => setSelectedProviders([])} className="text-[11px] text-[#BF5AF2] font-medium">
+                    <button onClick={() => setSelectedProviders([])} className="text-[11px] text-[var(--color-accent)] font-medium">
                       Clear
                     </button>
                   )}
@@ -674,7 +674,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                         onClick={() => toggleProvider(p.provider_id)}
                         title={p.provider_name}
                         className={`w-9 h-9 rounded-xl overflow-hidden border-2 transition-all active:opacity-70 ${
-                          isSelected ? 'border-[#BF5AF2]' : 'border-transparent opacity-40'
+                          isSelected ? 'border-[var(--color-accent)]' : 'border-transparent opacity-40'
                         }`}
                       >
                         <img src={`${IMG_BASE}/original${p.logo_path}`} alt={p.provider_name} className="w-full h-full object-cover" />

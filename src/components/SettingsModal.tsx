@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { X, ChevronDown } from 'lucide-react'
-import { getCountry, setCountry, COUNTRIES, getDefaultProviders, setDefaultProviders } from '../lib/settings'
+import { getCountry, setCountry, COUNTRIES, getDefaultProviders, setDefaultProviders, ACCENT_COLORS, getAccentColor, applyAccentColor } from '../lib/settings'
 import { getStreamingProviders, IMG_BASE } from '../lib/tmdb'
 import type { WatchProvider } from '../types'
 
@@ -13,6 +13,7 @@ export function SettingsModal({ onClose }: Props) {
   const [country, setLocalCountry] = useState(getCountry)
   const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
   const [defaultProviderIds, setLocalDefaultProviders] = useState<number[]>(getDefaultProviders)
+  const [accentHex, setAccentHex] = useState(() => getAccentColor().hex)
 
   useEffect(() => {
     getStreamingProviders(country).then(setAvailableProviders)
@@ -70,6 +71,32 @@ export function SettingsModal({ onClose }: Props) {
 
         {/* Content */}
         <div className="px-5 pb-4 space-y-5">
+
+          {/* Accent colour */}
+          <div>
+            <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-3">Accent colour</p>
+            <div className="flex gap-3 flex-wrap">
+              {ACCENT_COLORS.map(color => (
+                <button
+                  key={color.hex}
+                  onClick={() => {
+                    applyAccentColor(color)
+                    setAccentHex(color.hex)
+                  }}
+                  className="w-8 h-8 rounded-full transition-all"
+                  style={{
+                    backgroundColor: color.hex,
+                    boxShadow: accentHex === color.hex
+                      ? `0 0 0 2px #111111, 0 0 0 4px ${color.hex}`
+                      : 'none',
+                    transform: accentHex === color.hex ? 'scale(1.15)' : 'scale(1)',
+                  }}
+                  title={color.name}
+                />
+              ))}
+            </div>
+          </div>
+
           <div>
             <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-1.5">Your country</p>
             <p className="text-xs text-[#8E8E93] mb-3">Used to show streaming platforms available in your region.</p>
@@ -103,7 +130,7 @@ export function SettingsModal({ onClose }: Props) {
                       onClick={() => toggleDefaultProvider(p.provider_id)}
                       title={p.provider_name}
                       className={`w-9 h-9 rounded-xl overflow-hidden border-2 transition-all ${
-                        isSelected ? 'border-[#BF5AF2]' : 'border-transparent opacity-40'
+                        isSelected ? 'border-[var(--color-accent)]' : 'border-transparent opacity-40'
                       }`}
                     >
                       <img src={`${IMG_BASE}/original${p.logo_path}`} alt={p.provider_name} className="w-full h-full object-cover" />

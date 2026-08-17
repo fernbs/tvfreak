@@ -200,14 +200,14 @@ export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
                           onClick={() => !isPast && handleDayClick(day)}
                           disabled={isPast && !hasEpisode}
                           className="flex flex-col items-center py-1 rounded-lg transition-colors"
-                          style={{ backgroundColor: isSelected ? 'rgba(191,90,242,0.18)' : undefined }}
+                          style={{ backgroundColor: isSelected ? 'rgba(var(--accent-rgb),0.18)' : undefined }}
                         >
                           <span
                             className={`text-sm leading-none font-medium ${
                               isSelected
-                                ? 'text-[#BF5AF2]'
+                                ? 'text-[var(--color-accent)]'
                                 : isToday
-                                  ? 'text-[#BF5AF2]'
+                                  ? 'text-[var(--color-accent)]'
                                   : isPast
                                     ? 'text-[#2C2C2E]'
                                     : 'text-[#8E8E93]'
@@ -217,7 +217,7 @@ export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
                             {day}
                           </span>
                           <div className="h-1.5 mt-0.5 flex items-center justify-center">
-                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[#BF5AF2]" />}
+                            {hasEpisode && <div className="w-1 h-1 rounded-full bg-[var(--color-accent)]" />}
                           </div>
                         </button>
                       )
@@ -266,7 +266,7 @@ export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
                       <p className="text-sm font-medium text-[#F5F5F7] truncate">{s.title}</p>
                     </div>
                     <div className="shrink-0">
-                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(191,90,242,0.12)] text-[#BF5AF2] leading-tight">
+                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(var(--accent-rgb),0.12)] text-[var(--color-accent)] leading-tight">
                         {formatAirDate(date)}
                       </span>
                     </div>
@@ -298,7 +298,7 @@ export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
                             <span className="text-[10px] text-[#48484A] text-center">{s.title}</span>
                           </div>
                         )}
-                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#BF5AF2]/90 text-white leading-tight backdrop-blur-sm">
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[var(--color-accent)]/90 text-white leading-tight backdrop-blur-sm">
                           {formatAirDate(date)}
                         </div>
                       </div>

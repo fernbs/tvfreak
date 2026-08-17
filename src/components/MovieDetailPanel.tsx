@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { X, Loader2, Plus, Play } from 'lucide-react'
 import { getMovieDetails, getMovieRecommendations, getMovieWatchProviders, getMovieExternalIds, getRatings, getTrailerKey, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getCountry } from '../lib/settings'
@@ -13,6 +13,8 @@ interface Props {
   onClose: () => void
   onUpdated: () => void
   onSelect: (m: Movie) => void
+  onPrev?: () => void
+  onNext?: () => void
 }
 
 function recToMovie(r: TmdbSearchResult): Movie {
@@ -38,7 +40,11 @@ function formatRuntime(mins: number | null): string {
   return h > 0 ? `${h}h ${m > 0 ? `${m}m` : ''}`.trim() : `${m}m`
 }
 
-export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props) {
+export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect, onPrev, onNext }: Props) {
+  const [minimized, setMinimized] = useState(false)
+  const dragControls = useDragControls()
+  const swipeStartX = useRef(0)
+  const swipeStartY = useRef(0)
   const [detail, setDetail] = useState<TmdbMovieDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
@@ -56,6 +62,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
   const isInLibrary = Boolean(movie?.id)
 
   useEffect(() => {
+    setMinimized(false)
     if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); setTrailerKey(null); setImdbId(null); setRtRating(null); return }
     setLoadingDetail(true)
     setDetail(null)
@@ -154,7 +161,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
             key="movie-backdrop"
             className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: minimized ? 0 : 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
@@ -162,15 +169,33 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
           {/* Panel */}
           <motion.div
             key="movie-panel"
+            drag="y"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0.05, bottom: 0.5 }}
+            onDragEnd={(_, info) => {
+              if (minimized) {
+                if (info.velocity.y < -300 || info.offset.y < -40) setMinimized(false)
+                else if (info.velocity.y > 400 || info.offset.y > 80) onClose()
+              } else {
+                if (info.velocity.y > 600 || info.offset.y > 200) onClose()
+                else if (info.velocity.y > 200 || info.offset.y > 60) setMinimized(true)
+              }
+            }}
             className="fixed inset-x-0 bottom-0 z-50 flex flex-col bg-[#111111] rounded-t-3xl overflow-hidden"
             style={{ maxHeight: '94dvh' }}
             initial={{ y: '100%' }}
-            animate={{ y: 0 }}
+            animate={{ y: minimized ? 'calc(100% - 80px)' : 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
           >
             {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 shrink-0">
+            <div
+              className="flex justify-center pt-3 pb-1 shrink-0 touch-none"
+              onPointerDown={(e) => dragControls.start(e)}
+              onClick={() => { if (minimized) setMinimized(false) }}
+            >
               <div className="w-10 h-[3px] rounded-full bg-white/20" />
             </div>
 
@@ -183,7 +208,23 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
             </button>
 
             {/* Scrollable body */}
-            <div ref={bodyRef} className="flex-1 overflow-y-auto overscroll-contain">
+            <div
+              ref={bodyRef}
+              className="flex-1 overflow-y-auto overscroll-contain"
+              onTouchStart={(e) => {
+                swipeStartX.current = e.touches[0].clientX
+                swipeStartY.current = e.touches[0].clientY
+              }}
+              onTouchEnd={(e) => {
+                if (minimized) return
+                const dx = e.changedTouches[0].clientX - swipeStartX.current
+                const dy = e.changedTouches[0].clientY - swipeStartY.current
+                if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                  if (dx > 0) onPrev?.()
+                  else onNext?.()
+                }
+              }}
+            >
 
               {/* Hero — poster + title */}
               <div className="px-4 pt-2 pb-4">
@@ -207,7 +248,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           onClick={e => { if (!imdbId) e.preventDefault() }}
                           className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
-                          <span className="text-[#BF5AF2]">★</span>
+                          <span className="text-[var(--color-accent)]">★</span>
                           <span className="text-white font-medium">{displayRating}</span>
                         </a>
                       )}
@@ -264,7 +305,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                   <button
                     onClick={handleAdd}
                     disabled={adding}
-                    className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#BF5AF2] text-white text-sm font-semibold active:opacity-80 transition-opacity disabled:opacity-50"
+                    className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--color-accent)] text-white text-sm font-semibold active:opacity-80 transition-opacity disabled:opacity-50"
                   >
                     {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Add to Watchlist
@@ -288,7 +329,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/6 border border-white/10 text-sm font-semibold text-[#F5F5F7] active:opacity-70 transition-opacity"
                   >
-                    <Play className="w-4 h-4 text-[#BF5AF2]" />
+                    <Play className="w-4 h-4 text-[var(--color-accent)]" />
                     Watch Trailer
                   </a>
                 </div>
@@ -329,7 +370,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           )}
                           {(r.vote_average ?? 0) > 0 && (
                             <div className="absolute top-1 left-1 px-1 rounded bg-black/65">
-                              <span className="text-[9px]"><span className="text-[#BF5AF2]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                              <span className="text-[9px]"><span className="text-[var(--color-accent)]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
                             </div>
                           )}
                         </div>

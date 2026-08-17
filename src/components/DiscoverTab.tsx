@@ -129,7 +129,7 @@ function SwipeCard({ card, isTop, stackIndex, inCinema, onDecide, onReady }: Swi
           )}
           {(card.vote_average ?? 0) > 0 && (
             <span className="text-sm font-medium">
-              <span className="text-[#BF5AF2]">★</span>
+              <span className="text-[var(--color-accent)]">★</span>
               <span className="text-white"> {card.vote_average!.toFixed(1)}</span>
             </span>
           )}
@@ -397,7 +397,7 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
 
   function chipClass(id: number): string {
     const state = genreStates[id] ?? 'neutral'
-    if (state === 'include') return 'bg-[#BF5AF2] text-white border border-[#BF5AF2]'
+    if (state === 'include') return 'bg-[var(--color-accent)] text-white border border-[var(--color-accent)]'
     if (state === 'exclude') return 'bg-rose-500/15 text-rose-400 border border-rose-500/35'
     return 'bg-[#1C1C1E] text-[#8E8E93] border border-white/8 active:bg-[#2C2C2E]'
   }
@@ -461,7 +461,7 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
                   onClick={() => setMinRating(opt.value)}
                   className={`py-1.5 px-3.5 rounded-full text-[11px] font-semibold transition-colors border ${
                     minRating === opt.value
-                      ? 'bg-[#BF5AF2] text-white border-[#BF5AF2]'
+                      ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
                       : 'bg-[#1C1C1E] text-[#8E8E93] border-white/8 active:bg-[#2C2C2E]'
                   }`}
                 >
@@ -495,7 +495,7 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
             </div>
             <button
               onClick={() => setNewOnly(v => !v)}
-              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${newOnly ? 'bg-[#BF5AF2]' : 'bg-[#2C2C2E]'}`}
+              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${newOnly ? 'bg-[var(--color-accent)]' : 'bg-[#2C2C2E]'}`}
             >
               <span className={`absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white shadow transition-all ${newOnly ? 'left-[22px]' : 'left-[3px]'}`} />
             </button>
@@ -518,7 +518,7 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
                       onClick={() => toggleProvider(p.provider_id)}
                       title={p.provider_name}
                       className={`w-9 h-9 rounded-xl overflow-hidden border-2 transition-all ${
-                        isSelected ? 'border-[#BF5AF2]' : 'border-transparent opacity-40'
+                        isSelected ? 'border-[var(--color-accent)]' : 'border-transparent opacity-40'
                       }`}
                     >
                       <img src={`${IMG_BASE}/original${p.logo_path}`} alt={p.provider_name} className="w-full h-full object-cover" />
@@ -540,8 +540,8 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
             disabled={includedGenres.length === 0}
             className="w-full py-4 rounded-2xl text-base font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-25"
             style={{
-              background: 'linear-gradient(180deg, #BF5AF2 0%, #A63FD9 100%)',
-              boxShadow: includedGenres.length > 0 ? '0 4px 24px rgba(191,90,242,0.4)' : 'none',
+              background: 'linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%)',
+              boxShadow: includedGenres.length > 0 ? '0 4px 24px rgba(var(--accent-rgb),0.4)' : 'none',
             }}
           >
             <Sparkles className="w-4 h-4" />
@@ -578,7 +578,7 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
             <p className="text-[#8E8E93] text-sm">You've seen everything in this filter mix!</p>
             <button
               onClick={() => setPhase('setup')}
-              className="px-6 py-3 bg-[#BF5AF2] rounded-2xl text-white text-sm font-semibold"
+              className="px-6 py-3 bg-[var(--color-accent)] rounded-2xl text-white text-sm font-semibold"
             >
               Adjust filters
             </button>

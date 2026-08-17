@@ -34,6 +34,10 @@
   --font-sans: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
 }
 
+:root {
+  --accent-rgb: 191, 90, 242;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }

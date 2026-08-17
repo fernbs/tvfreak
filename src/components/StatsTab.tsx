@@ -13,7 +13,7 @@ function heatColor(count: number): string {
   if (count === 0) return '#1C1C1E'
   if (count <= 2) return '#3D1472'
   if (count <= 5) return '#7B2EBC'
-  return '#BF5AF2'
+  return 'var(--color-accent)'
 }
 
 function buildWeeks(activityByDate: { date: string; count: number }[]) {
@@ -131,7 +131,7 @@ export function StatsTab({ allSeries }: Props) {
                 { value: streak.longest, label: 'Longest streak', unit: streak.longest === 1 ? 'day' : 'days' },
               ].map(({ value, label, unit }) => (
                 <div key={label} className="bg-[#111111] rounded-2xl p-4 border border-white/7">
-                  <p className="text-2xl font-bold text-[#BF5AF2] tabular-nums leading-none">
+                  <p className="text-2xl font-bold text-[var(--color-accent)] tabular-nums leading-none">
                     {value} <span className="text-sm font-normal text-[#48484A]">{unit}</span>
                   </p>
                   <p className="text-[10px] text-[#48484A] mt-1.5 uppercase tracking-wider font-medium">{label}</p>
@@ -200,7 +200,7 @@ export function StatsTab({ allSeries }: Props) {
                 </div>
                 <div className="flex items-center gap-1.5 mt-3 justify-end">
                   <span className="text-[9px] text-[#48484A]">Less</span>
-                  {['#1C1C1E', '#3D1472', '#7B2EBC', '#BF5AF2'].map(c => (
+                  {['#1C1C1E', '#3D1472', '#7B2EBC', 'var(--color-accent)'].map(c => (
                     <div key={c} style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: c }} />
                   ))}
                   <span className="text-[9px] text-[#48484A]">More</span>
@@ -230,7 +230,7 @@ export function StatsTab({ allSeries }: Props) {
                         </div>
                         <div className="h-[3px] bg-white/7 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#BF5AF2] rounded-full transition-all duration-500"
+                            className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

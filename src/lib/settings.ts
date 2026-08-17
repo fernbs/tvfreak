@@ -16,6 +16,39 @@ export function setDefaultProviders(ids: number[]): void {
   localStorage.setItem('tvfreak-default-providers', JSON.stringify(ids))
 }
 
+export interface AccentColor {
+  name: string
+  hex: string
+  rgb: string
+  hover: string
+}
+
+export const ACCENT_COLORS: AccentColor[] = [
+  { name: 'Purple', hex: '#BF5AF2', rgb: '191, 90, 242',  hover: '#A63FD9' },
+  { name: 'Blue',   hex: '#0A84FF', rgb: '10, 132, 255',  hover: '#0071E3' },
+  { name: 'Cyan',   hex: '#5AC8FA', rgb: '90, 200, 250',  hover: '#32AEE4' },
+  { name: 'Green',  hex: '#30D158', rgb: '48, 209, 88',   hover: '#25A244' },
+  { name: 'Yellow', hex: '#FFD60A', rgb: '255, 214, 10',  hover: '#E6BE00' },
+  { name: 'Orange', hex: '#FF9F0A', rgb: '255, 159, 10',  hover: '#E68900' },
+  { name: 'Pink',   hex: '#FF375F', rgb: '255, 55, 95',   hover: '#E0274B' },
+  { name: 'Indigo', hex: '#5E5CE6', rgb: '94, 92, 230',   hover: '#4644C9' },
+]
+
+export function getAccentColor(): AccentColor {
+  const saved = localStorage.getItem('tvfreak-accent')
+  return ACCENT_COLORS.find(c => c.hex === saved) ?? ACCENT_COLORS[0]
+}
+
+export function applyAccentColor(color: AccentColor): void {
+  const r = document.documentElement
+  r.style.setProperty('--color-accent', color.hex)
+  r.style.setProperty('--color-accent-fill', color.hex)
+  r.style.setProperty('--color-accent-hover', color.hover)
+  r.style.setProperty('--color-accent-subtle', `rgba(${color.rgb}, 0.15)`)
+  r.style.setProperty('--accent-rgb', color.rgb)
+  localStorage.setItem('tvfreak-accent', color.hex)
+}
+
 export const COUNTRIES: { code: string; name: string }[] = [
   { code: 'AR', name: 'Argentina' },
   { code: 'AU', name: 'Australia' },

@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { Toaster } from 'sonner'
 import './index.css'
 import App from './App.tsx'
+import { getAccentColor, applyAccentColor } from './lib/settings'
+
+applyAccentColor(getAccentColor())
 
 const isStandalone =
   window.matchMedia('(display-mode: standalone)').matches ||

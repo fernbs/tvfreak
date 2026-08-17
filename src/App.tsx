@@ -464,6 +464,14 @@ export default function App() {
   function pushSeries(s: Series) { setSeriesStack(prev => [...prev, s]) }
   function popSeries() { setSeriesStack(prev => prev.slice(0, -1)) }
 
+  const seriesNavIndex = selected ? allSeries.findIndex(s => s.tmdbId === selected.tmdbId) : -1
+  function handleSeriesPrev() { if (seriesNavIndex > 0) setSeriesStack([allSeries[seriesNavIndex - 1]]) }
+  function handleSeriesNext() { if (seriesNavIndex < allSeries.length - 1) setSeriesStack([allSeries[seriesNavIndex + 1]]) }
+
+  const movieNavIndex = selectedMovie ? allMovies.findIndex(m => m.tmdbId === selectedMovie.tmdbId) : -1
+  function handleMoviePrev() { if (movieNavIndex > 0) setSelectedMovie(allMovies[movieNavIndex - 1]) }
+  function handleMovieNext() { if (movieNavIndex < allMovies.length - 1) setSelectedMovie(allMovies[movieNavIndex + 1]) }
+
   async function handleSeriesUpdated() {
     const data = await getAllSeries()
     setAllSeries(data)
@@ -603,6 +611,8 @@ export default function App() {
         onClose={popSeries}
         onUpdated={handleSeriesUpdated}
         onSelect={pushSeries}
+        onPrev={seriesNavIndex > 0 ? handleSeriesPrev : undefined}
+        onNext={seriesNavIndex < allSeries.length - 1 ? handleSeriesNext : undefined}
       />
 
       <MovieDetailPanel
@@ -610,6 +620,8 @@ export default function App() {
         onClose={() => setSelectedMovie(null)}
         onUpdated={handleMovieUpdated}
         onSelect={setSelectedMovie}
+        onPrev={movieNavIndex > 0 ? handleMoviePrev : undefined}
+        onNext={movieNavIndex < allMovies.length - 1 ? handleMovieNext : undefined}
       />
 
       {importing && (

@@ -116,7 +116,7 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
                 </div>
               </div>
               {m.imdbRating && (
-                <span className="text-xs shrink-0"><span className="text-[#BF5AF2]">★</span><span className="text-white"> {m.imdbRating}</span></span>
+                <span className="text-xs shrink-0"><span className="text-[var(--color-accent)]">★</span><span className="text-white"> {m.imdbRating}</span></span>
               )}
             </button>
           )
@@ -153,7 +153,7 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
             />
             {m.imdbRating && (
               <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/85 leading-tight">
-                <span className="text-[#BF5AF2]">★</span>
+                <span className="text-[var(--color-accent)]">★</span>
                 <span className="text-white"> {m.imdbRating}</span>
               </div>
             )}
@@ -236,11 +236,11 @@ export function LibraryTab({
                   <span className={`text-sm font-semibold transition-colors ${isActive ? 'text-[#F5F5F7]' : 'text-[#48484A]'}`}>
                     {label}
                   </span>
-                  <span className={`text-[11px] font-medium transition-colors ${isActive ? 'text-[#BF5AF2]' : 'text-[#48484A]'}`}>
+                  <span className={`text-[11px] font-medium transition-colors ${isActive ? 'text-[var(--color-accent)]' : 'text-[#48484A]'}`}>
                     {count}
                   </span>
                   {isActive && (
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-10 bg-[#BF5AF2] rounded-full" />
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-10 bg-[var(--color-accent)] rounded-full" />
                   )}
                 </button>
               )
@@ -250,7 +250,7 @@ export function LibraryTab({
             {duplicates.length > 0 && (
               <button
                 onClick={onShowDuplicates}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-[rgba(191,90,242,0.08)] text-[#BF5AF2]/80 border border-[rgba(191,90,242,0.15)] active:bg-[rgba(191,90,242,0.15)] transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-[rgba(var(--accent-rgb),0.08)] text-[var(--color-accent)]/80 border border-[rgba(var(--accent-rgb),0.15)] active:bg-[rgba(var(--accent-rgb),0.15)] transition-colors"
               >
                 <GitMerge className="w-3 h-3" />
                 {duplicates.length}
@@ -259,7 +259,7 @@ export function LibraryTab({
             {!migrationDone && (
               <button
                 onClick={onShowMigration}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-[rgba(191,90,242,0.1)] text-[#BF5AF2] border border-[rgba(191,90,242,0.2)] active:bg-[rgba(191,90,242,0.18)] transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-[rgba(var(--accent-rgb),0.1)] text-[var(--color-accent)] border border-[rgba(var(--accent-rgb),0.2)] active:bg-[rgba(var(--accent-rgb),0.18)] transition-colors"
               >
                 <Wand2 className="w-3 h-3" />
                 Restore
@@ -290,14 +290,14 @@ export function LibraryTab({
             onClick={() => setShowFilterSheet(true)}
             className={`ml-auto relative flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
               activeFilterCount > 0
-                ? 'bg-[rgba(191,90,242,0.08)] border-[rgba(191,90,242,0.25)] text-[#BF5AF2]'
+                ? 'bg-[rgba(var(--accent-rgb),0.08)] border-[rgba(var(--accent-rgb),0.25)] text-[var(--color-accent)]'
                 : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
             }`}
           >
             <SlidersHorizontal className="w-3 h-3 shrink-0" />
             <span>Filter</span>
             {activeFilterCount > 0 && (
-              <span className="bg-[#BF5AF2] text-white text-[9px] font-bold min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center leading-none">
+              <span className="bg-[var(--color-accent)] text-white text-[9px] font-bold min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center leading-none">
                 {activeFilterCount}
               </span>
             )}
@@ -331,7 +331,7 @@ export function LibraryTab({
               <span className="text-sm font-semibold text-[#F5F5F7]">Filter</span>
               <div className="flex items-center gap-3">
                 {activeFilterCount > 0 && (
-                  <button onClick={clearFilters} className="text-xs text-[#BF5AF2] font-medium">
+                  <button onClick={clearFilters} className="text-xs text-[var(--color-accent)] font-medium">
                     Clear all
                   </button>
                 )}
@@ -355,7 +355,7 @@ export function LibraryTab({
                       key={f.value}
                       onClick={() => mediaMode === 'tv' ? setFilter(f.value as SeriesStatus | 'all') : setMovieFilter(f.value as MovieStatus | 'all')}
                       className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                        isActive ? 'bg-[#BF5AF2] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                        isActive ? 'bg-[var(--color-accent)] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
                       }`}
                     >
                       {f.label}
@@ -372,7 +372,7 @@ export function LibraryTab({
                 <button
                   onClick={() => setGenreFilter(null)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                    genreFilter === null ? 'bg-[#BF5AF2] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                    genreFilter === null ? 'bg-[var(--color-accent)] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
                   }`}
                 >
                   Any
@@ -382,7 +382,7 @@ export function LibraryTab({
                     key={g.id}
                     onClick={() => setGenreFilter(prev => prev === g.id ? null : g.id)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                      genreFilter === g.id ? 'bg-[#BF5AF2] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                      genreFilter === g.id ? 'bg-[var(--color-accent)] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
                     }`}
                   >
                     {g.label}
@@ -400,7 +400,7 @@ export function LibraryTab({
                     key={String(r)}
                     onClick={() => setMinRating(r)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                      minRating === r ? 'bg-[#BF5AF2] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                      minRating === r ? 'bg-[var(--color-accent)] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
                     }`}
                   >
                     {r == null ? 'Any' : `${r}+`}
