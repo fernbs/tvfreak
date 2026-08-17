@@ -149,19 +149,21 @@ export async function getImdbRating(imdbId: string): Promise<string | null> {
   return (await getRatings(imdbId)).imdb
 }
 
-export async function getRatings(imdbId: string): Promise<{ imdb: string | null; rt: string | null }> {
-  if (!OMDB_KEY || !imdbId) return { imdb: null, rt: null }
+export async function getRatings(imdbId: string): Promise<{ imdb: string | null; rt: string | null; mc: string | null }> {
+  if (!OMDB_KEY || !imdbId) return { imdb: null, rt: null, mc: null }
   try {
     const res = await fetch(`https://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_KEY}`)
-    if (!res.ok) return { imdb: null, rt: null }
+    if (!res.ok) return { imdb: null, rt: null, mc: null }
     const data = await res.json()
-    if (data.Response !== 'True') return { imdb: null, rt: null }
+    if (data.Response !== 'True') return { imdb: null, rt: null, mc: null }
     const imdb = data.imdbRating && data.imdbRating !== 'N/A' ? data.imdbRating : null
     const rtEntry = (data.Ratings ?? []).find((r: { Source: string }) => r.Source === 'Rotten Tomatoes')
     const rt = rtEntry?.Value ?? null
-    return { imdb, rt }
+    const mcEntry = (data.Ratings ?? []).find((r: { Source: string }) => r.Source === 'Metacritic')
+    const mc = mcEntry?.Value && mcEntry.Value !== 'N/A' ? mcEntry.Value.split('/')[0] : null
+    return { imdb, rt, mc }
   } catch {
-    return { imdb: null, rt: null }
+    return { imdb: null, rt: null, mc: null }
   }
 }
 

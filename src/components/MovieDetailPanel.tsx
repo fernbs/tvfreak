@@ -48,6 +48,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
   const [trailerKey, setTrailerKey] = useState<string | null>(null)
   const [imdbId, setImdbId] = useState<string | null>(null)
   const [rtRating, setRtRating] = useState<string | null>(null)
+  const [mcRating, setMcRating] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [adding, setAdding] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -59,13 +60,14 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
 
   useEffect(() => {
     setMinimized(false)
-    if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); setTrailerKey(null); setImdbId(null); setRtRating(null); return }
+    if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); setTrailerKey(null); setImdbId(null); setRtRating(null); setMcRating(null); return }
     setLoadingDetail(true)
     setDetail(null)
     setRecommendations([])
     setTrailerKey(null)
     setImdbId(null)
     setRtRating(null)
+    setMcRating(null)
     setDisplayRating(movie.imdbRating ?? null)
     getTrailerKey(movie.tmdbId, 'movie').then(setTrailerKey)
 
@@ -84,9 +86,10 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
         getMovieExternalIds(movie.tmdbId).then(ext => {
           if (ext.imdb_id) {
             setImdbId(ext.imdb_id)
-            getRatings(ext.imdb_id).then(({ imdb, rt }) => {
+            getRatings(ext.imdb_id).then(({ imdb, rt, mc }) => {
               if (imdb) setDisplayRating(imdb)
               if (rt) setRtRating(rt)
+              if (mc) setMcRating(mc)
             })
           }
         })
@@ -229,10 +232,10 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={e => { if (!imdbId) e.preventDefault() }}
-                          className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
-                          <span className="text-[var(--color-accent)]">★</span>
-                          <span className="text-white font-medium">{displayRating}</span>
+                          <span className="text-[#F5C518] leading-none">★</span>
+                          <span className="text-white font-medium leading-none">{displayRating}</span>
                         </a>
                       )}
                       {rtRating && (
@@ -242,9 +245,15 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
-                          <span className="text-[#FA320A] text-[10px] font-bold">RT</span>
-                          <span className="text-white font-medium">{rtRating}</span>
+                          <span className="text-[#FA320A] text-[10px] font-bold leading-none">RT</span>
+                          <span className="text-white font-medium leading-none">{rtRating}</span>
                         </a>
+                      )}
+                      {mcRating && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs">
+                          <span className="text-[#6C9] text-[10px] font-bold leading-none">MC</span>
+                          <span className="text-white font-medium leading-none">{mcRating}</span>
+                        </span>
                       )}
                     </div>
                     {detail?.genres && detail.genres.length > 0 && (

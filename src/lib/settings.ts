@@ -30,8 +30,10 @@ export const ACCENT_COLORS: AccentColor[] = [
   { name: 'Green',  hex: '#30D158', rgb: '48, 209, 88',   hover: '#25A244' },
   { name: 'Yellow', hex: '#FFD60A', rgb: '255, 214, 10',  hover: '#E6BE00' },
   { name: 'Orange', hex: '#FF9F0A', rgb: '255, 159, 10',  hover: '#E68900' },
-  { name: 'Pink',   hex: '#FF375F', rgb: '255, 55, 95',   hover: '#E0274B' },
-  { name: 'Indigo', hex: '#5E5CE6', rgb: '94, 92, 230',   hover: '#4644C9' },
+  { name: 'Pink',     hex: '#FF375F', rgb: '255, 55, 95',    hover: '#E0274B' },
+  { name: 'Hot Pink', hex: '#FF2D78', rgb: '255, 45, 120',   hover: '#E01862' },
+  { name: 'Gold',     hex: '#F0B429', rgb: '240, 180, 41',   hover: '#D99B00' },
+  { name: 'Indigo',   hex: '#5E5CE6', rgb: '94, 92, 230',    hover: '#4644C9' },
 ]
 
 export function getAccentColor(): AccentColor {

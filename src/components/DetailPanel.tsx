@@ -50,6 +50,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const [localImdbRating, setLocalImdbRating] = useState<string | null>(null)
   const [imdbId, setImdbId] = useState<string | null>(null)
   const [rtRating, setRtRating] = useState<string | null>(null)
+  const [mcRating, setMcRating] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [moreModal, setMoreModal] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -78,6 +79,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
     setLocalImdbRating(null)
     setImdbId(null)
     setRtRating(null)
+    setMcRating(null)
     if (!series.tmdbId) return
 
     setLoadingDetail(true)
@@ -97,8 +99,9 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
       const ext = await getExternalIds(series.tmdbId!)
       if (ext.imdb_id) {
         setImdbId(ext.imdb_id)
-        const { imdb, rt } = await getRatings(ext.imdb_id)
+        const { imdb, rt, mc } = await getRatings(ext.imdb_id)
         if (rt) setRtRating(rt)
+        if (mc) setMcRating(mc)
         if (imdb) {
           setLocalImdbRating(imdb)
           if (!series.imdbRating && series.id) updates.imdbRating = imdb
@@ -405,8 +408,8 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     {(detail?.number_of_seasons ?? series.numberOfSeasons) ? ` · ${detail?.number_of_seasons ?? series.numberOfSeasons} season${(detail?.number_of_seasons ?? series.numberOfSeasons) === 1 ? '' : 's'}` : ''}
                   </p>
 
-                  {(displayImdbRating || rtRating) && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  {(displayImdbRating || rtRating || mcRating) && (
+                    <div className="flex gap-1.5 mt-1.5 flex-wrap">
                       {displayImdbRating && (
                         <a
                           href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
@@ -415,8 +418,8 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                           onClick={e => { if (!imdbId) e.preventDefault() }}
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                         >
-                          <span className="text-[var(--color-accent)] text-xs">★</span>
-                          <span className="text-xs text-white font-medium">{displayImdbRating}</span>
+                          <span className="text-[#F5C518] text-xs leading-none">★</span>
+                          <span className="text-xs text-white font-medium leading-none">{displayImdbRating}</span>
                         </a>
                       )}
                       {rtRating && (
@@ -426,9 +429,15 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                         >
-                          <span className="text-[#FA320A] text-[10px] font-bold">RT</span>
-                          <span className="text-xs text-white font-medium">{rtRating}</span>
+                          <span className="text-[#FA320A] text-[10px] font-bold leading-none">RT</span>
+                          <span className="text-xs text-white font-medium leading-none">{rtRating}</span>
                         </a>
+                      )}
+                      {mcRating && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full">
+                          <span className="text-[#6C9] text-[10px] font-bold leading-none">MC</span>
+                          <span className="text-xs text-white font-medium leading-none">{mcRating}</span>
+                        </span>
                       )}
                     </div>
                   )}
@@ -598,7 +607,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                           />
                           {(r.vote_average ?? 0) > 0 && (
                             <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-black/65">
-                              <span className="text-[9px] font-medium"><span className="text-[var(--color-accent)]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                              <span className="text-[9px] font-medium"><span className="text-[var(--color-accent)]">★</span><span className="text-white">{r.vote_average!.toFixed(1)}</span></span>
                             </div>
                           )}
                         </div>
