@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
-import { X, Check, Loader2, ChevronLeft, Sparkles, Eye, EyeOff } from 'lucide-react'
+import { X, Check, Loader2, ChevronLeft, Sparkles } from 'lucide-react'
 import { getDiscoverByGenres, discoverMovies, getNowPlayingMovieIds, getStreamingProviders, getMovieStreamingProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getDefaultProviders, getCountry } from '../lib/settings'
 import { addSeries, addMovie } from '../lib/api'
@@ -489,6 +489,20 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
             />
           </div>
 
+          {/* Library toggle */}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-[#F5F5F7]">New only</p>
+              <p className="text-[11px] text-[#48484A] mt-0.5">Hide titles already in your library</p>
+            </div>
+            <button
+              onClick={() => setNewOnly(v => !v)}
+              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${newOnly ? 'bg-[#BF5AF2]' : 'bg-[#2C2C2E]'}`}
+            >
+              <span className={`absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white shadow transition-all ${newOnly ? 'left-[22px]' : 'left-[3px]'}`} />
+            </button>
+          </div>
+
           {/* Platforms */}
           <div>
             <SectionLabel>Platforms</SectionLabel>
@@ -527,27 +541,6 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
                 ? 'No platform selected — showing everything, including cinema releases.'
                 : `${selectedProviders.length} platform${selectedProviders.length > 1 ? 's' : ''} selected.`}
             </p>
-          </div>
-
-          {/* Library toggle */}
-          <div>
-            <SectionLabel>Library</SectionLabel>
-            <button
-              onClick={() => setNewOnly(v => !v)}
-              className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl border transition-colors ${
-                newOnly
-                  ? 'bg-[rgba(191,90,242,0.08)] border-[rgba(191,90,242,0.25)] text-[#BF5AF2]'
-                  : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
-              }`}
-            >
-              {newOnly ? <EyeOff className="w-4 h-4 shrink-0" /> : <Eye className="w-4 h-4 shrink-0" />}
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold">{newOnly ? 'New only' : 'Show everything'}</p>
-                <p className="text-[11px] opacity-70 mt-0.5">
-                  {newOnly ? "Skip titles already in your library" : "Include titles you've already added"}
-                </p>
-              </div>
-            </button>
           </div>
 
           {/* CTA */}

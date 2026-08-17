@@ -91,13 +91,14 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
         if (!series.imdbRating) {
           const rating = await getImdbRating(ext.imdb_id)
           if (rating) {
+            setLocalImdbRating(rating)
             if (series.id) updates.imdbRating = rating
-            else setLocalImdbRating(rating)
           }
         }
       }
       if (series.id && Object.keys(updates).length > 0) {
         await updateSeries(series.id, updates)
+        onUpdated()
       }
     }).finally(() => setLoadingDetail(false))
 
@@ -201,7 +202,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
         notes: '',
         nextEpisodeDate: detail?.next_episode_to_air?.air_date ?? null,
         nextEpisodeName: detail?.next_episode_to_air?.name ?? null,
-        imdbRating: null,
+        imdbRating: series.imdbRating,
         futureDates: null,
         addedAt: new Date(),
         updatedAt: new Date(),
