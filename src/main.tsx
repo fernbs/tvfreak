@@ -31,7 +31,22 @@ window.addEventListener('orientationchange', () => setTimeout(update, 100))
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {})
+    // updateViaCache: 'none' bypasses the browser's HTTP cache when checking
+    // for a new SW script, so GitHub Pages' max-age doesn't block updates.
+    // reg.update() forces an immediate SW update check on every page load,
+    // bypassing the browser's once-per-day throttle (critical on iOS PWA).
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { updateViaCache: 'none' })
+      .then(reg => { reg.update().catch(() => {}) })
+      .catch(() => {})
+  })
+
+  // When a new SW activates and claims control, reload so the new JS bundle loads.
+  // The guard prevents double-reloads if the event fires more than once.
+  let reloading = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading) return
+    reloading = true
+    window.location.reload()
   })
 }
 

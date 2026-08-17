@@ -418,7 +418,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                           onClick={e => { if (!imdbId) e.preventDefault() }}
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                         >
-                          <span className="text-[#F5C518] text-xs leading-none">★</span>
+                          <span className="bg-[#F5C518] text-black font-black px-[3px] py-px rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
                           <span className="text-xs text-white font-medium leading-none">{displayImdbRating}</span>
                         </a>
                       )}
@@ -429,13 +429,13 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                         >
-                          <span className="text-[#FA320A] text-[10px] font-bold leading-none">RT</span>
+                          <span className="inline-flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#FA320A] text-white font-black leading-none" style={{ fontSize: '6px' }}>RT</span>
                           <span className="text-xs text-white font-medium leading-none">{rtRating}</span>
                         </a>
                       )}
                       {mcRating && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full">
-                          <span className="text-[#6C9] text-[10px] font-bold leading-none">MC</span>
+                          <span className="bg-[#66CC33] text-black font-black px-[3px] py-px rounded-[2px] leading-none" style={{ fontSize: '7px' }}>MC</span>
                           <span className="text-xs text-white font-medium leading-none">{mcRating}</span>
                         </span>
                       )}
@@ -607,7 +607,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                           />
                           {(r.vote_average ?? 0) > 0 && (
                             <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-black/65">
-                              <span className="text-[9px] font-medium"><span className="text-[var(--color-accent)]">★</span><span className="text-white">{r.vote_average!.toFixed(1)}</span></span>
+                              <span className="text-[9px] font-medium leading-none"><span className="text-[var(--color-accent)]">★</span><span className="text-white">{r.vote_average!.toFixed(1)}</span></span>
                             </div>
                           )}
                         </div>
