@@ -119,13 +119,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     const hasProviderFilter = selectedProviders.length > 0
     const hasYearFilter = yearFilter.length === 4
 
-    if (!hasQuery && !hasGenreFilter && !hasProviderFilter && !hasYearFilter) {
-      setResults([])
-      setCurrentPage(1)
-      setTotalPages(1)
-      return
-    }
-
     debounceRef.current = setTimeout(async () => {
       setSearching(true)
       setCurrentPage(1)
@@ -456,83 +449,91 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
       {/* Scrollable content */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0">
 
-        {/* Results grid */}
-        {(!noQuery || !noGenreFilter || !noProviderFilter || !noYearFilter) && (
-          <>
-            {sectionLabel && (
-              <div className="flex items-center gap-2 px-4 pt-3 pb-1">
-                <SectionIcon className="w-4.5 h-4.5 text-[#BF5AF2] shrink-0" />
-                <h2 className="text-sm font-bold text-[#F5F5F7] flex-1 truncate">{sectionLabel}</h2>
-                {isLoading && <Loader2 className="w-3.5 h-3.5 text-[#48484A] animate-spin shrink-0" />}
-              </div>
-            )}
+        {/* Section label (filter-only browse) */}
+        {sectionLabel && (
+          <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+            <SectionIcon className="w-4.5 h-4.5 text-[#BF5AF2] shrink-0" />
+            <h2 className="text-sm font-bold text-[#F5F5F7] flex-1 truncate">{sectionLabel}</h2>
+            {isLoading && <Loader2 className="w-3.5 h-3.5 text-[#48484A] animate-spin shrink-0" />}
+          </div>
+        )}
 
-            {visibleResults.length === 0 && !isLoading ? (
-              query.trim() ? (
-                <div className="flex flex-col items-center justify-center h-40 text-center px-6">
-                  <p className="text-sm text-[#48484A]">No results for "{query}"</p>
-                </div>
-              ) : null
-            ) : viewMode === 'list' ? (
-              <div className="pb-6">
-                {visibleResults.map(r => (
-                  <div
-                    key={r.id}
-                    className="flex items-center gap-3 px-4 border-b border-white/5"
-                    style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
-                  >
-                    <button
-                      onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
-                      className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
-                    >
-                      <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#1C1C1E]">
-                        {r.poster_path && (
-                          <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#F5F5F7] leading-snug truncate">{r.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-xs text-[#48484A]">{r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}</p>
-                          {(r.vote_average ?? 0) > 0 && (
-                            <span className="text-xs"><span className="text-[#BF5AF2]">★</span><span className="text-[#8E8E93]"> {r.vote_average!.toFixed(1)}</span></span>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                    <AddButton r={r} />
+        {/* Loading spinner */}
+        {isLoading && visibleResults.length === 0 && (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-6 h-6 text-[#48484A] animate-spin" />
+          </div>
+        )}
+
+        {/* No results */}
+        {!isLoading && visibleResults.length === 0 && query.trim() && (
+          <div className="flex flex-col items-center justify-center h-40 text-center px-6">
+            <p className="text-sm text-[#48484A]">No results for "{query}"</p>
+          </div>
+        )}
+
+        {/* List view */}
+        {visibleResults.length > 0 && viewMode === 'list' && (
+          <div className="pb-6">
+            {visibleResults.map(r => (
+              <div
+                key={r.id}
+                className="flex items-center gap-3 px-4 border-b border-white/5"
+                style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
+              >
+                <button
+                  onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
+                  className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
+                >
+                  <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#1C1C1E]">
+                    {r.poster_path && (
+                      <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
+                    )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className={`px-4 pt-2 pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
-                {visibleResults.map(r => (
-                  <button
-                    key={r.id}
-                    onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
-                    className="relative text-left active:opacity-70 transition-opacity"
-                    style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
-                  >
-                    <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#1C1C1E] relative">
-                      {r.poster_path ? (
-                        <img src={posterUrl(r.poster_path, 'w342') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center p-2">
-                          <span className="text-[10px] text-[#48484A] text-center">{r.name}</span>
-                        </div>
-                      )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#F5F5F7] leading-snug truncate">{r.name}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xs text-[#48484A]">{r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}</p>
                       {(r.vote_average ?? 0) > 0 && (
-                        <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
-                          <span className="text-[10px] font-medium leading-none"><span className="text-[#BF5AF2]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
-                        </div>
+                        <span className="text-xs"><span className="text-[#BF5AF2]">★</span><span className="text-[#8E8E93]"> {r.vote_average!.toFixed(1)}</span></span>
                       )}
-                      <AddButton r={r} />
                     </div>
-                  </button>
-                ))}
+                  </div>
+                </button>
+                <AddButton r={r} />
               </div>
-            )}
-          </>
+            ))}
+          </div>
+        )}
+
+        {/* Grid view */}
+        {visibleResults.length > 0 && viewMode !== 'list' && (
+          <div className={`px-4 pt-2 pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
+            {visibleResults.map(r => (
+              <button
+                key={r.id}
+                onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
+                className="relative text-left active:opacity-70 transition-opacity"
+                style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
+              >
+                <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#1C1C1E] relative">
+                  {r.poster_path ? (
+                    <img src={posterUrl(r.poster_path, 'w342') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center p-2">
+                      <span className="text-[10px] text-[#48484A] text-center">{r.name}</span>
+                    </div>
+                  )}
+                  {(r.vote_average ?? 0) > 0 && (
+                    <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
+                      <span className="text-[10px] font-medium leading-none"><span className="text-[#BF5AF2]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                    </div>
+                  )}
+                  <AddButton r={r} />
+                </div>
+              </button>
+            ))}
+          </div>
         )}
 
         {hasMore && <div ref={sentinelRef} className="h-px" />}

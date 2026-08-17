@@ -481,7 +481,7 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
               style={{ fontSize: 16 }}
             >
               <option value="" className="bg-[#1C1C1E]">Any year</option>
-              {Array.from({ length: new Date().getFullYear() + 4 - 1969 }, (_, i) => new Date().getFullYear() + 3 - i).map(year => (
+              {Array.from({ length: new Date().getFullYear() - 1969 }, (_, i) => new Date().getFullYear() - i).map(year => (
                 <option key={year} value={String(year)} className="bg-[#1C1C1E]">{year}</option>
               ))}
             </select>

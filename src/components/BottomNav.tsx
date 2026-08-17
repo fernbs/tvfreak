@@ -11,8 +11,8 @@ const tabs = [
   { id: 'home' as Tab, icon: Home, label: 'Home' },
   { id: 'library' as Tab, icon: Library, label: 'Library' },
   { id: 'search' as Tab, icon: Search, label: 'Search' },
-  { id: 'stats' as Tab, icon: BarChart2, label: 'Stats' },
   { id: 'discover' as Tab, icon: Sparkles, label: 'Discover' },
+  { id: 'stats' as Tab, icon: BarChart2, label: 'Stats' },
 ]
 
 export function BottomNav({ active, onChange }: Props) {
