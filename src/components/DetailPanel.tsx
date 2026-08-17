@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MoreHorizontal, Loader2, Calendar, CheckCircle2, Plus, Share2 } from 'lucide-react'
-import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, getTvSimilar, getWatchProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
+import { X, MoreHorizontal, Loader2, Calendar, CheckCircle2, Plus, Share2, Play } from 'lucide-react'
+import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, getTvSimilar, getWatchProviders, getTrailerKey, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getCountry } from '../lib/settings'
 import { updateSeries, deleteSeries, addSeries } from '../lib/api'
 import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode, TmdbSearchResult, WatchProvider } from '../types'
@@ -52,6 +52,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const [adding, setAdding] = useState(false)
   const [providers, setProviders] = useState<WatchProvider[]>([])
   const [watchLink, setWatchLink] = useState<string | null>(null)
+  const [trailerKey, setTrailerKey] = useState<string | null>(null)
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const recsScrollRef = useRef<HTMLDivElement>(null)
   const recsSentinelRef = useRef<HTMLDivElement>(null)
@@ -121,7 +122,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   }, [series?.tmdbId])
 
   useEffect(() => {
-    if (!series?.tmdbId) { setProviders([]); setWatchLink(null); return }
+    if (!series?.tmdbId) { setProviders([]); setWatchLink(null); setTrailerKey(null); return }
     getWatchProviders(series.tmdbId, getCountry()).then(({ flatrate, free, link }) => {
       const combined: WatchProvider[] = []
       const seen = new Set<number>()
@@ -131,6 +132,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
       setProviders(combined)
       setWatchLink(link)
     })
+    getTrailerKey(series.tmdbId, 'tv').then(setTrailerKey)
   }, [series?.tmdbId])
 
   useEffect(() => {
@@ -449,6 +451,21 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                   <p className="text-sm text-[#8E8E93] leading-relaxed line-clamp-4">
                     {detail?.overview || series.overview}
                   </p>
+                </div>
+              )}
+
+              {/* Trailer */}
+              {trailerKey && (
+                <div className="mb-5">
+                  <a
+                    href={`https://www.youtube.com/watch?v=${trailerKey}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/6 border border-white/10 text-sm font-semibold text-[#F5F5F7] active:opacity-70 transition-opacity"
+                  >
+                    <Play className="w-4 h-4 text-[#BF5AF2]" />
+                    Watch Trailer
+                  </a>
                 </div>
               )}
 

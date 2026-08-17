@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, Plus } from 'lucide-react'
-import { getMovieDetails, getMovieRecommendations, getMovieWatchProviders, getMovieExternalIds, getImdbRating, posterUrl, IMG_BASE } from '../lib/tmdb'
+import { X, Loader2, Plus, Play } from 'lucide-react'
+import { getMovieDetails, getMovieRecommendations, getMovieWatchProviders, getMovieExternalIds, getImdbRating, getTrailerKey, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getCountry } from '../lib/settings'
 import { addMovie, updateMovie, deleteMovie } from '../lib/api'
 import type { Movie, MovieStatus, TmdbMovieDetail, TmdbSearchResult, WatchProvider } from '../types'
@@ -43,6 +43,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
   const [providers, setProviders] = useState<{ flatrate: WatchProvider[]; free: WatchProvider[] }>({ flatrate: [], free: [] })
+  const [trailerKey, setTrailerKey] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [adding, setAdding] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -53,11 +54,13 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
   const isInLibrary = Boolean(movie?.id)
 
   useEffect(() => {
-    if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); return }
+    if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); setTrailerKey(null); return }
     setLoadingDetail(true)
     setDetail(null)
     setRecommendations([])
+    setTrailerKey(null)
     setDisplayRating(movie.imdbRating ?? null)
+    getTrailerKey(movie.tmdbId, 'movie').then(setTrailerKey)
 
     Promise.all([
       getMovieDetails(movie.tmdbId),
@@ -249,6 +252,21 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
               {(detail?.overview || movie?.overview) && (
                 <div className="px-4 mb-4">
                   <p className="text-sm text-[#8E8E93] leading-relaxed">{detail?.overview ?? movie?.overview}</p>
+                </div>
+              )}
+
+              {/* Trailer */}
+              {trailerKey && (
+                <div className="px-4 mb-4">
+                  <a
+                    href={`https://www.youtube.com/watch?v=${trailerKey}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/6 border border-white/10 text-sm font-semibold text-[#F5F5F7] active:opacity-70 transition-opacity"
+                  >
+                    <Play className="w-4 h-4 text-[#BF5AF2]" />
+                    Watch Trailer
+                  </a>
                 </div>
               )}
 

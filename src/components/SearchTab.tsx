@@ -457,7 +457,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0">
 
         {/* Results grid */}
-        {(visibleResults.length > 0 || isLoading) && (
+        {(!noQuery || !noGenreFilter || !noProviderFilter || !noYearFilter) && (
           <>
             {sectionLabel && (
               <div className="flex items-center gap-2 px-4 pt-3 pb-1">

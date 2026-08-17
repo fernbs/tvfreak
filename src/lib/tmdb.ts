@@ -51,7 +51,8 @@ export async function getDiscoverByGenres(
   sortBy = 'vote_average.desc',
   year?: string,
   providerIds: number[] = [],
-  region?: string
+  region?: string,
+  minRating?: number
 ): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
   const params = new URLSearchParams({
     sort_by: sortBy,
@@ -60,6 +61,7 @@ export async function getDiscoverByGenres(
   })
   // vote_count floor only for rating-sorted results to avoid noise
   if (sortBy === 'vote_average.desc') params.set('vote_count.gte', '100')
+  if (minRating != null) params.set('vote_average.gte', String(minRating))
   if (includedIds.length > 0) params.set('with_genres', includedIds.join(','))
   if (excludedIds.length > 0) params.set('without_genres', excludedIds.join(','))
   if (year) params.set('first_air_date_year', year)
@@ -198,9 +200,11 @@ export async function discoverMovies(
   year?: string,
   providerIds: number[] = [],
   region?: string,
+  minRating?: number,
 ): Promise<{ results: import('../types').TmdbSearchResult[]; totalPages: number }> {
   const params = new URLSearchParams({ sort_by: sortBy, language: 'en-US', page: String(page) })
   if (sortBy === 'vote_average.desc') params.set('vote_count.gte', '200')
+  if (minRating != null) params.set('vote_average.gte', String(minRating))
   if (includedIds.length > 0) params.set('with_genres', includedIds.join(','))
   if (excludedIds.length > 0) params.set('without_genres', excludedIds.join(','))
   if (year) params.set('primary_release_year', year)
@@ -276,4 +280,16 @@ export async function getMovieExternalIds(tmdbId: number): Promise<{ imdb_id: st
   if (!res.ok) return { imdb_id: null }
   const data = await res.json()
   return { imdb_id: data.imdb_id ?? null }
+}
+
+export async function getTrailerKey(tmdbId: number, type: 'tv' | 'movie'): Promise<string | null> {
+  const res = await fetch(`${BASE_URL}/${type}/${tmdbId}/videos?language=en-US`, { headers: headers() })
+  if (!res.ok) return null
+  const data = await res.json()
+  const videos: { key: string; site: string; type: string; official?: boolean }[] = data.results ?? []
+  const trailer =
+    videos.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official) ??
+    videos.find(v => v.site === 'YouTube' && v.type === 'Trailer') ??
+    videos.find(v => v.site === 'YouTube' && v.type === 'Teaser')
+  return trailer?.key ?? null
 }
