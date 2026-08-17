@@ -45,8 +45,8 @@ export function SeriesCard({ series, onClick }: Props) {
       <div
         className="absolute pointer-events-none"
         style={{
-          bottom: -22,
-          left: -22,
+          bottom: 0,
+          left: 0,
           width: 44,
           height: 44,
           borderRadius: '50%',
