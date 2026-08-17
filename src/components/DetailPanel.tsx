@@ -64,13 +64,11 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const [rtRating, setRtRating] = useState<string | null>(null)
   const [mcRating, setMcRating] = useState<string | null>(null)
   const [ratingsLoaded, setRatingsLoaded] = useState(false)
-  const [notes, setNotes] = useState('')
   const [moreModal, setMoreModal] = useState(false)
   const [adding, setAdding] = useState(false)
   const [providers, setProviders] = useState<WatchProvider[]>([])
   const [watchLink, setWatchLink] = useState<string | null>(null)
   const [trailerKey, setTrailerKey] = useState<string | null>(null)
-  const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const recsScrollRef = useRef<HTMLDivElement>(null)
   const recsSentinelRef = useRef<HTMLDivElement>(null)
   const handleLoadMoreRecsRef = useRef<() => void>(() => {})
@@ -85,7 +83,6 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
       setImdbId(null)
       return
     }
-    setNotes(series.notes ?? '')
     setRecommendations([])
     setRecsPage(1)
     setHasMoreRecs(false)
@@ -190,17 +187,6 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
     if (status === 'completed') fireConfetti()
     toast.success(`Status updated to ${STATUS_CONFIG[status].label}`)
     onUpdated()
-  }
-
-  async function saveNotes(value: string) {
-    if (!series?.id) return
-    await updateSeries(series.id, { notes: value })
-  }
-
-  function handleNotesChange(value: string) {
-    setNotes(value)
-    if (notesTimer.current) clearTimeout(notesTimer.current)
-    notesTimer.current = setTimeout(() => saveNotes(value), 800)
   }
 
   async function handleRemove() {
@@ -519,13 +505,44 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
               {/* Divider */}
               <div className="border-t border-white/6 mb-5" />
 
-              {/* Overview */}
-              {(detail?.overview || series.overview) && (
+              {/* Creator / overview */}
+              {(detail?.overview || series.overview || (detail?.created_by && detail.created_by.length > 0)) && (
                 <div className="mb-5">
                   <p className="text-[10px] text-[#48484A] mb-2 uppercase tracking-widest font-semibold">About</p>
-                  <p className="text-sm text-[#8E8E93] leading-relaxed line-clamp-4">
-                    {detail?.overview || series.overview}
-                  </p>
+                  {detail?.created_by && detail.created_by.length > 0 && (
+                    <p className="text-[11px] text-[#8E8E93] mb-2">
+                      <span className="text-[#48484A]">Created by</span> {detail.created_by.map(c => c.name).join(', ')}
+                    </p>
+                  )}
+                  {(detail?.overview || series.overview) && (
+                    <p className="text-sm text-[#8E8E93] leading-relaxed line-clamp-4">
+                      {detail?.overview || series.overview}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Cast */}
+              {detail?.credits?.cast && detail.credits.cast.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-[10px] text-[#48484A] mb-2.5 uppercase tracking-widest font-semibold">Cast</p>
+                  <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                    {detail.credits.cast.slice(0, 12).map(actor => (
+                      <div key={actor.id} className="shrink-0 w-14 text-center">
+                        <div className="w-14 h-14 rounded-full overflow-hidden bg-[#1C1C1E] mb-1 mx-auto">
+                          {actor.profile_path ? (
+                            <img src={`${IMG_BASE}/w185${actor.profile_path}`} alt={actor.name} className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#2C2C2E]">
+                              <span className="text-[18px] font-bold text-[#48484A]">{actor.name[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[9px] text-[#F5F5F7] leading-tight font-medium line-clamp-1">{actor.name}</p>
+                        <p className="text-[8px] text-[#48484A] leading-tight line-clamp-1">{actor.character}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -690,19 +707,6 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                 </div>
               )}
 
-              {/* Notes */}
-              {inLibrary && (
-                <div>
-                  <p className="text-[10px] text-[#48484A] mb-2 uppercase tracking-widest font-semibold">Notes</p>
-                  <textarea
-                    value={notes}
-                    onChange={e => handleNotesChange(e.target.value)}
-                    placeholder="Add notes..."
-                    rows={3}
-                    className="w-full bg-[#1C1C1E] border border-white/8 rounded-2xl px-3.5 py-2.5 text-sm text-[#F5F5F7] placeholder:text-[#48484A] outline-none focus:border-white/20 resize-none transition-colors"
-                  />
-                </div>
-              )}
             </div>
           </motion.div>
 

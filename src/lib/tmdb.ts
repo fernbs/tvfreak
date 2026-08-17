@@ -22,7 +22,7 @@ export async function searchTv(query: string, page = 1, year?: string): Promise<
 }
 
 export async function getTvDetails(tmdbId: number): Promise<import('../types').TmdbShowDetail | null> {
-  const url = `${BASE_URL}/tv/${tmdbId}?language=en-US`
+  const url = `${BASE_URL}/tv/${tmdbId}?language=en-US&append_to_response=credits`
   const res = await fetch(url, { headers: headers() })
   if (!res.ok) return null
   return res.json()
@@ -240,7 +240,7 @@ export async function getNowPlayingMovieIds(region?: string): Promise<Set<number
 }
 
 export async function getMovieDetails(tmdbId: number): Promise<import('../types').TmdbMovieDetail | null> {
-  const res = await fetch(`${BASE_URL}/movie/${tmdbId}?language=en-US`, { headers: headers() })
+  const res = await fetch(`${BASE_URL}/movie/${tmdbId}?language=en-US&append_to_response=credits`, { headers: headers() })
   if (!res.ok) return null
   return res.json()
 }

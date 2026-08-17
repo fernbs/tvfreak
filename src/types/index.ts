@@ -66,6 +66,27 @@ export interface TmdbNextEpisode {
   name: string
 }
 
+export interface TmdbCastMember {
+  id: number
+  name: string
+  character: string
+  profile_path: string | null
+  order: number
+}
+
+export interface TmdbCrewMember {
+  id: number
+  name: string
+  job: string
+  department: string
+  profile_path: string | null
+}
+
+export interface TmdbCredits {
+  cast: TmdbCastMember[]
+  crew: TmdbCrewMember[]
+}
+
 export interface TmdbShowDetail {
   id: number
   name: string
@@ -80,6 +101,8 @@ export interface TmdbShowDetail {
   vote_average?: number
   status?: string
   genres?: { id: number; name: string }[]
+  created_by?: { id: number; name: string; profile_path: string | null }[]
+  credits?: TmdbCredits
 }
 
 export const STATUS_CONFIG: Record<SeriesStatus, {
@@ -120,6 +143,7 @@ export interface TmdbMovieDetail {
   vote_average?: number
   status?: string
   genres?: { id: number; name: string }[]
+  credits?: TmdbCredits
 }
 
 export const MOVIE_STATUS_CONFIG: Record<MovieStatus, { label: string; color: string }> = {

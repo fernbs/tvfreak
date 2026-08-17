@@ -233,18 +233,23 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                   {/* Info */}
                   <div className="flex-1 min-w-0 pt-1">
                     <h2 className="text-xl font-bold text-[#F5F5F7] leading-tight">{movie?.title}</h2>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {releaseYear && <span className="text-sm text-[#8E8E93]">{releaseYear}</span>}
-                      {runtime && <span className="text-sm text-[#8E8E93]">{runtime}</span>}
+                    <div className="mt-1.5">
+                    {(releaseYear || runtime) && (
+                      <div className="flex items-center gap-2">
+                        {releaseYear && <span className="text-sm text-[#8E8E93]">{releaseYear}</span>}
+                        {runtime && <span className="text-sm text-[#8E8E93]">{runtime}</span>}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       {!loadingDetail && (
                         <a
                           href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={e => { if (!imdbId) e.preventDefault() }}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
+                          className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
-                          <span className="bg-[#F5C518] text-black font-black px-[3px] py-px rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
+                          <span className="bg-[#F5C518] text-black font-black px-[3px] py-[2px] rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
                           <span className="font-medium leading-none" style={{ color: displayRating ? 'white' : '#8E8E93' }}>{displayRating ?? 'N/A'}</span>
                         </a>
                       )}
@@ -253,7 +258,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie?.title ?? '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
+                          className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
                           {rtRating ? (
                             parseInt(rtRating) >= 60 ? (
@@ -270,12 +275,13 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                         </a>
                       )}
                       {mcRating && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs">
-                          <span className="bg-[#66CC33] text-black font-black px-[3px] py-px rounded-[2px] leading-none" style={{ fontSize: '7px' }}>MC</span>
+                        <span className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full text-xs">
+                          <span className="bg-[#66CC33] text-black font-black px-[3px] py-[2px] rounded-[2px] leading-none" style={{ fontSize: '7px' }}>MC</span>
                           <span className="text-white font-medium leading-none">{mcRating}</span>
                         </span>
                       )}
                     </div>
+                  </div>
                     {detail?.genres && detail.genres.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {detail.genres.slice(0, 3).map(g => (
@@ -325,10 +331,54 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                 )}
               </div>
 
-              {/* Overview */}
-              {(detail?.overview || movie?.overview) && (
+              {/* Director / writer / overview */}
+              {(detail?.overview || movie?.overview || detail?.credits) && (
                 <div className="px-4 mb-4">
-                  <p className="text-sm text-[#8E8E93] leading-relaxed">{detail?.overview ?? movie?.overview}</p>
+                  {(() => {
+                    const director = detail?.credits?.crew?.find(c => c.job === 'Director')?.name
+                    const writers = detail?.credits?.crew?.filter(c => c.department === 'Writing').slice(0, 2).map(c => c.name).join(', ')
+                    return (
+                      <>
+                        {director && (
+                          <p className="text-[11px] text-[#8E8E93] mb-1">
+                            <span className="text-[#48484A]">Directed by</span> {director}
+                          </p>
+                        )}
+                        {writers && (
+                          <p className="text-[11px] text-[#8E8E93] mb-2">
+                            <span className="text-[#48484A]">Written by</span> {writers}
+                          </p>
+                        )}
+                      </>
+                    )
+                  })()}
+                  {(detail?.overview || movie?.overview) && (
+                    <p className="text-sm text-[#8E8E93] leading-relaxed">{detail?.overview ?? movie?.overview}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Cast */}
+              {detail?.credits?.cast && detail.credits.cast.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-[10px] text-[#48484A] mb-2.5 uppercase tracking-widest font-semibold px-4">Cast</p>
+                  <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: 'none' }}>
+                    {detail.credits.cast.slice(0, 12).map(actor => (
+                      <div key={actor.id} className="shrink-0 w-14 text-center">
+                        <div className="w-14 h-14 rounded-full overflow-hidden bg-[#1C1C1E] mb-1 mx-auto">
+                          {actor.profile_path ? (
+                            <img src={`${IMG_BASE}/w185${actor.profile_path}`} alt={actor.name} className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#2C2C2E]">
+                              <span className="text-[18px] font-bold text-[#48484A]">{actor.name[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[9px] text-[#F5F5F7] leading-tight font-medium line-clamp-1">{actor.name}</p>
+                        <p className="text-[8px] text-[#48484A] leading-tight line-clamp-1">{actor.character}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
