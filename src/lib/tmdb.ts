@@ -215,6 +215,20 @@ export async function discoverMovies(
   return { results: (data.results ?? []).map(mapMovieResult), totalPages: data.total_pages ?? 1 }
 }
 
+export async function getNowPlayingMovieIds(region?: string): Promise<Set<number>> {
+  const ids = new Set<number>()
+  try {
+    const base = new URLSearchParams({ language: 'en-US' })
+    if (region) base.set('region', region)
+    const [r1, r2] = await Promise.all([
+      fetch(`${BASE_URL}/movie/now_playing?${base}&page=1`, { headers: headers() }).then(r => r.ok ? r.json() : { results: [] }),
+      fetch(`${BASE_URL}/movie/now_playing?${base}&page=2`, { headers: headers() }).then(r => r.ok ? r.json() : { results: [] }),
+    ])
+    ;[...(r1.results ?? []), ...(r2.results ?? [])].forEach((m: { id: number }) => ids.add(m.id))
+  } catch { /* non-fatal */ }
+  return ids
+}
+
 export async function getMovieDetails(tmdbId: number): Promise<import('../types').TmdbMovieDetail | null> {
   const res = await fetch(`${BASE_URL}/movie/${tmdbId}?language=en-US`, { headers: headers() })
   if (!res.ok) return null
