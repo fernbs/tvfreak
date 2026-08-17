@@ -95,17 +95,10 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
                 <span className="text-xs text-[#48484A] text-center leading-snug font-medium">{m.title}</span>
               </div>
             )}
-            {/* Crescent arc — status indicator */}
+            {/* Bottom-left corner status gradient */}
             <div
-              className="absolute pointer-events-none"
-              style={{
-                bottom: 0,
-                left: 0,
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                border: `2.5px solid ${cfg.color}`,
-              }}
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: `radial-gradient(circle at 0% 100%, ${cfg.color}70 0%, transparent 38%)` }}
             />
             {/* Rating */}
             {m.imdbRating && (
