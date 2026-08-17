@@ -119,7 +119,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     setTrending([])
     const fetchFn = mediaMode === 'tv' ? getTrending : getTrendingMovies
     Promise.all([fetchFn(1), fetchFn(2)]).then(([p1, p2]) => {
-      setTrending(deduped([...p1.results, ...p2.results]))
+      setTrending(applySort(deduped([...p1.results, ...p2.results])))
       setTrendingTotalPages(p1.totalPages)
       setTrendingPage(Math.min(2, p1.totalPages))
     }).finally(() => setLoadingTrending(false))
@@ -151,7 +151,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
         if (mediaMode === 'tv') {
           if (hasQuery) {
             const [p1, p2] = await Promise.all([searchTv(query, 1, year), searchTv(query, 2, year)])
-            setResults(deduped([...p1.results, ...p2.results]))
+            setResults(applySort(deduped([...p1.results, ...p2.results])))
             setTotalPages(p1.totalPages)
             setCurrentPage(Math.min(2, p1.totalPages))
           } else {
@@ -159,14 +159,14 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               getDiscoverByGenres(includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()),
               getDiscoverByGenres(includedGenres, excludedGenres, 2, sortBy, year, selectedProviders, getCountry()),
             ])
-            setResults(deduped([...p1.results, ...p2.results]))
+            setResults(applySort(deduped([...p1.results, ...p2.results])))
             setTotalPages(p1.totalPages)
             setCurrentPage(Math.min(2, p1.totalPages))
           }
         } else {
           if (hasQuery) {
             const [p1, p2] = await Promise.all([searchMovie(query, 1, year), searchMovie(query, 2, year)])
-            setResults(deduped([...p1.results, ...p2.results]))
+            setResults(applySort(deduped([...p1.results, ...p2.results])))
             setTotalPages(p1.totalPages)
             setCurrentPage(Math.min(2, p1.totalPages))
           } else {
@@ -174,7 +174,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               discoverMovies(includedGenres, excludedGenres, 1, sortBy, year, selectedProviders, getCountry()),
               discoverMovies(includedGenres, excludedGenres, 2, sortBy, year, selectedProviders, getCountry()),
             ])
-            setResults(deduped([...p1.results, ...p2.results]))
+            setResults(applySort(deduped([...p1.results, ...p2.results])))
             setTotalPages(p1.totalPages)
             setCurrentPage(Math.min(2, p1.totalPages))
           }
@@ -366,7 +366,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     })
   }
 
-  const displayResults = applySort(showTrending ? trending : results)
+  const displayResults = showTrending ? trending : results
   const visibleResults = hideInLibrary ? displayResults.filter(r => !libraryIds.has(r.id)) : displayResults
   const isLoading = showTrending ? loadingTrending : searching
 
