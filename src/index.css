@@ -101,18 +101,10 @@ body {
 .safe-top { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
-/* In standalone PWA mode the home indicator is visible and needs accommodation.
-   In browser mode Safari's own toolbar already handles that area. */
-.nav-safe-pad { padding-bottom: 0; }
-@media (display-mode: standalone) {
-  .nav-safe-pad { padding-bottom: env(safe-area-inset-bottom, 0px); }
-}
-
-/* Reserve space below content for the fixed nav (browser: 60px, standalone: 60px + safe area) */
+/* Reserve space below content for the fixed nav. The nav's visible button area
+   is ~62px in all modes; the bleed below the visual viewport is handled via
+   --nav-bleed in JS and does not need extra padding here. */
 .main-safe-pad { padding-bottom: 3.75rem; }
-@media (display-mode: standalone) {
-  .main-safe-pad { padding-bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px)); }
-}
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }

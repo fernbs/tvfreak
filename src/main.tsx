@@ -4,12 +4,24 @@ import { Toaster } from 'sonner'
 import './index.css'
 import App from './App.tsx'
 
-const setVvh = () => {
-  const h = window.visualViewport?.height ?? window.innerHeight
-  document.documentElement.style.setProperty('--vvh', `${h}px`)
+const isStandalone =
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (navigator as any).standalone === true
+
+const update = () => {
+  const vvh = window.visualViewport?.height ?? window.innerHeight
+  // In iOS standalone portrait, visualViewport.height = screen.height - status_bar.
+  // fixed;bottom:0 lands at the viewport bottom (physical y=793), not the screen
+  // bottom (physical y=852). Bleeding by that gap fills the space with nav background.
+  const isLandscape = window.matchMedia('(orientation: landscape)').matches
+  const bleed = isStandalone && !isLandscape ? Math.max(0, screen.height - vvh) : 0
+  document.documentElement.style.setProperty('--vvh', `${vvh}px`)
+  document.documentElement.style.setProperty('--nav-bleed', `${bleed}px`)
 }
-setVvh()
-window.visualViewport?.addEventListener('resize', setVvh)
+
+update()
+window.visualViewport?.addEventListener('resize', update)
+window.addEventListener('orientationchange', () => setTimeout(update, 100))
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

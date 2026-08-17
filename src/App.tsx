@@ -471,34 +471,8 @@ export default function App() {
     setDuplicates(dupes)
   }
 
-  // TEMP DEBUG — remove once gap is understood
-  const [dbg, setDbg] = useState('')
-  useEffect(() => {
-    const vvh = window.visualViewport?.height ?? 0
-    const sh = screen.height
-    const standalone = window.matchMedia('(display-mode: standalone)').matches
-    // Measure env() values via a probe element
-    const probe = document.createElement('div')
-    probe.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden'
-    const probe2 = document.createElement('div')
-    probe2.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden'
-    document.body.appendChild(probe)
-    document.body.appendChild(probe2)
-    const sit = probe.getBoundingClientRect().height
-    const sib = probe2.getBoundingClientRect().height
-    document.body.removeChild(probe)
-    document.body.removeChild(probe2)
-    setDbg(`vvh:${vvh} sh:${sh} sa:${standalone} sit:${sit} sib:${sib}`)
-  }, [])
-
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden">
-      {/* TEMP DEBUG */}
-      {dbg && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-red-900/90 text-white text-[10px] px-2 py-1 text-center" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-          {dbg}
-        </div>
-      )}
       {/* Worker unreachable banner */}
       {workerError && !loading && (
         <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-rose-500/8 border-b border-rose-500/15">
