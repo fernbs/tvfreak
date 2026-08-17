@@ -435,17 +435,10 @@ function StatRow({ color, label, count, note }: { color: string; label: string; 
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
-export function useMovieImport(moviesLoaded: boolean, moviesCount: number) {
+export function useMovieImport() {
   const [importData, setImportData] = useState<ImportData | null>(null)
   const [importDone, setImportDone] = useState(() => !!localStorage.getItem(IMPORT_DONE_KEY))
   const [sheetOpen, setSheetOpen] = useState(false)
-
-  useEffect(() => {
-    if (moviesLoaded && moviesCount === 0 && importDone) {
-      localStorage.removeItem(IMPORT_DONE_KEY)
-      setImportDone(false)
-    }
-  }, [moviesLoaded, moviesCount, importDone])
 
   useEffect(() => {
     if (importDone) return
