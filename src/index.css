@@ -108,6 +108,12 @@ body {
   .nav-safe-pad { padding-bottom: env(safe-area-inset-bottom, 0px); }
 }
 
+/* Reserve space below content for the fixed nav (browser: 60px, standalone: 60px + safe area) */
+.main-safe-pad { padding-bottom: 3.75rem; }
+@media (display-mode: standalone) {
+  .main-safe-pad { padding-bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px)); }
+}
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
