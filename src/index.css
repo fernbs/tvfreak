@@ -39,13 +39,10 @@
 }
 
 html {
-  background-color: #000000;
-}
-
-html {
-  height: var(--app-h, 100dvh);
+  height: 100%;
   margin: 0;
   padding: 0;
+  background-color: #000000;
   overflow: hidden;
   overscroll-behavior: none;
 }
