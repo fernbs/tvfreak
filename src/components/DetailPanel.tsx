@@ -564,7 +564,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     {detail?.status === 'Canceled' ? 'Cancelled' : 'Series complete'}
                   </p>
                   <p className="relative text-[22px] font-extrabold italic text-[#F5F5F7] leading-tight">
-                    That's all, freaks.
+                    That's all, freaks!
                   </p>
                 </div>
               )}
