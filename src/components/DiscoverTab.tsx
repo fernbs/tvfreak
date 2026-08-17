@@ -1,22 +1,24 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { X, Check, Loader2, ChevronLeft, Sparkles, Eye, EyeOff } from 'lucide-react'
-import { getDiscoverByGenres, discoverMovies, getNowPlayingMovieIds, posterUrl } from '../lib/tmdb'
+import { getDiscoverByGenres, discoverMovies, getNowPlayingMovieIds, getStreamingProviders, getMovieStreamingProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getDefaultProviders, getCountry } from '../lib/settings'
 import { addSeries, addMovie } from '../lib/api'
-import type { TmdbSearchResult, Series, Movie } from '../types'
+import type { TmdbSearchResult, Series, Movie, WatchProvider } from '../types'
 import { toast } from 'sonner'
 
+// ── Genre lists matching SearchTab ──────────────────────────────────────────
+
 const TV_GENRES = [
+  { id: 10759, label: 'Action & Adventure' },
   { id: 18,    label: 'Drama' },
   { id: 80,    label: 'Crime' },
-  { id: 10759, label: 'Action' },
-  { id: 10765, label: 'Sci-Fi' },
+  { id: 10765, label: 'Sci-Fi & Fantasy' },
   { id: 9648,  label: 'Mystery' },
   { id: 35,    label: 'Comedy' },
   { id: 99,    label: 'Documentary' },
   { id: 16,    label: 'Animation' },
-  { id: 10768, label: 'War' },
+  { id: 10768, label: 'War & Politics' },
   { id: 37,    label: 'Western' },
 ]
 
@@ -26,6 +28,7 @@ const MOVIE_GENRES = [
   { id: 16,    label: 'Animation' },
   { id: 35,    label: 'Comedy' },
   { id: 80,    label: 'Crime' },
+  { id: 99,    label: 'Documentary' },
   { id: 18,    label: 'Drama' },
   { id: 14,    label: 'Fantasy' },
   { id: 27,    label: 'Horror' },
@@ -35,6 +38,15 @@ const MOVIE_GENRES = [
   { id: 53,    label: 'Thriller' },
   { id: 10752, label: 'War' },
   { id: 37,    label: 'Western' },
+]
+
+const RATING_OPTIONS: { label: string; value: number | null }[] = [
+  { label: 'Any', value: null },
+  { label: '5+', value: 5 },
+  { label: '6+', value: 6 },
+  { label: '7+', value: 7 },
+  { label: '7.5+', value: 7.5 },
+  { label: '8+', value: 8 },
 ]
 
 type GenreState = 'neutral' | 'include' | 'exclude'
@@ -93,10 +105,7 @@ function SwipeCard({ card, isTop, stackIndex, inCinema, onDecide, onReady }: Swi
         cursor: isTop ? 'grab' : 'default',
         boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
       }}
-      animate={{
-        y: stackIndex * 10,
-        scale: 1 - stackIndex * 0.045,
-      }}
+      animate={{ y: stackIndex * 10, scale: 1 - stackIndex * 0.045 }}
       transition={{ type: 'spring', stiffness: 280, damping: 28 }}
       drag={isTop ? 'x' : false}
       dragConstraints={{ left: 0, right: 0 }}
@@ -111,8 +120,6 @@ function SwipeCard({ card, isTop, stackIndex, inCinema, onDecide, onReady }: Swi
           <span className="text-[#8E8E93] text-center text-sm leading-relaxed">{card.name}</span>
         </div>
       )}
-
-      {/* Info overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-5 pb-7">
         <h2 className="text-[22px] font-bold text-white leading-tight mb-2">{card.name}</h2>
@@ -136,8 +143,6 @@ function SwipeCard({ card, isTop, stackIndex, inCinema, onDecide, onReady }: Swi
           <p className="text-[13px] text-[#8E8E93]/75 line-clamp-2 leading-relaxed">{card.overview}</p>
         )}
       </div>
-
-      {/* Like indicator */}
       {isTop && (
         <motion.div className="absolute inset-0 rounded-3xl" style={{ opacity: likeOpacity }}>
           <div className="absolute inset-0 rounded-3xl border-[3px] border-emerald-400 bg-emerald-500/10" />
@@ -147,8 +152,6 @@ function SwipeCard({ card, isTop, stackIndex, inCinema, onDecide, onReady }: Swi
           </div>
         </motion.div>
       )}
-
-      {/* Skip indicator */}
       {isTop && (
         <motion.div className="absolute inset-0 rounded-3xl" style={{ opacity: skipOpacity }}>
           <div className="absolute inset-0 rounded-3xl border-[3px] border-rose-400 bg-rose-500/10" />
@@ -162,15 +165,32 @@ function SwipeCard({ card, isTop, stackIndex, inCinema, onDecide, onReady }: Swi
   )
 }
 
+// ── Section label ─────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-2">
+      {children}
+    </p>
+  )
+}
+
 // ── Main component ──────────────────────────────────────────────────────────
 
 export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded }: Props) {
   const [phase, setPhase] = useState<'setup' | 'swiping'>('setup')
   const [mediaMode, setMediaMode] = useState<'tv' | 'movie'>('tv')
   const [genreStates, setGenreStates] = useState<Record<number, GenreState>>({})
+  const [minRating, setMinRating] = useState<number | null>(null)
+  const [yearFilter, setYearFilter] = useState('')
   const [newOnly, setNewOnly] = useState(false)
 
-  // Queue-based swiping state
+  // Provider state (per-session, pre-seeded from settings defaults)
+  const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
+  const [selectedProviders, setSelectedProviders] = useState<number[]>(() => getDefaultProviders())
+  const [loadingProviders, setLoadingProviders] = useState(false)
+
+  // Queue-based swiping
   const [queue, setQueue] = useState<TmdbSearchResult[]>([])
   const [seen, setSeen] = useState(0)
   const [fetching, setFetching] = useState(false)
@@ -185,6 +205,8 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
   const activeExcludedRef = useRef<number[]>([])
   const activeProvidersRef = useRef<number[]>([])
   const activeRegionRef = useRef<string>('')
+  const activeMinRatingRef = useRef<number | null>(null)
+  const activeYearRef = useRef<string>('')
   const newOnlyRef = useRef(false)
   const seenIds = useRef(new Set<number>())
   const libraryIdsRef = useRef(new Set<number>())
@@ -201,7 +223,23 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
     [genres, genreStates]
   )
 
-  // Keep library ID ref current as library changes
+  // Load providers when mediaMode or country changes (setup phase only)
+  useEffect(() => {
+    if (phase !== 'setup') return
+    const country = getCountry()
+    setLoadingProviders(true)
+    const fetchFn = mediaMode === 'tv' ? getStreamingProviders : getMovieStreamingProviders
+    fetchFn(country)
+      .then(providers => {
+        setAvailableProviders(providers)
+        // Pre-select only providers that are available in this mode
+        const available = new Set(providers.map(p => p.provider_id))
+        setSelectedProviders(prev => prev.filter(id => available.has(id)))
+      })
+      .finally(() => setLoadingProviders(false))
+  }, [mediaMode, phase])
+
+  // Keep library ID ref current
   useEffect(() => {
     const mode = activeModeRef.current
     libraryIdsRef.current = new Set(
@@ -221,6 +259,19 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
     })
   }
 
+  function makeFetchArgs(page: number) {
+    return [
+      activeIncludedRef.current,
+      activeExcludedRef.current,
+      page,
+      'vote_average.desc',
+      activeYearRef.current || undefined,
+      activeProvidersRef.current,
+      activeRegionRef.current,
+      activeMinRatingRef.current ?? undefined,
+    ] as const
+  }
+
   async function fetchBatch(page: number): Promise<void> {
     if (fetchingRef.current || page > maxPageRef.current) return
     fetchingRef.current = true
@@ -230,11 +281,8 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
       const fetchFn = mode === 'tv' ? getDiscoverByGenres : discoverMovies
       const p2 = Math.min(page + 1, maxPageRef.current)
       const fetches = page < p2
-        ? [
-            fetchFn(activeIncludedRef.current, activeExcludedRef.current, page, 'vote_average.desc', undefined, activeProvidersRef.current, activeRegionRef.current),
-            fetchFn(activeIncludedRef.current, activeExcludedRef.current, p2, 'vote_average.desc', undefined, activeProvidersRef.current, activeRegionRef.current),
-          ]
-        : [fetchFn(activeIncludedRef.current, activeExcludedRef.current, page, 'vote_average.desc', undefined, activeProvidersRef.current, activeRegionRef.current)]
+        ? [fetchFn(...makeFetchArgs(page)), fetchFn(...makeFetchArgs(p2))]
+        : [fetchFn(...makeFetchArgs(page))]
       const results = await Promise.all(fetches)
       maxPageRef.current = results[0].totalPages
       fetchPageRef.current = (page < p2 ? p2 : page) + 1
@@ -246,7 +294,6 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
     }
   }
 
-  // Auto-fetch when queue runs low
   useEffect(() => {
     if (phase !== 'swiping' || fetchingRef.current) return
     if (queue.length < 6 && fetchPageRef.current <= maxPageRef.current) {
@@ -256,15 +303,15 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
 
   async function handleStart() {
     if (includedGenres.length === 0) return
-
-    const providers = getDefaultProviders()
     const region = getCountry()
 
     activeModeRef.current = mediaMode
     activeIncludedRef.current = includedGenres
     activeExcludedRef.current = excludedGenres
-    activeProvidersRef.current = providers
+    activeProvidersRef.current = selectedProviders
     activeRegionRef.current = region
+    activeMinRatingRef.current = minRating
+    activeYearRef.current = yearFilter.length === 4 ? yearFilter : ''
     newOnlyRef.current = newOnly
 
     seenIds.current = new Set()
@@ -283,15 +330,12 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
     try {
       const fetchFn = mediaMode === 'tv' ? getDiscoverByGenres : discoverMovies
       const [p1, p2] = await Promise.all([
-        fetchFn(includedGenres, excludedGenres, 1, 'vote_average.desc', undefined, providers, region),
-        fetchFn(includedGenres, excludedGenres, 2, 'vote_average.desc', undefined, providers, region),
+        fetchFn(...makeFetchArgs(1)),
+        fetchFn(...makeFetchArgs(2)),
       ])
       maxPageRef.current = p1.totalPages
-      const fresh = filterFresh([...p1.results, ...p2.results])
-      setQueue(fresh)
-
-      // Fetch cinema IDs in parallel (movies with no platform filter = broad results may include theatrical)
-      if (mediaMode === 'movie' && providers.length === 0) {
+      setQueue(filterFresh([...p1.results, ...p2.results]))
+      if (mediaMode === 'movie' && selectedProviders.length === 0) {
         getNowPlayingMovieIds(region).then(setNowPlayingIds)
       }
     } finally {
@@ -303,14 +347,13 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
   async function handleDecide(dir: 'left' | 'right') {
     const card = queue[0]
     if (!card) return
-
     setQueue(prev => prev.slice(1))
     setSeen(s => s + 1)
     topCardFlyOut.current = null
 
     if (dir === 'right') {
       if (libraryIdsRef.current.has(card.id)) {
-        toast(`Already in your library`)
+        toast('Already in your library')
       } else {
         try {
           if (activeModeRef.current === 'tv') {
@@ -361,16 +404,17 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
     return 'bg-[#1C1C1E] text-[#8E8E93] border border-white/8 active:bg-[#2C2C2E]'
   }
 
+  function toggleProvider(id: number) {
+    setSelectedProviders(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id])
+  }
+
   // ── Setup screen ─────────────────────────────────────────────────────────
 
   if (phase === 'setup') {
-    const providers = getDefaultProviders()
-    const hasProviders = providers.length > 0
-    const country = getCountry()
-
     return (
       <div className="flex flex-col h-full bg-black">
-        <div className="shrink-0 px-4 pb-4 bg-black pt-2">
+        {/* TV / Movie toggle */}
+        <div className="shrink-0 px-4 pb-3 pt-2 bg-black">
           <div className="flex bg-white/5 rounded-2xl p-1 gap-1">
             {(['tv', 'movie'] as const).map(mode => (
               <button
@@ -387,11 +431,10 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-5">
-          {/* Genre chips */}
+
+          {/* Genres */}
           <div>
-            <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-1.5">
-              Genres
-            </p>
+            <SectionLabel>Genres</SectionLabel>
             <p className="text-[11px] text-[#48484A] mb-3">Tap once to include, twice to exclude.</p>
             <div className="flex flex-wrap gap-2">
               {genres.map(g => {
@@ -410,11 +453,85 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
             </div>
           </div>
 
+          {/* Rating */}
+          <div>
+            <SectionLabel>Min rating</SectionLabel>
+            <div className="flex flex-wrap gap-2">
+              {RATING_OPTIONS.map(opt => (
+                <button
+                  key={String(opt.value)}
+                  onClick={() => setMinRating(opt.value)}
+                  className={`py-1.5 px-3.5 rounded-full text-[11px] font-semibold transition-colors border ${
+                    minRating === opt.value
+                      ? 'bg-[#BF5AF2] text-white border-[#BF5AF2]'
+                      : 'bg-[#1C1C1E] text-[#8E8E93] border-white/8 active:bg-[#2C2C2E]'
+                  }`}
+                >
+                  {opt.value == null ? 'Any' : <><span className="text-[10px]">★</span> {opt.label}</>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Year */}
+          <div>
+            <SectionLabel>Year</SectionLabel>
+            <input
+              type="number"
+              inputMode="numeric"
+              placeholder="e.g. 2022"
+              min={1900}
+              max={new Date().getFullYear() + 2}
+              value={yearFilter}
+              onChange={e => setYearFilter(e.target.value.slice(0, 4))}
+              className="w-full bg-[#1C1C1E] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-[#F5F5F7] placeholder-[#48484A] outline-none focus:border-white/20 transition-colors"
+              style={{ fontSize: 16 }}
+            />
+          </div>
+
+          {/* Platforms */}
+          <div>
+            <SectionLabel>Platforms</SectionLabel>
+            {loadingProviders ? (
+              <Loader2 className="w-4 h-4 text-[#48484A] animate-spin" />
+            ) : availableProviders.length === 0 ? (
+              <p className="text-[11px] text-[#48484A]">No platforms found for your region. Update in Settings.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {availableProviders.map(p => {
+                  const isSelected = selectedProviders.includes(p.provider_id)
+                  return (
+                    <button
+                      key={p.provider_id}
+                      onClick={() => toggleProvider(p.provider_id)}
+                      title={p.provider_name}
+                      className={`flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-full border transition-colors ${
+                        isSelected
+                          ? 'bg-[rgba(191,90,242,0.15)] border-[rgba(191,90,242,0.35)] text-[#F5F5F7]'
+                          : 'bg-[#1C1C1E] border-white/8 text-[#48484A] active:bg-[#2C2C2E]'
+                      }`}
+                    >
+                      <img
+                        src={`${IMG_BASE}/w45${p.logo_path}`}
+                        alt={p.provider_name}
+                        className="w-5 h-5 rounded-sm object-cover shrink-0"
+                      />
+                      <span className="text-[11px] font-medium whitespace-nowrap">{p.provider_name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            <p className="text-[11px] text-[#48484A] mt-2 leading-relaxed">
+              {selectedProviders.length === 0
+                ? 'No platform selected — showing everything, including cinema releases.'
+                : `${selectedProviders.length} platform${selectedProviders.length > 1 ? 's' : ''} selected.`}
+            </p>
+          </div>
+
           {/* Library toggle */}
           <div>
-            <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-3">
-              Library
-            </p>
+            <SectionLabel>Library</SectionLabel>
             <button
               onClick={() => setNewOnly(v => !v)}
               className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl border transition-colors ${
@@ -431,18 +548,6 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
                 </p>
               </div>
             </button>
-          </div>
-
-          {/* Platform info */}
-          <div>
-            <p className="text-[10px] text-[#48484A] uppercase tracking-widest font-semibold mb-2">
-              Platforms
-            </p>
-            <p className="text-[11px] text-[#48484A] leading-relaxed">
-              {hasProviders
-                ? `Showing content from your ${providers.length} saved platform${providers.length > 1 ? 's' : ''} (${country}). Change in Settings.`
-                : 'No platforms saved — showing everything, including cinema releases. Set platforms in Settings to filter.'}
-            </p>
           </div>
 
           {/* CTA */}
@@ -486,12 +591,12 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
       <div className="relative flex-1 mx-4 mt-1 mb-3">
         {isEmpty ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center">
-            <p className="text-[#8E8E93] text-sm">You've seen everything in this genre mix!</p>
+            <p className="text-[#8E8E93] text-sm">You've seen everything in this filter mix!</p>
             <button
               onClick={() => setPhase('setup')}
               className="px-6 py-3 bg-[#BF5AF2] rounded-2xl text-white text-sm font-semibold"
             >
-              Change genres
+              Adjust filters
             </button>
           </div>
         ) : fetching && queue.length === 0 ? (
