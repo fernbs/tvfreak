@@ -5,21 +5,21 @@
     <rect x="10" y="14" width="80" height="8"/>
     <rect x="2"  y="22" width="96" height="8"/>
     <rect x="2"  y="30" width="16" height="8"/>
-    <rect x="26" y="30" width="40" height="8"/>
-    <rect x="74" y="30" width="24" height="8"/>
+    <rect x="26" y="30" width="48" height="8"/>
+    <rect x="82" y="30" width="16" height="8"/>
     <rect x="2"  y="38" width="8"  height="8"/>
-    <rect x="34" y="38" width="24" height="8"/>
-    <rect x="82" y="38" width="16" height="8"/>
+    <rect x="34" y="38" width="32" height="8"/>
+    <rect x="90" y="38" width="8"  height="8"/>
     <rect x="2"  y="46" width="16" height="8"/>
-    <rect x="26" y="46" width="40" height="8"/>
-    <rect x="74" y="46" width="24" height="8"/>
+    <rect x="26" y="46" width="48" height="8"/>
+    <rect x="82" y="46" width="16" height="8"/>
     <rect x="2"  y="54" width="96" height="8"/>
     <rect x="2"  y="62" width="40" height="8"/>
     <rect x="58" y="62" width="40" height="8"/>
     <rect x="2"  y="70" width="96" height="8"/>
     <rect x="10" y="78" width="80" height="8"/>
-    <rect x="10" y="86" width="16" height="8"/>
+    <rect x="18" y="86" width="16" height="8"/>
     <rect x="42" y="86" width="16" height="8"/>
-    <rect x="74" y="86" width="16" height="8"/>
+    <rect x="66" y="86" width="16" height="8"/>
   </g>
 </svg>
