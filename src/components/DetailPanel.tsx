@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, MoreHorizontal, Loader2, Calendar, CheckCircle2, Plus, Share2, Play } from 'lucide-react'
-import { getTvDetails, getExternalIds, getImdbRating, getTvRecommendations, getTvSimilar, getWatchProviders, getTrailerKey, posterUrl, IMG_BASE } from '../lib/tmdb'
+import { getTvDetails, getExternalIds, getRatings, getTvRecommendations, getTvSimilar, getWatchProviders, getTrailerKey, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getCountry } from '../lib/settings'
 import { updateSeries, deleteSeries, addSeries } from '../lib/api'
 import type { Series, SeriesStatus, TmdbShowDetail, TmdbNextEpisode, TmdbSearchResult, WatchProvider } from '../types'
@@ -47,6 +47,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const [hasMoreRecs, setHasMoreRecs] = useState(false)
   const [localImdbRating, setLocalImdbRating] = useState<string | null>(null)
   const [imdbId, setImdbId] = useState<string | null>(null)
+  const [rtRating, setRtRating] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [moreModal, setMoreModal] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -73,6 +74,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
     setHasMoreRecs(false)
     setLocalImdbRating(null)
     setImdbId(null)
+    setRtRating(null)
     if (!series.tmdbId) return
 
     setLoadingDetail(true)
@@ -89,12 +91,11 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
       const ext = await getExternalIds(series.tmdbId!)
       if (ext.imdb_id) {
         setImdbId(ext.imdb_id)
-        if (!series.imdbRating) {
-          const rating = await getImdbRating(ext.imdb_id)
-          if (rating) {
-            setLocalImdbRating(rating)
-            if (series.id) updates.imdbRating = rating
-          }
+        const { imdb, rt } = await getRatings(ext.imdb_id)
+        if (rt) setRtRating(rt)
+        if (imdb && !series.imdbRating) {
+          setLocalImdbRating(imdb)
+          if (series.id) updates.imdbRating = imdb
         }
       }
       if (series.id && Object.keys(updates).length > 0) {
@@ -378,17 +379,32 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     {(detail?.number_of_seasons ?? series.numberOfSeasons) ? ` · ${detail?.number_of_seasons ?? series.numberOfSeasons} season${(detail?.number_of_seasons ?? series.numberOfSeasons) === 1 ? '' : 's'}` : ''}
                   </p>
 
-                  {displayImdbRating && (
-                    <a
-                      href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={e => { if (!imdbId) e.preventDefault() }}
-                      className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
-                    >
-                      <span className="text-[#BF5AF2] text-xs">★</span>
-                      <span className="text-xs text-white font-medium">{displayImdbRating}</span>
-                    </a>
+                  {(displayImdbRating || rtRating) && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {displayImdbRating && (
+                        <a
+                          href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => { if (!imdbId) e.preventDefault() }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
+                        >
+                          <span className="text-[#BF5AF2] text-xs">★</span>
+                          <span className="text-xs text-white font-medium">{displayImdbRating}</span>
+                        </a>
+                      )}
+                      {rtRating && (
+                        <a
+                          href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(series.title)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
+                        >
+                          <span className="text-[#FA320A] text-[10px] font-bold">RT</span>
+                          <span className="text-xs text-white font-medium">{rtRating}</span>
+                        </a>
+                      )}
+                    </div>
                   )}
 
                   {/* Genre chips */}

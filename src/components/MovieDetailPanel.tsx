@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, Plus, Play } from 'lucide-react'
-import { getMovieDetails, getMovieRecommendations, getMovieWatchProviders, getMovieExternalIds, getImdbRating, getTrailerKey, posterUrl, IMG_BASE } from '../lib/tmdb'
+import { getMovieDetails, getMovieRecommendations, getMovieWatchProviders, getMovieExternalIds, getRatings, getTrailerKey, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getCountry } from '../lib/settings'
 import { addMovie, updateMovie, deleteMovie } from '../lib/api'
 import type { Movie, MovieStatus, TmdbMovieDetail, TmdbSearchResult, WatchProvider } from '../types'
@@ -44,6 +44,8 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
   const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
   const [providers, setProviders] = useState<{ flatrate: WatchProvider[]; free: WatchProvider[] }>({ flatrate: [], free: [] })
   const [trailerKey, setTrailerKey] = useState<string | null>(null)
+  const [imdbId, setImdbId] = useState<string | null>(null)
+  const [rtRating, setRtRating] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [adding, setAdding] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -54,11 +56,13 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
   const isInLibrary = Boolean(movie?.id)
 
   useEffect(() => {
-    if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); setTrailerKey(null); return }
+    if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); setTrailerKey(null); setImdbId(null); setRtRating(null); return }
     setLoadingDetail(true)
     setDetail(null)
     setRecommendations([])
     setTrailerKey(null)
+    setImdbId(null)
+    setRtRating(null)
     setDisplayRating(movie.imdbRating ?? null)
     getTrailerKey(movie.tmdbId, 'movie').then(setTrailerKey)
 
@@ -73,11 +77,14 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
       if (d && (d.vote_average ?? 0) > 0 && !movie.imdbRating) {
         setDisplayRating(d.vote_average!.toFixed(1))
       }
-      // Fetch IMDB rating via OMDB
       if (movie.tmdbId) {
         getMovieExternalIds(movie.tmdbId).then(ext => {
           if (ext.imdb_id) {
-            getImdbRating(ext.imdb_id).then(r => { if (r) setDisplayRating(r) })
+            setImdbId(ext.imdb_id)
+            getRatings(ext.imdb_id).then(({ imdb, rt }) => {
+              if (imdb) setDisplayRating(imdb)
+              if (rt) setRtRating(rt)
+            })
           }
         })
       }
@@ -193,10 +200,27 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                       {releaseYear && <span className="text-sm text-[#8E8E93]">{releaseYear}</span>}
                       {runtime && <span className="text-sm text-[#8E8E93]">{runtime}</span>}
                       {displayRating && (
-                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs">
+                        <a
+                          href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => { if (!imdbId) e.preventDefault() }}
+                          className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
+                        >
                           <span className="text-[#BF5AF2]">★</span>
                           <span className="text-white font-medium">{displayRating}</span>
-                        </span>
+                        </a>
+                      )}
+                      {rtRating && (
+                        <a
+                          href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie?.title ?? '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
+                        >
+                          <span className="text-[#FA320A] text-[10px] font-bold">RT</span>
+                          <span className="text-white font-medium">{rtRating}</span>
+                        </a>
                       )}
                     </div>
                     {detail?.genres && detail.genres.length > 0 && (

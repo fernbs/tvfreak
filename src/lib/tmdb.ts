@@ -146,18 +146,22 @@ export async function getWatchProviders(
 }
 
 export async function getImdbRating(imdbId: string): Promise<string | null> {
-  if (!OMDB_KEY || !imdbId) return null
-  const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_KEY}`
+  return (await getRatings(imdbId)).imdb
+}
+
+export async function getRatings(imdbId: string): Promise<{ imdb: string | null; rt: string | null }> {
+  if (!OMDB_KEY || !imdbId) return { imdb: null, rt: null }
   try {
-    const res = await fetch(url)
-    if (!res.ok) return null
+    const res = await fetch(`https://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_KEY}`)
+    if (!res.ok) return { imdb: null, rt: null }
     const data = await res.json()
-    if (data.Response === 'True' && data.imdbRating && data.imdbRating !== 'N/A') {
-      return data.imdbRating
-    }
-    return null
+    if (data.Response !== 'True') return { imdb: null, rt: null }
+    const imdb = data.imdbRating && data.imdbRating !== 'N/A' ? data.imdbRating : null
+    const rtEntry = (data.Ratings ?? []).find((r: { Source: string }) => r.Source === 'Rotten Tomatoes')
+    const rt = rtEntry?.Value ?? null
+    return { imdb, rt }
   } catch {
-    return null
+    return { imdb: null, rt: null }
   }
 }
 
