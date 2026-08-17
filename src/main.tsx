@@ -15,7 +15,10 @@ const update = () => {
   // bottom (physical y=852). Bleeding by that gap fills the space with nav background.
   const isLandscape = window.matchMedia('(orientation: landscape)').matches
   const bleed = isStandalone && !isLandscape ? Math.max(0, screen.height - vvh) : 0
-  document.documentElement.style.setProperty('--vvh', `${vvh}px`)
+  // In standalone portrait, set --vvh to the full screen height so the in-flow
+  // nav's bleed area renders in the safe zone below the visual viewport.
+  const cssVvh = isStandalone && !isLandscape ? screen.height : vvh
+  document.documentElement.style.setProperty('--vvh', `${cssVvh}px`)
   document.documentElement.style.setProperty('--nav-bleed', `${bleed}px`)
 }
 
