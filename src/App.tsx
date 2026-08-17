@@ -475,12 +475,20 @@ export default function App() {
   const [dbg, setDbg] = useState('')
   useEffect(() => {
     const vvh = window.visualViewport?.height ?? 0
-    const inh = window.innerHeight
-    const dch = document.documentElement.clientHeight
     const sh = screen.height
     const standalone = window.matchMedia('(display-mode: standalone)').matches
-    const vvhCss = getComputedStyle(document.documentElement).getPropertyValue('--vvh').trim()
-    setDbg(`vvh:${vvh} inh:${inh} dch:${dch} sh:${sh} sa:${standalone} css:${vvhCss}`)
+    // Measure env() values via a probe element
+    const probe = document.createElement('div')
+    probe.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden'
+    const probe2 = document.createElement('div')
+    probe2.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden'
+    document.body.appendChild(probe)
+    document.body.appendChild(probe2)
+    const sit = probe.getBoundingClientRect().height
+    const sib = probe2.getBoundingClientRect().height
+    document.body.removeChild(probe)
+    document.body.removeChild(probe2)
+    setDbg(`vvh:${vvh} sh:${sh} sa:${standalone} sit:${sit} sib:${sib}`)
   }, [])
 
   return (
