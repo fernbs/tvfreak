@@ -780,10 +780,10 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
 
                   <button
                     onClick={handleRemove}
-                    className="w-full px-4 py-3 bg-white/3 hover:bg-rose-500/8 border border-white/8 hover:border-rose-500/15 text-left rounded-2xl transition-colors group"
+                    className="w-full px-4 py-3 bg-rose-500/8 hover:bg-rose-500/14 border border-rose-500/20 hover:border-rose-500/30 text-left rounded-2xl transition-colors"
                   >
-                    <span className="text-sm font-medium text-[#8E8E93] group-hover:text-rose-400 transition-colors block">Remove from library</span>
-                    <span className="text-xs text-[#48484A] group-hover:text-rose-400/50 transition-colors mt-0.5 block">Permanently delete this series and all watch history</span>
+                    <span className="text-sm font-medium text-rose-400 block">Remove from library</span>
+                    <span className="text-xs text-rose-400/50 mt-0.5 block">Permanently delete this series and all watch history</span>
                   </button>
 
                   <button
