@@ -1,19 +1,17 @@
-import { useState, useRef, useEffect } from 'react'
-import { Calendar, Loader2, ChevronLeft, ChevronRight, ChevronDown, Tv } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Calendar, ChevronLeft, ChevronRight, ChevronDown, Tv } from 'lucide-react'
 import type { Series } from '../types'
 import { SeriesGrid } from './SeriesGrid'
 import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
 import type { ViewMode } from '../lib/useViewMode'
 
-const PULL_THRESHOLD = 72
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 interface Props {
   series: Series[]
   loading: boolean
   onSelect: (s: Series) => void
-  onRefresh: () => Promise<void>
   viewMode: ViewMode
 }
 
@@ -28,11 +26,8 @@ function addMonths(date: Date, n: number): Date {
   return d
 }
 
-export function HomeTab({ series, loading, onSelect, onRefresh, viewMode }: Props) {
+export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
   const [view, setView] = useState<'watching' | 'upcoming'>('watching')
-  const [pullDistance, setPullDistance] = useState(0)
-  const [pullReady, setPullReady] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
   const [calMonth, setCalMonth] = useState(() => {
     const d = new Date()
     d.setDate(1)
@@ -42,74 +37,6 @@ export function HomeTab({ series, loading, onSelect, onRefresh, viewMode }: Prop
   const [calOpen, setCalOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(20)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const touchStartY = useRef(0)
-  const isPulling = useRef(false)
-  const pullDistanceRef = useRef(0)
-  const refreshingRef = useRef(false)
-
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-
-    function handleTouchStart(e: TouchEvent) {
-      if ((el!.scrollTop ?? 0) === 0) {
-        touchStartY.current = e.touches[0].clientY
-        isPulling.current = true
-      }
-    }
-
-    function handleTouchMove(e: TouchEvent) {
-      if (!isPulling.current || refreshingRef.current) return
-      const delta = e.touches[0].clientY - touchStartY.current
-      if (delta > 0) {
-        e.preventDefault()
-        let dist: number
-        if (delta * 0.75 <= PULL_THRESHOLD) {
-          dist = delta * 0.75
-        } else {
-          const overshoot = delta * 0.75 - PULL_THRESHOLD
-          dist = PULL_THRESHOLD + overshoot * 0.25
-        }
-        dist = Math.min(dist, PULL_THRESHOLD * 1.6)
-        pullDistanceRef.current = dist
-        setPullDistance(dist)
-        setPullReady(dist >= PULL_THRESHOLD)
-      }
-    }
-
-    async function handleTouchEnd() {
-      if (pullDistanceRef.current >= PULL_THRESHOLD && !refreshingRef.current) {
-        refreshingRef.current = true
-        setRefreshing(true)
-        setPullReady(false)
-        setPullDistance(0)
-        pullDistanceRef.current = 0
-        try {
-          await Promise.race([
-            onRefresh(),
-            new Promise<void>(resolve => setTimeout(resolve, 12000)),
-          ])
-        } finally {
-          refreshingRef.current = false
-          setRefreshing(false)
-        }
-      } else {
-        setPullDistance(0)
-        setPullReady(false)
-        pullDistanceRef.current = 0
-      }
-      isPulling.current = false
-    }
-
-    el.addEventListener('touchstart', handleTouchStart, { passive: true })
-    el.addEventListener('touchmove', handleTouchMove, { passive: false })
-    el.addEventListener('touchend', handleTouchEnd)
-    return () => {
-      el.removeEventListener('touchstart', handleTouchStart)
-      el.removeEventListener('touchmove', handleTouchMove)
-      el.removeEventListener('touchend', handleTouchEnd)
-    }
-  }, [onRefresh])
 
   const today = new Date()
   const todayStr = toDateStr(today)
@@ -168,26 +95,6 @@ export function HomeTab({ series, loading, onSelect, onRefresh, viewMode }: Prop
 
   return (
     <div className="flex flex-col h-full">
-      {/* Pull-to-refresh indicator */}
-      <div
-        className="shrink-0 flex items-center justify-center overflow-hidden"
-        style={{
-          height: refreshing ? 40 : pullDistance > 0 ? Math.min(pullDistance * 0.55, 40) : 0,
-          transition: pullDistance === 0 ? 'height 0.3s ease' : 'none',
-        }}
-      >
-        <Loader2
-          className={`w-5 h-5 transition-colors duration-150 ${
-            refreshing ? 'animate-spin text-[#BF5AF2]' : pullReady ? 'text-[#BF5AF2]' : 'text-[#48484A]'
-          }`}
-          style={{
-            opacity: refreshing ? 1 : Math.min(pullDistance / (PULL_THRESHOLD * 0.5), 1),
-            transform: refreshing ? undefined : `rotate(${Math.min(pullDistance / PULL_THRESHOLD, 1) * 180}deg)`,
-            transition: refreshing ? undefined : 'color 0.15s ease',
-          }}
-        />
-      </div>
-
       {/* Sticky sub-header */}
       <div className="shrink-0 px-4 pb-3 bg-black">
         {/* Segmented control */}
@@ -339,7 +246,7 @@ export function HomeTab({ series, loading, onSelect, onRefresh, viewMode }: Prop
                   {selectedDate ? 'No episodes airing this day.' : 'No upcoming episodes found.'}
                 </p>
                 {!selectedDate && (
-                  <p className="text-xs text-[#2C2C2E] mt-1">Pull to refresh to update dates.</p>
+                  <p className="text-xs text-[#2C2C2E] mt-1">Dates update automatically on launch.</p>
                 )}
               </div>
             ) : viewMode === 'list' ? (

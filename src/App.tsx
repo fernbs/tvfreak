@@ -551,7 +551,7 @@ export default function App() {
       {/* Tab content */}
       <main className="flex-1 overflow-hidden min-h-0">
         {tab === 'home' && (
-          <HomeTab series={allSeries} loading={loading} onSelect={openSeries} onRefresh={refreshNextEpisodeDates} viewMode={viewMode} />
+          <HomeTab series={allSeries} loading={loading} onSelect={openSeries} viewMode={viewMode} />
         )}
         {tab === 'library' && (
           <LibraryTab

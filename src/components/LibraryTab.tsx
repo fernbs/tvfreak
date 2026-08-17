@@ -130,10 +130,10 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
         const cfg = MOVIE_STATUS_CONFIG[m.status]
         const poster = m.posterPath ? `https://image.tmdb.org/t/p/w342${m.posterPath}` : null
         return (
-          <div
+          <button
             key={m.id ?? m.tmdbId}
             onClick={() => onSelect(m)}
-            className="relative aspect-[2/3] rounded-2xl overflow-hidden cursor-pointer group select-none"
+            className="relative aspect-[2/3] rounded-2xl overflow-hidden text-left"
             style={{ transform: 'translateZ(0)' }}
           >
             {poster ? (
@@ -157,7 +157,7 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
                 <span className="text-white"> {m.imdbRating}</span>
               </div>
             )}
-          </div>
+          </button>
         )
       })}
     </div>
