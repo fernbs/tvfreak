@@ -118,15 +118,13 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
   const [seasonStates, setSeasonStates] = useState<Record<number, SeasonState>>({})
   const [episodeModal, setEpisodeModal] = useState<EpisodeModal | null>(null)
   const [seasonModal, setSeasonModal] = useState<SeasonModal | null>(null)
+  const today = new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
-    loadWatched()
+    getWatchedEpisodes(seriesId).then(eps => {
+      setWatched(new Set(eps.map(e => `${e.seasonNumber}-${e.episodeNumber}`)))
+    })
   }, [seriesId])
-
-  async function loadWatched() {
-    const eps = await getWatchedEpisodes(seriesId)
-    setWatched(new Set(eps.map(e => `${e.seasonNumber}-${e.episodeNumber}`)))
-  }
 
   function releasedEpisodeCount(freshSeasonEps?: Record<number, TmdbEpisode[]>): number {
     return seasons.filter(s => s.season_number > 0).reduce((sum, s) => {
@@ -316,7 +314,6 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
     checkAllWatched(next)
   }
 
-  const today = new Date().toISOString().slice(0, 10)
   const regularSeasons = seasons.filter(s => s.season_number > 0)
   const specialsSeason = seasons.find(s => s.season_number === 0)
 

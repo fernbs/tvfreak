@@ -110,6 +110,12 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
   const ambiguous = data?.movies.filter(m => m.status === 'ambiguous') ?? []
   const noMatch = data?.movies.filter(m => m.status === 'no_match') ?? []
 
+  const markDone = useCallback(() => {
+    localStorage.setItem(IMPORT_DONE_KEY, '1')
+    onImportDone()
+    setStage('done')
+  }, [onImportDone])
+
   const handleBulkImport = useCallback(async () => {
     setStage('bulk-importing')
 
@@ -163,8 +169,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
     } else {
       markDone()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matched, ambiguous])
+  }, [matched, ambiguous, markDone])
 
   const handleSkipBulk = useCallback(() => {
     if (ambiguous.length > 0) {
@@ -174,14 +179,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
     } else {
       markDone()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ambiguous])
-
-  const markDone = () => {
-    localStorage.setItem(IMPORT_DONE_KEY, '1')
-    onImportDone()
-    setStage('done')
-  }
+  }, [ambiguous, markDone])
 
   const handleSelectCandidate = async (candidate: Candidate) => {
     try {

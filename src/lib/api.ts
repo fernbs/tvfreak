@@ -1,4 +1,4 @@
-import type { Series, WatchedEpisode } from '../types'
+import type { Series, WatchedEpisode, Movie } from '../types'
 
 const BASE = (import.meta.env.VITE_WORKER_URL ?? 'http://localhost:8787').replace(/\/$/, '')
 
@@ -197,16 +197,16 @@ export async function resolveDuplicate(keepId: number, removeId: number): Promis
 
 // ── Movie CRUD ───────────────────────────────────────────────────────────────
 
-function parseMovie(row: Record<string, unknown>): import('../types').Movie {
+function parseMovie(row: Record<string, unknown>): Movie {
   return {
     ...row,
     imdbRating: (row.imdbRating as string | null) ?? null,
     addedAt: new Date(row.addedAt as string),
     updatedAt: new Date(row.updatedAt as string),
-  } as import('../types').Movie
+  } as Movie
 }
 
-export async function getAllMovies(): Promise<import('../types').Movie[]> {
+export async function getAllMovies(): Promise<Movie[]> {
   try {
     const res = await fetch(`${BASE}/api/movies`)
     if (!res.ok) return []
@@ -215,7 +215,7 @@ export async function getAllMovies(): Promise<import('../types').Movie[]> {
   } catch { return [] }
 }
 
-export async function addMovie(movie: Omit<import('../types').Movie, 'id'>): Promise<number> {
+export async function addMovie(movie: Omit<Movie, 'id'>): Promise<number> {
   const res = await fetch(`${BASE}/api/movies`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -236,7 +236,7 @@ export async function deduplicateMovies(): Promise<number> {
   return data.deleted
 }
 
-export async function addMoviesBatch(movies: import('../types').Movie[]): Promise<{ inserted: number }> {
+export async function addMoviesBatch(movies: Movie[]): Promise<{ inserted: number }> {
   const res = await fetch(`${BASE}/api/movies/batch`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -255,7 +255,7 @@ export async function addMoviesBatch(movies: import('../types').Movie[]): Promis
   return res.json()
 }
 
-export async function updateMovie(id: number, changes: Partial<import('../types').Movie>): Promise<void> {
+export async function updateMovie(id: number, changes: Partial<Movie>): Promise<void> {
   const body: Record<string, unknown> = { ...changes, updatedAt: new Date().toISOString() }
   if (body.addedAt instanceof Date) body.addedAt = (body.addedAt as Date).toISOString()
   await fetch(`${BASE}/api/movies/${id}`, {

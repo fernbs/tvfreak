@@ -56,7 +56,7 @@ export async function importFromCsv(
       chunk.map(async (row) => {
         let tmdbData = null
         try {
-          const results = await searchTv(row.Title)
+          const { results } = await searchTv(row.Title)
           if (results.length > 0) tmdbData = results[0]
         } catch {
           // TMDB lookup failed, store without poster

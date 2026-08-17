@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { X, Check, Loader2, ChevronLeft, Sparkles } from 'lucide-react'
 import { getDiscoverByGenres, discoverMovies, getNowPlayingMovieIds, getStreamingProviders, getMovieStreamingProviders, posterUrl, IMG_BASE } from '../lib/tmdb'
@@ -79,16 +79,16 @@ function SwipeCard({ card, isTop, stackIndex, inCinema, onDecide, onReady }: Swi
   const onDecideRef = useRef(onDecide)
   onDecideRef.current = onDecide
 
-  async function flyOut(dir: 'left' | 'right') {
+  const flyOut = useCallback(async (dir: 'left' | 'right') => {
     await animate(x, dir === 'right' ? 620 : -620, {
       type: 'tween', duration: 0.26, ease: 'easeOut',
     })
     onDecideRef.current(dir)
-  }
+  }, [x])
 
   useEffect(() => {
     if (isTop) onReady?.(flyOut)
-  }, [isTop])
+  }, [isTop, onReady, flyOut])
 
   function onDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
     if (info.offset.x > 80 || info.velocity.x > 500) flyOut('right')
