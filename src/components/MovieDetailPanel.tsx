@@ -49,6 +49,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
   const [imdbId, setImdbId] = useState<string | null>(null)
   const [rtRating, setRtRating] = useState<string | null>(null)
   const [mcRating, setMcRating] = useState<string | null>(null)
+  const [ratingsLoaded, setRatingsLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
   const [adding, setAdding] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -60,7 +61,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
 
   useEffect(() => {
     setMinimized(false)
-    if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); setTrailerKey(null); setImdbId(null); setRtRating(null); setMcRating(null); return }
+    if (!movie?.tmdbId) { setDetail(null); setRecommendations([]); setTrailerKey(null); setImdbId(null); setRtRating(null); setMcRating(null); setRatingsLoaded(false); return }
     setLoadingDetail(true)
     setDetail(null)
     setRecommendations([])
@@ -90,9 +91,14 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
               if (imdb) setDisplayRating(imdb)
               if (rt) setRtRating(rt)
               if (mc) setMcRating(mc)
+              setRatingsLoaded(true)
             })
+          } else {
+            setRatingsLoaded(true)
           }
         })
+      } else {
+        setRatingsLoaded(true)
       }
     }).finally(() => setLoadingDetail(false))
   }, [movie?.tmdbId])
@@ -226,7 +232,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       {releaseYear && <span className="text-sm text-[#8E8E93]">{releaseYear}</span>}
                       {runtime && <span className="text-sm text-[#8E8E93]">{runtime}</span>}
-                      {displayRating && (
+                      {!loadingDetail && (
                         <a
                           href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
                           target="_blank"
@@ -235,24 +241,28 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
                           <span className="bg-[#F5C518] text-black font-black px-[3px] py-px rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
-                          <span className="text-white font-medium leading-none">{displayRating}</span>
+                          <span className="font-medium leading-none" style={{ color: displayRating ? 'white' : '#8E8E93' }}>{displayRating ?? 'N/A'}</span>
                         </a>
                       )}
-                      {rtRating && (
+                      {ratingsLoaded && (
                         <a
                           href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie?.title ?? '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
-                          {parseInt(rtRating) >= 60 ? (
-                            <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
+                          {rtRating ? (
+                            parseInt(rtRating) >= 60 ? (
+                              <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
+                            ) : (
+                              <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
+                                <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
+                              </svg>
+                            )
                           ) : (
-                            <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
-                              <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
-                            </svg>
+                            <span className="text-[#8E8E93] text-[10px] font-bold leading-none">RT</span>
                           )}
-                          <span className="text-white font-medium leading-none">{rtRating}</span>
+                          <span className="font-medium leading-none" style={{ color: rtRating ? 'white' : '#8E8E93' }}>{rtRating ?? 'N/A'}</span>
                         </a>
                       )}
                       {mcRating && (

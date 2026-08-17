@@ -51,6 +51,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const [imdbId, setImdbId] = useState<string | null>(null)
   const [rtRating, setRtRating] = useState<string | null>(null)
   const [mcRating, setMcRating] = useState<string | null>(null)
+  const [ratingsLoaded, setRatingsLoaded] = useState(false)
   const [notes, setNotes] = useState('')
   const [moreModal, setMoreModal] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -80,6 +81,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
     setImdbId(null)
     setRtRating(null)
     setMcRating(null)
+    setRatingsLoaded(false)
     if (!series.tmdbId) return
 
     setLoadingDetail(true)
@@ -107,6 +109,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
           if (!series.imdbRating && series.id) updates.imdbRating = imdb
         }
       }
+      setRatingsLoaded(true)
       if (series.id && Object.keys(updates).length > 0) {
         await updateSeries(series.id, updates)
         onUpdated()
@@ -408,35 +411,37 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     {(detail?.number_of_seasons ?? series.numberOfSeasons) ? ` · ${detail?.number_of_seasons ?? series.numberOfSeasons} season${(detail?.number_of_seasons ?? series.numberOfSeasons) === 1 ? '' : 's'}` : ''}
                   </p>
 
-                  {(displayImdbRating || rtRating || mcRating) && (
+                  {!loadingDetail && (
                     <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                      {displayImdbRating && (
-                        <a
-                          href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={e => { if (!imdbId) e.preventDefault() }}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
-                        >
-                          <span className="bg-[#F5C518] text-black font-black px-[3px] py-px rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
-                          <span className="text-xs text-white font-medium leading-none">{displayImdbRating}</span>
-                        </a>
-                      )}
-                      {rtRating && (
+                      <a
+                        href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => { if (!imdbId) e.preventDefault() }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
+                      >
+                        <span className="bg-[#F5C518] text-black font-black px-[3px] py-px rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
+                        <span className="text-xs font-medium leading-none" style={{ color: displayImdbRating ? 'white' : '#8E8E93' }}>{displayImdbRating ?? 'N/A'}</span>
+                      </a>
+                      {ratingsLoaded && (
                         <a
                           href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(series.title)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
                         >
-                          {parseInt(rtRating) >= 60 ? (
-                            <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
+                          {rtRating ? (
+                            parseInt(rtRating) >= 60 ? (
+                              <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
+                            ) : (
+                              <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
+                                <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
+                              </svg>
+                            )
                           ) : (
-                            <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
-                              <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
-                            </svg>
+                            <span className="text-[#8E8E93] text-[10px] font-bold leading-none">RT</span>
                           )}
-                          <span className="text-xs text-white font-medium leading-none">{rtRating}</span>
+                          <span className="text-xs font-medium leading-none" style={{ color: rtRating ? 'white' : '#8E8E93' }}>{rtRating ?? 'N/A'}</span>
                         </a>
                       )}
                       {mcRating && (
