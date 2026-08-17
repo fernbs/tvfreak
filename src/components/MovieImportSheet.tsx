@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
-import { X, Check, SkipForward, Download, ChevronRight, Film } from 'lucide-react'
-import { addMovie } from '../lib/api'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { X, Check, SkipForward, Download, ChevronRight, Film, Search } from 'lucide-react'
+import { addMovie, addMoviesBatch } from '../lib/api'
+import { searchMovie } from '../lib/tmdb'
 
 const IMPORT_DONE_KEY = 'tvfreak-movie-import-done'
 const IMPORT_JSON_URL = `${import.meta.env.BASE_URL}movie-import.json`
+const BATCH_SIZE = 100
 
 interface Candidate {
   tmdbId: number
@@ -15,12 +17,10 @@ interface Candidate {
 interface ImportEntry {
   csvTitle: string
   status: 'matched' | 'ambiguous' | 'no_match'
-  // matched
   tmdbId?: number
   title?: string
   year?: string | null
   posterPath?: string | null
-  // ambiguous
   candidates?: Candidate[]
 }
 
@@ -87,13 +87,20 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
   const [reviewIndex, setReviewIndex] = useState(0)
   const [bulkProgress, setBulkProgress] = useState(0)
   const [bulkTotal, setBulkTotal] = useState(0)
+  const [bulkFailed, setBulkFailed] = useState(0)
   const [error, setError] = useState<string | null>(null)
+
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Candidate[]>([])
+  const [searching, setSearching] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch(IMPORT_JSON_URL)
       .then(r => r.json())
       .then((d: ImportData) => setData(d))
-      .catch(() => setError('Could not load import file. Make sure you ran the match script first.'))
+      .catch(() => setError('Could not load import file.'))
   }, [])
 
   const matched = data?.movies.filter(m => m.status === 'matched') ?? []
@@ -102,17 +109,37 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
 
   const handleBulkImport = useCallback(async () => {
     setStage('bulk-importing')
-    setBulkTotal(matched.length)
-    let done = 0
 
-    for (const m of matched) {
-      if (!m.tmdbId || !m.title) { done++; continue }
+    const toImport = matched
+      .filter(m => m.tmdbId && m.title)
+      .map(m => ({
+        tmdbId: m.tmdbId!,
+        title: m.title!,
+        status: 'completed' as const,
+        posterPath: m.posterPath ?? null,
+        overview: null,
+        releaseDate: m.year ? `${m.year}-01-01` : null,
+        runtime: null,
+        notes: '' as string,
+        imdbRating: null,
+        addedAt: new Date(),
+        updatedAt: new Date(),
+      }))
+
+    setBulkTotal(toImport.length)
+
+    let failed = 0
+    for (let i = 0; i < toImport.length; i += BATCH_SIZE) {
+      const batch = toImport.slice(i, i + BATCH_SIZE)
       try {
-        await saveMovie({ tmdbId: m.tmdbId, title: m.title, year: m.year ?? null, posterPath: m.posterPath ?? null })
-      } catch { /* continue on error */ }
-      done++
-      setBulkProgress(done)
+        await addMoviesBatch(batch)
+      } catch {
+        failed += batch.length
+      }
+      setBulkProgress(Math.min(i + BATCH_SIZE, toImport.length))
     }
+
+    setBulkFailed(failed)
 
     if (ambiguous.length > 0) {
       setReviewQueue(ambiguous)
@@ -121,6 +148,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
     } else {
       markDone()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matched, ambiguous])
 
   const handleSkipBulk = useCallback(() => {
@@ -131,6 +159,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
     } else {
       markDone()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ambiguous])
 
   const markDone = () => {
@@ -147,11 +176,32 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
   }
 
   const advance = () => {
+    setShowSearch(false)
+    setSearchQuery('')
+    setSearchResults([])
     const next = reviewIndex + 1
     if (next >= reviewQueue.length) {
       markDone()
     } else {
       setReviewIndex(next)
+    }
+  }
+
+  const handleTmdbSearch = async (query: string) => {
+    if (!query.trim()) return
+    setSearching(true)
+    try {
+      const { results } = await searchMovie(query)
+      setSearchResults(results.slice(0, 10).map(r => ({
+        tmdbId: r.id,
+        title: r.name,
+        year: r.first_air_date ? r.first_air_date.substring(0, 4) : null,
+        posterPath: r.poster_path,
+      })))
+    } catch {
+      setSearchResults([])
+    } finally {
+      setSearching(false)
     }
   }
 
@@ -181,7 +231,6 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
           </button>
         </div>
 
-        {/* Body */}
         {error && (
           <div className="px-5 py-8 text-center">
             <p className="text-[#FB7185] text-sm">{error}</p>
@@ -194,19 +243,17 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
           </div>
         )}
 
-        {/* ── Summary stage ── */}
+        {/* ── Summary ── */}
         {data && stage === 'summary' && (
           <div className="px-5 py-5 overflow-y-auto">
             <p className="text-[#8E8E93] text-sm mb-5">
               Found {data.movies.length.toLocaleString()} movies in your CSV. Here's what we matched against TMDB:
             </p>
-
             <div className="space-y-2.5 mb-6">
               <StatRow color="#34D399" label="Auto-matched" count={matched.length} note="ready to import" />
               <StatRow color="#FBBF24" label="Needs confirmation" count={ambiguous.length} note="pick from options" />
               <StatRow color="#48484A" label="Not found" count={noMatch.length} note="will be skipped" />
             </div>
-
             {matched.length > 0 && (
               <button
                 onClick={handleBulkImport}
@@ -231,7 +278,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
           </div>
         )}
 
-        {/* ── Bulk importing stage ── */}
+        {/* ── Bulk importing ── */}
         {stage === 'bulk-importing' && (
           <div className="px-5 py-10 flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-2 border-[#BF5AF2] border-t-transparent rounded-full animate-spin" />
@@ -248,41 +295,71 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
           </div>
         )}
 
-        {/* ── Review stage ── */}
+        {/* ── Review ── */}
         {data && stage === 'review' && currentItem && (
-          <div className="px-5 pt-4 pb-4 overflow-y-auto">
+          <div className="px-5 pt-4 pb-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 70px)' }}>
             <p className="text-[#8E8E93] text-xs mb-1">Your title</p>
             <p className="text-[#F5F5F7] text-base font-semibold mb-4">{currentItem.csvTitle}</p>
 
-            {currentItem.status === 'ambiguous' && currentItem.candidates && (
+            {currentItem.candidates && currentItem.candidates.length > 0 && (
               <>
                 <p className="text-[#48484A] text-xs mb-3">Pick the right film:</p>
                 <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                   {currentItem.candidates.map(c => (
-                    <button
-                      key={c.tmdbId}
-                      onClick={() => handleSelectCandidate(c)}
-                      className="shrink-0 flex flex-col gap-1.5 active:opacity-70 transition-opacity"
-                    >
-                      <div className="w-[110px] aspect-[2/3] rounded-xl overflow-hidden bg-[#1C1C1E]">
-                        {posterUrl(c.posterPath) ? (
-                          <img src={posterUrl(c.posterPath)!} alt={c.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center p-2">
-                            <span className="text-[9px] text-[#48484A] text-center">{c.title}</span>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-[#F5F5F7] font-medium text-center w-[110px] leading-tight line-clamp-2">{c.title}</p>
-                      {c.year && <p className="text-[10px] text-[#48484A] text-center">{c.year}</p>}
-                    </button>
+                    <CandidateCard key={c.tmdbId} candidate={c} onSelect={handleSelectCandidate} />
+                  ))}
+                  {searchResults.map(c => (
+                    <CandidateCard key={`sr-${c.tmdbId}`} candidate={c} onSelect={handleSelectCandidate} />
                   ))}
                 </div>
               </>
             )}
 
-            {currentItem.status === 'no_match' && (
-              <p className="text-[#48484A] text-sm mb-4">No match found on TMDB. Tap Skip to move on.</p>
+            {currentItem.status === 'no_match' && searchResults.length === 0 && (
+              <p className="text-[#48484A] text-sm mb-2">No match found on TMDB.</p>
+            )}
+            {currentItem.status === 'no_match' && searchResults.length > 0 && (
+              <>
+                <p className="text-[#48484A] text-xs mb-3">Search results:</p>
+                <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                  {searchResults.map(c => (
+                    <CandidateCard key={`sr-${c.tmdbId}`} candidate={c} onSelect={handleSelectCandidate} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* TMDB search */}
+            {!showSearch ? (
+              <button
+                onClick={() => {
+                  setShowSearch(true)
+                  setSearchQuery(currentItem.csvTitle)
+                  setTimeout(() => searchInputRef.current?.focus(), 100)
+                }}
+                className="mt-3 flex items-center gap-1.5 text-xs text-[#BF5AF2] py-1"
+              >
+                <Search className="w-3 h-3" />
+                Not finding it? Search TMDB
+              </button>
+            ) : (
+              <div className="mt-3 flex gap-2">
+                <input
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleTmdbSearch(searchQuery)}
+                  placeholder={currentItem.csvTitle}
+                  className="flex-1 bg-[#1C1C1E] border border-white/10 rounded-xl px-3 py-2 text-sm text-[#F5F5F7] placeholder:text-[#48484A] outline-none focus:border-[rgba(191,90,242,0.5)]"
+                />
+                <button
+                  onClick={() => handleTmdbSearch(searchQuery || currentItem.csvTitle)}
+                  disabled={searching}
+                  className="px-3 py-2 rounded-xl bg-[#BF5AF2] text-white text-xs font-semibold disabled:opacity-50 shrink-0"
+                >
+                  {searching ? '…' : 'Search'}
+                </button>
+              </div>
             )}
 
             <div className="flex gap-2 mt-5">
@@ -297,14 +374,19 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
           </div>
         )}
 
-        {/* ── Done stage ── */}
+        {/* ── Done ── */}
         {stage === 'done' && (
           <div className="px-5 py-10 flex flex-col items-center gap-4 text-center">
             <div className="w-14 h-14 rounded-full bg-[rgba(52,211,153,0.15)] flex items-center justify-center">
               <Check className="w-7 h-7 text-[#34D399]" />
             </div>
             <p className="text-[#F5F5F7] text-lg font-bold">All done!</p>
-            <p className="text-[#8E8E93] text-sm">Your movie history has been imported.</p>
+            <p className="text-[#8E8E93] text-sm">
+              Your movie history has been imported.
+            </p>
+            {bulkFailed > 0 && (
+              <p className="text-[#FB7185] text-xs">{bulkFailed} movies couldn't be saved and were skipped.</p>
+            )}
             <button
               onClick={onClose}
               className="mt-2 px-8 py-3 rounded-2xl bg-[#BF5AF2] text-white text-sm font-bold active:opacity-80 transition-opacity"
@@ -315,6 +397,28 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
         )}
       </div>
     </>
+  )
+}
+
+// ── Candidate card ──────────────────────────────────────────────────────────────
+function CandidateCard({ candidate, onSelect }: { candidate: Candidate; onSelect: (c: Candidate) => void }) {
+  return (
+    <button
+      onClick={() => onSelect(candidate)}
+      className="shrink-0 flex flex-col gap-1.5 active:opacity-70 transition-opacity"
+    >
+      <div className="w-[110px] aspect-[2/3] rounded-xl overflow-hidden bg-[#1C1C1E]">
+        {posterUrl(candidate.posterPath) ? (
+          <img src={posterUrl(candidate.posterPath)!} alt={candidate.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center p-2">
+            <span className="text-[9px] text-[#48484A] text-center">{candidate.title}</span>
+          </div>
+        )}
+      </div>
+      <p className="text-[11px] text-[#F5F5F7] font-medium text-center w-[110px] leading-tight line-clamp-2">{candidate.title}</p>
+      {candidate.year && <p className="text-[10px] text-[#48484A] text-center">{candidate.year}</p>}
+    </button>
   )
 }
 
@@ -330,14 +434,12 @@ function StatRow({ color, label, count, note }: { color: string; label: string; 
   )
 }
 
-// ── Hook to control visibility ─────────────────────────────────────────────────
+// ── Hook ──────────────────────────────────────────────────────────────────────
 export function useMovieImport(moviesLoaded: boolean, moviesCount: number) {
   const [importData, setImportData] = useState<ImportData | null>(null)
   const [importDone, setImportDone] = useState(() => !!localStorage.getItem(IMPORT_DONE_KEY))
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  // If the import was marked done (e.g. from a test or a failed run) but no
-  // movies are actually in the DB, reset so the banner shows again.
   useEffect(() => {
     if (moviesLoaded && moviesCount === 0 && importDone) {
       localStorage.removeItem(IMPORT_DONE_KEY)

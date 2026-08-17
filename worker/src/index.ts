@@ -363,6 +363,28 @@ export default {
         return json({ id: result.meta.last_row_id }, 201, cors)
       }
 
+      // POST /api/movies/batch — insert many movies in one D1 batch call
+      if (path === '/api/movies/batch' && method === 'POST') {
+        await ensureMovies()
+        const body = await request.json() as { movies: Record<string, unknown>[] }
+        if (!Array.isArray(body.movies) || body.movies.length === 0) {
+          return json({ inserted: 0 }, 200, cors)
+        }
+        const stmts = body.movies.map(m =>
+          env.DB.prepare(
+            `INSERT INTO movies (tmdbId, title, status, posterPath, overview, releaseDate, runtime, notes, imdbRating, addedAt, updatedAt)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(
+            m.tmdbId ?? null, m.title, m.status ?? 'completed',
+            m.posterPath ?? null, m.overview ?? null, m.releaseDate ?? null,
+            m.runtime ?? null, m.notes ?? '', m.imdbRating ?? null,
+            m.addedAt, m.updatedAt,
+          )
+        )
+        await env.DB.batch(stmts)
+        return json({ inserted: stmts.length }, 201, cors)
+      }
+
       const movieIdMatch = path.match(/^\/api\/movies\/(\d+)$/)
       if (movieIdMatch) {
         const id = parseInt(movieIdMatch[1])

@@ -225,8 +225,25 @@ export async function addMovie(movie: Omit<import('../types').Movie, 'id'>): Pro
       updatedAt: movie.updatedAt.toISOString(),
     }),
   })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data: { id: number } = await res.json()
   return data.id
+}
+
+export async function addMoviesBatch(movies: import('../types').Movie[]): Promise<{ inserted: number }> {
+  const res = await fetch(`${BASE}/api/movies/batch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      movies: movies.map(m => ({
+        ...m,
+        addedAt: m.addedAt.toISOString(),
+        updatedAt: m.updatedAt.toISOString(),
+      })),
+    }),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
 }
 
 export async function updateMovie(id: number, changes: Partial<import('../types').Movie>): Promise<void> {
