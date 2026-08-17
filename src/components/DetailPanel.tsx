@@ -505,7 +505,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
               {/* Divider */}
               <div className="border-t border-white/6 mb-5" />
 
-              {/* "New episodes coming soon" banners — date known vs TBA */}
+              {/* "New episodes coming soon!" banners — date known vs TBA */}
               {series.status === 'plantowatch' && inLibrary && !!nextEpDate && (
                 <div
                   className="mb-5 relative overflow-hidden rounded-2xl px-5 py-4"
@@ -519,7 +519,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     style={{ background: `radial-gradient(ellipse at 0% 60%, rgba(var(--accent-rgb),0.22) 0%, transparent 65%)` }}
                   />
                   <p className="relative text-xl font-extrabold text-[#F5F5F7] leading-tight">
-                    New episodes coming soon
+                    New episodes coming soon!
                   </p>
                   <p className="relative mt-1.5 text-sm font-semibold" style={{ color: `var(--color-accent)` }}>
                     {formatAirDate(nextEpDate)}
@@ -542,7 +542,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     On its way
                   </p>
                   <p className="relative text-xl font-extrabold text-[#F5F5F7] leading-tight">
-                    New episodes coming soon
+                    New episodes coming soon!
                   </p>
                 </div>
               )}
