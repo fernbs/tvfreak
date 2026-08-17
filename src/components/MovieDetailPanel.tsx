@@ -13,8 +13,6 @@ interface Props {
   onClose: () => void
   onUpdated: () => void
   onSelect: (m: Movie) => void
-  onPrev?: () => void
-  onNext?: () => void
 }
 
 function recToMovie(r: TmdbSearchResult): Movie {
@@ -40,11 +38,9 @@ function formatRuntime(mins: number | null): string {
   return h > 0 ? `${h}h ${m > 0 ? `${m}m` : ''}`.trim() : `${m}m`
 }
 
-export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect, onPrev, onNext }: Props) {
+export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props) {
   const [minimized, setMinimized] = useState(false)
   const dragControls = useDragControls()
-  const swipeStartX = useRef(0)
-  const swipeStartY = useRef(0)
   const [detail, setDetail] = useState<TmdbMovieDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
@@ -192,11 +188,11 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect, onPrev, 
           >
             {/* Drag handle */}
             <div
-              className="flex justify-center pt-3 pb-1 shrink-0 touch-none"
+              className="flex justify-center pt-3 pb-5 shrink-0 touch-none"
               onPointerDown={(e) => dragControls.start(e)}
               onClick={() => { if (minimized) setMinimized(false) }}
             >
-              <div className="w-10 h-[3px] rounded-full bg-white/20" />
+              <div className="w-12 h-1.5 rounded-full bg-white/20" />
             </div>
 
             {/* Close button */}
@@ -211,19 +207,6 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect, onPrev, 
             <div
               ref={bodyRef}
               className="flex-1 overflow-y-auto overscroll-contain"
-              onTouchStart={(e) => {
-                swipeStartX.current = e.touches[0].clientX
-                swipeStartY.current = e.touches[0].clientY
-              }}
-              onTouchEnd={(e) => {
-                if (minimized) return
-                const dx = e.changedTouches[0].clientX - swipeStartX.current
-                const dy = e.changedTouches[0].clientY - swipeStartY.current
-                if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-                  if (dx > 0) onPrev?.()
-                  else onNext?.()
-                }
-              }}
             >
 
               {/* Hero — poster + title */}

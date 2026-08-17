@@ -15,8 +15,6 @@ interface Props {
   onClose: () => void
   onUpdated: () => void
   onSelect: (s: Series) => void
-  onPrev?: () => void
-  onNext?: () => void
 }
 
 function recToSeries(r: TmdbSearchResult): Series {
@@ -40,11 +38,9 @@ function recToSeries(r: TmdbSearchResult): Series {
   }
 }
 
-export function DetailPanel({ series, onClose, onUpdated, onSelect, onPrev, onNext }: Props) {
+export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const [minimized, setMinimized] = useState(false)
   const dragControls = useDragControls()
-  const swipeStartX = useRef(0)
-  const swipeStartY = useRef(0)
   const [detail, setDetail] = useState<TmdbShowDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [recommendations, setRecommendations] = useState<TmdbSearchResult[]>([])
@@ -95,15 +91,22 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect, onPrev, onNe
         updates.nextEpisodeDate = null
         updates.nextEpisodeName = null
       }
+      let gotImdb = false
       const ext = await getExternalIds(series.tmdbId!)
       if (ext.imdb_id) {
         setImdbId(ext.imdb_id)
         const { imdb, rt } = await getRatings(ext.imdb_id)
         if (rt) setRtRating(rt)
-        if (imdb && !series.imdbRating) {
-          setLocalImdbRating(imdb)
-          if (series.id) updates.imdbRating = imdb
+        if (imdb) {
+          gotImdb = true
+          if (!series.imdbRating) {
+            setLocalImdbRating(imdb)
+            if (series.id) updates.imdbRating = imdb
+          }
         }
+      }
+      if (!gotImdb && !series.imdbRating && (d?.vote_average ?? 0) > 0) {
+        setLocalImdbRating(d!.vote_average!.toFixed(1))
       }
       if (series.id && Object.keys(updates).length > 0) {
         await updateSeries(series.id, updates)
@@ -345,17 +348,18 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect, onPrev, onNe
             transition={{ type: 'spring', damping: 32, stiffness: 320, mass: 0.9 }}
             className="fixed bottom-0 left-0 right-0 h-[93dvh] bg-[#111111] rounded-t-3xl z-50 flex flex-col overflow-hidden border-t border-white/8"
           >
-            {/* Drag handle */}
+            {/* Drag handle + header — full area is draggable */}
             <div
-              className="shrink-0 flex justify-center pt-3 pb-1 touch-none"
+              className="shrink-0 touch-none"
               onPointerDown={(e) => dragControls.start(e)}
               onClick={() => { if (minimized) setMinimized(false) }}
             >
-              <div className="w-10 h-1 rounded-full bg-white/12" />
-            </div>
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-12 h-1.5 rounded-full bg-white/20" />
+              </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-2 pb-4 shrink-0">
+            <div className="flex items-center justify-between px-5 pt-1 pb-4">
               <button
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#1C1C1E] border border-white/8 text-[#8E8E93] hover:text-[#F5F5F7] transition-colors"
@@ -381,24 +385,10 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect, onPrev, onNe
                 )}
               </div>
             </div>
+            </div>
 
             {/* Scrollable content */}
-            <div
-              className="flex-1 overflow-y-auto px-5 pb-8"
-              onTouchStart={(e) => {
-                swipeStartX.current = e.touches[0].clientX
-                swipeStartY.current = e.touches[0].clientY
-              }}
-              onTouchEnd={(e) => {
-                if (minimized) return
-                const dx = e.changedTouches[0].clientX - swipeStartX.current
-                const dy = e.changedTouches[0].clientY - swipeStartY.current
-                if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-                  if (dx > 0) onPrev?.()
-                  else onNext?.()
-                }
-              }}
-            >
+            <div className="flex-1 overflow-y-auto px-5 pb-8">
 
               {/* Poster + metadata */}
               <div className="flex gap-4 mb-6">
