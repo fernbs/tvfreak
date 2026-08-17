@@ -474,16 +474,11 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     </div>
                   )}
 
-                  {/* "That's all, freaks." tagline for ended/cancelled/completed */}
-                  {(series.status === 'completed' || detail?.status === 'Ended' || detail?.status === 'Canceled') && (
-                    <p className="mt-2 text-[11px] italic text-[#8E8E93] font-medium">That's all, freaks.</p>
-                  )}
-
                   {/* Complete chip */}
                   {isComplete && inLibrary && (
-                    <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-400/8 border border-emerald-400/15 rounded-full">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                      <span className="text-xs text-emerald-400 font-medium">Series complete</span>
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full">
+                      <CheckCircle2 className="w-3 h-3 text-[#8E8E93]" />
+                      <span className="text-xs text-[#8E8E93] font-medium">Series complete</span>
                     </div>
                   )}
 
@@ -587,6 +582,55 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     S{String(nextEp.season_number).padStart(2, '0')} E{String(nextEp.episode_number).padStart(2, '0')} · {nextEp.name}
                   </p>
                   <p className="text-xs text-[#8E8E93] mt-0.5">{formatAirDate(nextEp.air_date)}</p>
+                </div>
+              )}
+
+              {/* "New episodes coming soon" banner */}
+              {series.status === 'plantowatch' && inLibrary && (
+                <div
+                  className="mb-5 relative overflow-hidden rounded-2xl px-5 py-4"
+                  style={{
+                    background: `linear-gradient(135deg, rgba(var(--accent-rgb),0.18) 0%, rgba(var(--accent-rgb),0.06) 100%)`,
+                    border: `1px solid rgba(var(--accent-rgb),0.22)`,
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: `radial-gradient(ellipse at 0% 60%, rgba(var(--accent-rgb),0.22) 0%, transparent 65%)` }}
+                  />
+                  <p className="relative text-[10px] font-bold uppercase tracking-[0.14em] mb-1" style={{ color: `rgba(var(--accent-rgb),0.65)` }}>
+                    Hang tight
+                  </p>
+                  <p className="relative text-[22px] font-extrabold text-[#F5F5F7] leading-tight">
+                    New episodes<br />coming soon
+                  </p>
+                  {nextEpDate && (
+                    <p className="relative mt-2 text-sm font-semibold" style={{ color: `var(--color-accent)` }}>
+                      {formatAirDate(nextEpDate)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* "That's all, freaks." banner */}
+              {(series.status === 'completed' || detail?.status === 'Ended' || detail?.status === 'Canceled') && inLibrary && (
+                <div
+                  className="mb-5 relative overflow-hidden rounded-2xl px-5 py-4"
+                  style={{
+                    background: `linear-gradient(135deg, rgba(var(--accent-rgb),0.14) 0%, rgba(var(--accent-rgb),0.04) 100%)`,
+                    border: `1px solid rgba(var(--accent-rgb),0.18)`,
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: `radial-gradient(ellipse at 100% 60%, rgba(var(--accent-rgb),0.18) 0%, transparent 65%)` }}
+                  />
+                  <p className="relative text-[10px] font-bold uppercase tracking-[0.14em] mb-1" style={{ color: `rgba(var(--accent-rgb),0.65)` }}>
+                    {detail?.status === 'Canceled' ? 'Cancelled' : 'Series complete'}
+                  </p>
+                  <p className="relative text-[22px] font-extrabold italic text-[#F5F5F7] leading-tight">
+                    That's all,<br />freaks.
+                  </p>
                 </div>
               )}
 
