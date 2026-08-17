@@ -98,7 +98,7 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
             {/* Bottom-left corner status gradient */}
             <div
               className="absolute inset-0 pointer-events-none"
-              style={{ background: `radial-gradient(circle at 0% 100%, ${cfg.color}70 0%, transparent 38%)` }}
+              style={{ background: `radial-gradient(circle at 0% 100%, ${cfg.color}99 0%, transparent 38%)` }}
             />
             {/* Rating */}
             {m.imdbRating && (

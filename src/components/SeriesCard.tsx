@@ -44,7 +44,7 @@ export function SeriesCard({ series, onClick }: Props) {
       {/* Bottom-left corner status gradient */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: `radial-gradient(circle at 0% 100%, ${config.color}70 0%, transparent 38%)` }}
+        style={{ background: `radial-gradient(circle at 0% 100%, ${config.color}99 0%, transparent 38%)` }}
       />
 
       {/* Hover overlay */}
