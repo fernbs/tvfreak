@@ -133,11 +133,10 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
           <div
             key={m.id ?? m.tmdbId}
             onClick={() => onSelect(m)}
-            className="relative aspect-[2/3] rounded-2xl overflow-hidden cursor-pointer group select-none"
-            style={{ transform: 'translateZ(0)' }}
+            className="relative aspect-[2/3] rounded-2xl overflow-hidden cursor-pointer select-none active:opacity-75 transition-opacity"
           >
             {poster ? (
-              <img src={poster} alt={m.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.06]" draggable={false} />
+              <img src={poster} alt={m.title} loading="lazy" className="w-full h-full object-cover" draggable={false} />
             ) : (
               <div className="w-full h-full bg-[#1C1C1E] flex items-center justify-center p-3">
                 <span className="text-xs text-[#48484A] text-center leading-snug font-medium">{m.title}</span>
@@ -152,14 +151,11 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
               style={{ bottom: 0, left: 0, width: 16, height: 16, borderLeft: `2px solid ${cfg.color}`, borderBottom: `2px solid ${cfg.color}`, borderBottomLeftRadius: 16 }}
             />
             {m.imdbRating && (
-              <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
+              <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/85 leading-tight">
                 <span className="text-[#BF5AF2]">★</span>
                 <span className="text-white"> {m.imdbRating}</span>
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
-              <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{m.title}</p>
-            </div>
           </div>
         )
       })}

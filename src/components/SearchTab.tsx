@@ -632,7 +632,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                   }`}
                 >
                   <option value="" className="bg-[#111111]">Any year</option>
-                  {Array.from({ length: 2027 - 1950 + 1 }, (_, i) => 2027 - i).map(y => (
+                  {Array.from({ length: new Date().getFullYear() + 3 - 1950 + 1 }, (_, i) => new Date().getFullYear() + 3 - i).map(y => (
                     <option key={y} value={String(y)} className="bg-[#111111]">{y}</option>
                   ))}
                 </select>
