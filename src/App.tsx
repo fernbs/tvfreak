@@ -471,8 +471,26 @@ export default function App() {
     setDuplicates(dupes)
   }
 
+  // TEMP DEBUG — remove once gap is understood
+  const [dbg, setDbg] = useState('')
+  useEffect(() => {
+    const vvh = window.visualViewport?.height ?? 0
+    const inh = window.innerHeight
+    const dch = document.documentElement.clientHeight
+    const sh = screen.height
+    const standalone = window.matchMedia('(display-mode: standalone)').matches
+    const vvhCss = getComputedStyle(document.documentElement).getPropertyValue('--vvh').trim()
+    setDbg(`vvh:${vvh} inh:${inh} dch:${dch} sh:${sh} sa:${standalone} css:${vvhCss}`)
+  }, [])
+
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden">
+      {/* TEMP DEBUG */}
+      {dbg && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-900/90 text-white text-[10px] px-2 py-1 text-center" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          {dbg}
+        </div>
+      )}
       {/* Worker unreachable banner */}
       {workerError && !loading && (
         <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-rose-500/8 border-b border-rose-500/15">
