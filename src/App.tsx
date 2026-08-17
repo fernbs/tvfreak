@@ -12,6 +12,7 @@ import { HomeTab } from './components/HomeTab'
 import { LibraryTab } from './components/LibraryTab'
 import { SearchTab } from './components/SearchTab'
 import { StatsTab } from './components/StatsTab'
+import { DiscoverTab } from './components/DiscoverTab'
 import { DetailPanel } from './components/DetailPanel'
 import { MovieDetailPanel } from './components/MovieDetailPanel'
 import { ImportBanner } from './components/ImportBanner'
@@ -529,6 +530,14 @@ export default function App() {
         )}
         {tab === 'stats' && (
           <StatsTab allSeries={allSeries} />
+        )}
+        {tab === 'discover' && (
+          <DiscoverTab
+            allSeries={allSeries}
+            allMovies={allMovies}
+            onSeriesAdded={handleSeriesAdded}
+            onMovieAdded={handleMovieAdded}
+          />
         )}
       </main>
 
