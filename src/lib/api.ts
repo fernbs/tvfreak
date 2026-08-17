@@ -242,7 +242,10 @@ export async function addMoviesBatch(movies: import('../types').Movie[]): Promis
       })),
     }),
   })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as Record<string, unknown>
+    throw new Error((body.error as string) ?? `HTTP ${res.status}`)
+  }
   return res.json()
 }
 

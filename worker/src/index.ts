@@ -324,7 +324,7 @@ export default {
       // ── Movies ──────────────────────────────────────────────────────────
       // Auto-create movies table on first use (idempotent)
       async function ensureMovies() {
-        await env.DB.exec(`
+        await env.DB.prepare(`
           CREATE TABLE IF NOT EXISTS movies (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             tmdbId INTEGER,
@@ -339,7 +339,7 @@ export default {
             addedAt TEXT NOT NULL,
             updatedAt TEXT NOT NULL
           )
-        `)
+        `).run()
       }
 
       if (path === '/api/movies' && method === 'GET') {

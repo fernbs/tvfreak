@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { X, Check, SkipForward, Download, ChevronRight, Film, Search } from 'lucide-react'
-import { addMovie, addMoviesBatch } from '../lib/api'
+import { toast } from 'sonner'
+import { addMovie, addMoviesBatch, getAllMovies } from '../lib/api'
 import { searchMovie } from '../lib/tmdb'
 
 const IMPORT_DONE_KEY = 'tvfreak-movie-import-done'
@@ -88,6 +89,8 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
   const [bulkProgress, setBulkProgress] = useState(0)
   const [bulkTotal, setBulkTotal] = useState(0)
   const [bulkFailed, setBulkFailed] = useState(0)
+  const [bulkError, setBulkError] = useState<string | null>(null)
+  const [savedCount, setSavedCount] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const [showSearch, setShowSearch] = useState(false)
@@ -129,17 +132,29 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
     setBulkTotal(toImport.length)
 
     let failed = 0
+    let firstError: string | null = null
     for (let i = 0; i < toImport.length; i += BATCH_SIZE) {
       const batch = toImport.slice(i, i + BATCH_SIZE)
       try {
         await addMoviesBatch(batch)
-      } catch {
+      } catch (err) {
         failed += batch.length
+        if (!firstError) {
+          firstError = err instanceof Error ? err.message : String(err)
+          toast.error(`Import error: ${firstError}`, { duration: 8000 })
+        }
       }
       setBulkProgress(Math.min(i + BATCH_SIZE, toImport.length))
     }
 
     setBulkFailed(failed)
+    setBulkError(firstError)
+
+    // Verify actual DB count so we know if saves landed
+    try {
+      const saved = await getAllMovies()
+      setSavedCount(saved.length)
+    } catch { /* non-fatal */ }
 
     if (ambiguous.length > 0) {
       setReviewQueue(ambiguous)
@@ -377,15 +392,23 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
         {/* ── Done ── */}
         {stage === 'done' && (
           <div className="px-5 py-10 flex flex-col items-center gap-4 text-center">
-            <div className="w-14 h-14 rounded-full bg-[rgba(52,211,153,0.15)] flex items-center justify-center">
-              <Check className="w-7 h-7 text-[#34D399]" />
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center ${bulkError ? 'bg-[rgba(251,113,133,0.15)]' : 'bg-[rgba(52,211,153,0.15)]'}`}>
+              <Check className={`w-7 h-7 ${bulkError ? 'text-[#FB7185]' : 'text-[#34D399]'}`} />
             </div>
-            <p className="text-[#F5F5F7] text-lg font-bold">All done!</p>
-            <p className="text-[#8E8E93] text-sm">
-              Your movie history has been imported.
+            <p className="text-[#F5F5F7] text-lg font-bold">
+              {bulkError ? 'Import had errors' : 'All done!'}
             </p>
-            {bulkFailed > 0 && (
-              <p className="text-[#FB7185] text-xs">{bulkFailed} movies couldn't be saved and were skipped.</p>
+            {savedCount !== null && (
+              <p className="text-[#8E8E93] text-sm">{savedCount.toLocaleString()} movies now in your library.</p>
+            )}
+            {!savedCount && !bulkError && (
+              <p className="text-[#8E8E93] text-sm">Your movie history has been imported.</p>
+            )}
+            {bulkError && (
+              <div className="w-full bg-[#1C1C1E] rounded-xl p-3 text-left">
+                <p className="text-[#FB7185] text-xs font-semibold mb-1">Error (please share this):</p>
+                <p className="text-[#F5F5F7] text-[11px] font-mono break-all">{bulkError}</p>
+              </div>
             )}
             <button
               onClick={onClose}
