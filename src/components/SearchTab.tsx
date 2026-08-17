@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, X, Plus, Loader2, TrendingUp, Sparkles, ChevronDown, SlidersHorizontal } from 'lucide-react'
-import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE, searchMovie, getTrendingMovies, discoverMovies, getMovieStreamingProviders } from '../lib/tmdb'
+import { Search, X, Plus, Loader2, Sparkles, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { searchTv, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE, searchMovie, discoverMovies, getMovieStreamingProviders } from '../lib/tmdb'
 import { addSeries, addMovie } from '../lib/api'
 import type { TmdbSearchResult, Series, Movie, WatchProvider } from '../types'
 import type { ViewMode } from '../lib/useViewMode'
@@ -64,15 +64,11 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   const [sortBy, setSortBy] = useState('vote_average.desc')
   const [yearFilter, setYearFilter] = useState('')
   const [results, setResults] = useState<TmdbSearchResult[]>([])
-  const [trending, setTrending] = useState<TmdbSearchResult[]>([])
   const [searching, setSearching] = useState(false)
-  const [loadingTrending, setLoadingTrending] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [addingId, setAddingId] = useState<number | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [trendingPage, setTrendingPage] = useState(1)
-  const [trendingTotalPages, setTrendingTotalPages] = useState(1)
   const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
   const [selectedProviders, setSelectedProviders] = useState<number[]>(getDefaultProviders)
   const [hideInLibrary, setHideInLibrary] = useState(false)
@@ -94,8 +90,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     setQuery('')
     setYearFilter('')
     setResults([])
-    setTrending([])
-    setTrendingPage(1)
     setCurrentPage(1)
     scrollRef.current?.scrollTo({ top: 0 })
   }
@@ -104,8 +98,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   const noGenreFilter = includedGenres.length === 0 && excludedGenres.length === 0
   const noProviderFilter = selectedProviders.length === 0
   const noYearFilter = yearFilter.length !== 4
-  const showTrending = noQuery && noGenreFilter && noProviderFilter && noYearFilter
-  const hasMore = showTrending ? trendingPage < trendingTotalPages : currentPage < totalPages
+  const hasMore = currentPage < totalPages
 
   const sortedProviders = useMemo(() => {
     const sel = availableProviders.filter(p => selectedProviders.includes(p.provider_id))
@@ -114,14 +107,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   }, [availableProviders, selectedProviders])
 
   useEffect(() => {
-    setLoadingTrending(true)
-    setTrending([])
-    const fetchFn = mediaMode === 'tv' ? getTrending : getTrendingMovies
-    Promise.all([fetchFn(1), fetchFn(2)]).then(([p1, p2]) => {
-      setTrending(applySort(deduped([...p1.results, ...p2.results])))
-      setTrendingTotalPages(p1.totalPages)
-      setTrendingPage(Math.min(2, p1.totalPages))
-    }).finally(() => setLoadingTrending(false))
     const providerFn = mediaMode === 'tv' ? getStreamingProviders : getMovieStreamingProviders
     providerFn(getCountry()).then(setAvailableProviders)
   }, [mediaMode])
@@ -204,20 +189,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
       const year = yearFilter.length === 4 ? yearFilter : undefined
       const hasQuery = query.trim().length > 0
       let freshItems: TmdbSearchResult[] = []
-      if (showTrending) {
-        const p1 = trendingPage + 1
-        const p2 = trendingPage + 2
-        const trendFn = mediaMode === 'tv' ? getTrending : getTrendingMovies
-        const fetches = p2 <= trendingTotalPages
-          ? [trendFn(p1), trendFn(p2)]
-          : [trendFn(p1)]
-        const pages = await Promise.all(fetches)
-        freshItems = pages.flatMap(p => p.results)
-        setTrending(prev => deduped([...prev, ...freshItems]))
-        setTrendingTotalPages(pages[0].totalPages)
-        setTrendingPage(fetches.length === 2 ? p2 : p1)
-      } else {
-        const p1 = currentPage + 1
+      const p1 = currentPage + 1
         const p2 = currentPage + 2
         if (hasQuery) {
           const searchFn = mediaMode === 'tv' ? searchTv : searchMovie
@@ -241,7 +213,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
           setTotalPages(pages[0].totalPages)
           setCurrentPage(fetches.length === 2 ? p2 : p1)
         }
-      }
       if (freshItems.length > 0) setNewItemIds(new Set(freshItems.map(r => r.id)))
     } finally { setLoadingMore(false) }
   }
@@ -365,15 +336,12 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     })
   }
 
-  const displayResults = showTrending ? trending : results
-  const visibleResults = hideInLibrary ? displayResults.filter(r => !libraryIds.has(r.id)) : displayResults
-  const isLoading = showTrending ? loadingTrending : searching
+  const visibleResults = hideInLibrary ? results.filter(r => !libraryIds.has(r.id)) : results
+  const isLoading = searching
 
   let sectionLabel = ''
-  let SectionIcon = TrendingUp
-  if (!noQuery) {
-    sectionLabel = ''
-  } else if (!noGenreFilter || !noProviderFilter) {
+  const SectionIcon = Sparkles
+  if (noQuery && (!noGenreFilter || !noProviderFilter)) {
     const genreParts = [
       ...includedGenres.map(id => genres.find(g => g.id === id)?.label ?? ''),
       ...excludedGenres.map(id => `not ${genres.find(g => g.id === id)?.label ?? ''}`),
@@ -385,10 +353,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     if (genreParts.length > 0) label += ' · ' + genreParts.join(', ')
     if (providerParts.length > 0) label += ' on ' + providerParts.join(', ')
     sectionLabel = label
-    SectionIcon = Sparkles
-  } else {
-    sectionLabel = 'Trending this week'
-    SectionIcon = TrendingUp
   }
 
   const activeFilterCount = [
@@ -492,63 +456,10 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
       {/* Scrollable content */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0">
 
-        {/* Trending section (only when no filters active) */}
-        {showTrending && (
-          <div className="px-4 pt-3 pb-2">
-            <div className="flex items-center gap-2 mb-3">
-              <SectionIcon className="w-5 h-5 text-[#BF5AF2] shrink-0" />
-              <h2 className="text-base font-bold text-[#F5F5F7] flex-1">{sectionLabel}</h2>
-              {isLoading && <Loader2 className="w-4 h-4 text-[#48484A] animate-spin shrink-0" />}
-            </div>
-            <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {visibleResults.slice(0, 12).map(r => {
-                const inLib = libraryIds.has(r.id)
-                return (
-                  <button
-                    key={r.id}
-                    onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
-                    className="shrink-0 w-[88px] text-left active:opacity-70 transition-opacity"
-                    style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
-                  >
-                    <div className="w-[88px] aspect-[2/3] rounded-2xl overflow-hidden bg-[#1C1C1E] relative">
-                      {r.poster_path ? (
-                        <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center p-2">
-                          <span className="text-[9px] text-[#48484A] text-center">{r.name}</span>
-                        </div>
-                      )}
-                      {(r.vote_average ?? 0) > 0 && (
-                        <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
-                          <span className="text-[10px] font-medium leading-none"><span className="text-[#BF5AF2]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
-                        </div>
-                      )}
-                      {inLib && (
-                        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded bg-[#BF5AF2]/80">
-                          <span className="text-[9px] text-white font-bold">✓</span>
-                        </div>
-                      )}
-                      {!inLib && (
-                        <button
-                          onClick={e => { e.stopPropagation(); handleAdd(r) }}
-                          disabled={addingId === r.id}
-                          className="absolute bottom-1.5 right-1.5 w-7 h-7 flex items-center justify-center rounded-lg bg-black/80 text-[#BF5AF2] border border-white/15 active:bg-[rgba(191,90,242,0.5)] transition-colors disabled:opacity-50"
-                        >
-                          {addingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                        </button>
-                      )}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Results grid (also used as the full grid when no trending) */}
-        {(!showTrending || visibleResults.length > 0) && (
+        {/* Results grid */}
+        {(visibleResults.length > 0 || isLoading) && (
           <>
-            {(!showTrending && sectionLabel) && (
+            {sectionLabel && (
               <div className="flex items-center gap-2 px-4 pt-3 pb-1">
                 <SectionIcon className="w-4.5 h-4.5 text-[#BF5AF2] shrink-0" />
                 <h2 className="text-sm font-bold text-[#F5F5F7] flex-1 truncate">{sectionLabel}</h2>
@@ -594,8 +505,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                 ))}
               </div>
             ) : (
-              <div className={`px-4 ${showTrending ? 'pt-1' : 'pt-2'} pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
-                {(showTrending ? visibleResults : visibleResults).map(r => (
+              <div className={`px-4 pt-2 pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
+                {visibleResults.map(r => (
                   <button
                     key={r.id}
                     onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
