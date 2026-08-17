@@ -71,17 +71,10 @@ export function SeriesCard({ series, onClick }: Props) {
         </span>
       </div>
 
-      {/* Upcoming episode date badge */}
-      {hasUpcoming && series.nextEpisodeDate && (
+      {/* Upcoming date badge — only for non-pending statuses */}
+      {hasUpcoming && series.nextEpisodeDate && series.status !== 'plantowatch' && (
         <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[var(--color-accent)]/90 text-white leading-tight backdrop-blur-sm">
           {formatAirDate(series.nextEpisodeDate)}
-        </div>
-      )}
-
-      {/* Pending + no known date: TBA badge */}
-      {!hasUpcoming && !hasNewEpisode && series.status === 'plantowatch' && !series.nextEpisodeDate && (
-        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-black/60 text-[#8E8E93] leading-tight backdrop-blur-sm">
-          TBA
         </div>
       )}
 
@@ -99,9 +92,24 @@ export function SeriesCard({ series, onClick }: Props) {
         </div>
       )}
 
+      {/* Pending banner — coming soon strip at the bottom */}
+      {series.status === 'plantowatch' && (
+        <div className="absolute bottom-0 left-0 right-0 px-2 pt-4 pb-1.5 bg-gradient-to-t from-black/85 to-transparent">
+          <p className="text-[9px] font-bold leading-tight uppercase tracking-wide" style={{ color: STATUS_CONFIG.plantowatch.color }}>
+            New episodes coming soon
+          </p>
+          <p className="text-[9px] text-white/60 leading-tight mt-0.5">
+            {series.nextEpisodeDate ? formatAirDate(series.nextEpisodeDate) : 'Date TBA'}
+          </p>
+        </div>
+      )}
+
       {/* Rating */}
       {series.imdbRating && (
-        <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
+        <div
+          className="absolute right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm"
+          style={{ bottom: series.status === 'plantowatch' ? '2.5rem' : '0.375rem' }}
+        >
           <span className="text-[var(--color-accent)]">★</span>
           <span className="text-white"> {series.imdbRating}</span>
         </div>

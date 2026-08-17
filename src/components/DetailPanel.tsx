@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { X, MoreHorizontal, Loader2, Calendar, CheckCircle2, Plus, Share2, Play } from 'lucide-react'
+import confetti from 'canvas-confetti'
 import { getTvDetails, getExternalIds, getRatings, getTvRecommendations, getTvSimilar, getWatchProviders, getTrailerKey, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getCountry } from '../lib/settings'
 import { updateSeries, deleteSeries, addSeries } from '../lib/api'
@@ -9,6 +10,17 @@ import { STATUS_CONFIG } from '../types'
 import { EpisodeList } from './EpisodeList'
 import { formatAirDate } from '../lib/utils'
 import { toast } from 'sonner'
+
+function fireConfetti() {
+  confetti({
+    particleCount: 160,
+    spread: 100,
+    origin: { x: 0.5, y: 0.25 },
+    colors: ['#BF5AF2', '#FF0099', '#FF6600', '#FFD60A', '#00C840', '#0A84FF'],
+    gravity: 1.1,
+    ticks: 220,
+  })
+}
 
 interface Props {
   series: Series | null
@@ -175,6 +187,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   async function changeStatus(status: SeriesStatus) {
     if (!series?.id) return
     await updateSeries(series.id, { status })
+    if (status === 'completed') fireConfetti()
     toast.success(`Status updated to ${STATUS_CONFIG[status].label}`)
     onUpdated()
   }
@@ -291,6 +304,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
       toast.success(msg)
     } else {
       await updateSeries(series.id, { status: 'completed' })
+      fireConfetti()
       toast.success(`${series.title} marked as completed!`)
     }
     onUpdated()
@@ -462,6 +476,11 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                         </span>
                       ))}
                     </div>
+                  )}
+
+                  {/* "That's all, freaks." tagline for ended/cancelled/completed */}
+                  {(series.status === 'completed' || detail?.status === 'Ended' || detail?.status === 'Canceled') && (
+                    <p className="mt-2 text-[11px] italic text-[#8E8E93] font-medium">That's all, freaks.</p>
                   )}
 
                   {/* Complete chip */}
