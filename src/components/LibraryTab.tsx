@@ -1,12 +1,28 @@
 import { useState, type ReactNode } from 'react'
-import { SlidersHorizontal, GitMerge, Wand2, Grid2X2, Grid3X3, List, Film } from 'lucide-react'
+import { SlidersHorizontal, GitMerge, Wand2, Film, X } from 'lucide-react'
 import type { Series, SeriesStatus, Movie, MovieStatus } from '../types'
 import { MOVIE_STATUS_CONFIG } from '../types'
 import type { DuplicateGroup } from '../lib/api'
 import { SeriesGrid } from './SeriesGrid'
-import { useViewMode } from '../lib/useViewMode'
+import type { ViewMode } from '../lib/useViewMode'
 
 type SortKey = 'title' | 'added' | 'updated' | 'nextEpisode'
+
+const RATING_OPTIONS = [null, 5, 6, 7, 8] as const
+const TV_STATUS_FILTERS: { label: string; value: SeriesStatus | 'all' }[] = [
+  { label: 'All', value: 'all' },
+  { label: 'Pending', value: 'plantowatch' },
+  { label: 'Watching', value: 'watching' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'Dropped', value: 'dropped' },
+]
+const MOVIE_STATUS_FILTERS: { label: string; value: MovieStatus | 'all' }[] = [
+  { label: 'All', value: 'all' },
+  { label: 'Watchlist', value: 'plantowatch' },
+  { label: 'Watching', value: 'watching' },
+  { label: 'Watched', value: 'completed' },
+  { label: 'Dropped', value: 'dropped' },
+]
 
 interface Props {
   series: Series[]
@@ -18,6 +34,7 @@ interface Props {
   onShowMigration: () => void
   allMovies: Movie[]
   onMovieSelect: (m: Movie) => void
+  viewMode: ViewMode
   importBanner?: ReactNode
 }
 
@@ -94,32 +111,20 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
                 <span className="text-xs text-[#48484A] text-center leading-snug font-medium">{m.title}</span>
               </div>
             )}
-            {/* Bottom-left corner status gradient */}
             <div
               className="absolute inset-0 pointer-events-none"
               style={{ background: `radial-gradient(circle at 0% 100%, ${cfg.color}99 0%, transparent 38%)` }}
             />
-            {/* Bottom-left corner border arc */}
             <div
               className="absolute pointer-events-none"
-              style={{
-                bottom: 0,
-                left: 0,
-                width: 16,
-                height: 16,
-                borderLeft: `2px solid ${cfg.color}`,
-                borderBottom: `2px solid ${cfg.color}`,
-                borderBottomLeftRadius: 16,
-              }}
+              style={{ bottom: 0, left: 0, width: 16, height: 16, borderLeft: `2px solid ${cfg.color}`, borderBottom: `2px solid ${cfg.color}`, borderBottomLeftRadius: 16 }}
             />
-            {/* Rating */}
             {m.imdbRating && (
               <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
                 <span className="text-[#BF5AF2]">★</span>
                 <span className="text-white"> {m.imdbRating}</span>
               </div>
             )}
-            {/* Hover overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">
               <p className="text-white text-xs font-semibold leading-tight line-clamp-2">{m.title}</p>
             </div>
@@ -130,26 +135,19 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
   )
 }
 
-const FILTERS: { label: string; value: SeriesStatus | 'all' }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Pending', value: 'plantowatch' },
-  { label: 'Watching', value: 'watching' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'Dropped', value: 'dropped' },
-]
-
 export function LibraryTab({
   series, loading, onSelect,
   duplicates, onShowDuplicates,
   migrationDone, onShowMigration,
   allMovies, onMovieSelect,
-  importBanner,
+  viewMode, importBanner,
 }: Props) {
   const [filter, setFilter] = useState<SeriesStatus | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('title')
-  const [viewMode, setViewMode] = useViewMode()
   const [mediaMode, setMediaMode] = useState<'tv' | 'movie'>('tv')
   const [movieFilter, setMovieFilter] = useState<MovieStatus | 'all'>('all')
+  const [minRating, setMinRating] = useState<number | null>(null)
+  const [showFilterSheet, setShowFilterSheet] = useState(false)
 
   function sorted(list: Series[]): Series[] {
     return [...list].sort((a, b) => {
@@ -164,27 +162,34 @@ export function LibraryTab({
     })
   }
 
-  const filtered = sorted(filter === 'all' ? series : series.filter(s => s.status === filter))
+  const filtered = sorted(
+    (filter === 'all' ? series : series.filter(s => s.status === filter))
+      .filter(s => minRating == null || parseFloat(s.imdbRating ?? '0') >= minRating)
+  )
 
   const filteredMovies = [...allMovies]
     .filter(m => movieFilter === 'all' || m.status === movieFilter)
+    .filter(m => minRating == null || parseFloat(m.imdbRating ?? '0') >= minRating)
     .sort((a, b) => {
       if (sort === 'title') return a.title.localeCompare(b.title)
       if (sort === 'added') return b.addedAt.getTime() - a.addedAt.getTime()
       return b.updatedAt.getTime() - a.updatedAt.getTime()
     })
 
-  const viewToggleClasses = (mode: string) =>
-    `p-1.5 rounded-lg transition-colors ${viewMode === mode
-      ? 'bg-[#2C2C2E] text-[#F5F5F7]'
-      : 'text-[#48484A] active:text-[#8E8E93]'
-    }`
+  const activeStatusFilter = mediaMode === 'tv' ? filter !== 'all' : movieFilter !== 'all'
+  const activeFilterCount = [activeStatusFilter, minRating != null].filter(Boolean).length
+
+  function clearFilters() {
+    setFilter('all')
+    setMovieFilter('all')
+    setMinRating(null)
+  }
 
   return (
     <div className="flex flex-col h-full">
       {/* Sticky header */}
       <div className="shrink-0 bg-black px-4 pb-3 z-10">
-        {/* Series / Films tab bar — action buttons sit on the right */}
+        {/* Series / Films tab bar */}
         <div className="flex items-end border-b border-white/6 mb-3 -mx-4 px-4">
           <div className="flex flex-1">
             {([['tv', 'Series', series.length], ['movie', 'Films', allMovies.length]] as const).map(([mode, label, count]) => {
@@ -230,8 +235,8 @@ export function LibraryTab({
           </div>
         </div>
 
-        {/* Controls row */}
-        <div className="flex items-center justify-between mb-3">
+        {/* Controls row: sort + filter button */}
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
             <SlidersHorizontal className="w-3.5 h-3.5 text-[#48484A]" />
             <select
@@ -248,50 +253,23 @@ export function LibraryTab({
             </select>
           </div>
 
-          <div className="flex items-center gap-0.5 bg-white/5 rounded-xl p-0.5">
-            {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
-              <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
-                <Icon className="w-3.5 h-3.5" />
-              </button>
-            ))}
-          </div>
+          <button
+            onClick={() => setShowFilterSheet(true)}
+            className={`relative flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+              activeFilterCount > 0
+                ? 'bg-[rgba(191,90,242,0.08)] border-[rgba(191,90,242,0.25)] text-[#BF5AF2]'
+                : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
+            }`}
+          >
+            <SlidersHorizontal className="w-3 h-3 shrink-0" />
+            <span>Filter</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-[#BF5AF2] text-white text-[9px] font-bold min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center leading-none">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
         </div>
-
-        {/* Filter pills — Apple-style solid chips */}
-        {mediaMode === 'tv' && (
-          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            {FILTERS.map(f => (
-              <button
-                key={f.value}
-                onClick={() => setFilter(f.value)}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                  filter === f.value
-                    ? 'bg-[#BF5AF2] text-white'
-                    : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        )}
-        {mediaMode === 'movie' && (
-          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            {([['all', 'All'], ['plantowatch', 'Watchlist'], ['watching', 'Watching'], ['completed', 'Watched'], ['dropped', 'Dropped']] as const).map(([val, label]) => (
-              <button
-                key={val}
-                onClick={() => setMovieFilter(val as MovieStatus | 'all')}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                  movieFilter === val
-                    ? 'bg-[#BF5AF2] text-white'
-                    : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Grid */}
@@ -307,6 +285,73 @@ export function LibraryTab({
           )}
         </div>
       </div>
+
+      {/* Filter sheet */}
+      {showFilterSheet && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setShowFilterSheet(false)} />
+          <div
+            className="fixed left-0 right-0 bottom-0 z-40 bg-[#1C1C1E] rounded-t-2xl shadow-2xl border-t border-white/8 overflow-y-auto"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)', maxHeight: '75vh' }}
+          >
+            <div className="sticky top-0 bg-[#1C1C1E] flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/6 z-10">
+              <span className="text-sm font-semibold text-[#F5F5F7]">Filter</span>
+              <div className="flex items-center gap-3">
+                {activeFilterCount > 0 && (
+                  <button onClick={clearFilters} className="text-xs text-[#BF5AF2] font-medium">
+                    Clear all
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowFilterSheet(false)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/8"
+                >
+                  <X className="w-3.5 h-3.5 text-[#8E8E93]" />
+                </button>
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className="px-4 pt-4 pb-4">
+              <p className="text-[11px] font-semibold text-[#48484A] uppercase tracking-wide mb-2.5">Status</p>
+              <div className="flex flex-wrap gap-2">
+                {(mediaMode === 'tv' ? TV_STATUS_FILTERS : MOVIE_STATUS_FILTERS).map(f => {
+                  const isActive = mediaMode === 'tv' ? filter === f.value : movieFilter === f.value
+                  return (
+                    <button
+                      key={f.value}
+                      onClick={() => mediaMode === 'tv' ? setFilter(f.value as SeriesStatus | 'all') : setMovieFilter(f.value as MovieStatus | 'all')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                        isActive ? 'bg-[#BF5AF2] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Rating */}
+            <div className="px-4 pt-2 pb-4 border-t border-white/6">
+              <p className="text-[11px] font-semibold text-[#48484A] uppercase tracking-wide mb-2.5">Min rating</p>
+              <div className="flex flex-wrap gap-2">
+                {RATING_OPTIONS.map(r => (
+                  <button
+                    key={String(r)}
+                    onClick={() => setMinRating(r)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                      minRating === r ? 'bg-[#BF5AF2] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                    }`}
+                  >
+                    {r == null ? 'Any' : `${r}+`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

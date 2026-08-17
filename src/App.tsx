@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { Settings } from 'lucide-react'
+import { Settings, Grid2X2, Grid3X3, List } from 'lucide-react'
+import { useViewMode, type ViewMode } from './lib/useViewMode'
 import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration, getAllMovies, deduplicateMovies } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
@@ -31,9 +32,12 @@ const TAB_TITLES: Record<Tab, string> = {
   discover: 'Discover',
 }
 
+const GRID_TABS: Tab[] = ['search', 'library']
+
 export default function App() {
   const [tab, setTab] = useState<Tab>('home')
   const [showSettings, setShowSettings] = useState(false)
+  const [viewMode, setViewMode] = useViewMode()
   const [allSeries, setAllSeries] = useState<Series[]>([])
   const [loading, setLoading] = useState(true)
   const [workerError, setWorkerError] = useState(false)
@@ -504,12 +508,27 @@ export default function App() {
           <TVFreakIcon size={24} />
           <span className="text-xl font-bold tracking-tight text-[#F5F5F7]">{TAB_TITLES[tab]}</span>
         </div>
-        <button
-          onClick={() => setShowSettings(true)}
-          className="w-8 h-8 flex items-center justify-center rounded-xl active:bg-white/5 transition-colors"
-        >
-          <Settings className="w-[18px] h-[18px] text-[#48484A]" />
-        </button>
+        <div className="flex items-center gap-1.5">
+          {GRID_TABS.includes(tab) && (
+            <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5">
+              {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as [ViewMode, typeof Grid2X2][]).map(([mode, Icon]) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`p-1.5 rounded-lg transition-colors ${viewMode === mode ? 'bg-[#2C2C2E] text-[#F5F5F7]' : 'text-[#48484A]'}`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-8 h-8 flex items-center justify-center rounded-xl active:bg-white/5 transition-colors"
+          >
+            <Settings className="w-[18px] h-[18px] text-[#48484A]" />
+          </button>
+        </div>
       </div>
 
       {/* Worker unreachable banner */}
@@ -542,6 +561,7 @@ export default function App() {
             onShowMigration={() => setShowMigration(true)}
             allMovies={allMovies}
             onMovieSelect={setSelectedMovie}
+            viewMode={viewMode}
             importBanner={movieImport.showBanner ? (
               <MovieImportBanner onOpen={movieImport.openSheet} count={movieImport.matchCount} />
             ) : null}
@@ -555,6 +575,7 @@ export default function App() {
             allMovies={allMovies}
             onMovieAdded={handleMovieAdded}
             onMovieSelect={setSelectedMovie}
+            viewMode={viewMode}
           />
         )}
         {tab === 'stats' && (

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, X, Plus, Loader2, TrendingUp, Sparkles, Grid2X2, Grid3X3, List, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { Search, X, Plus, Loader2, TrendingUp, Sparkles, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { searchTv, getTrending, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE, searchMovie, getTrendingMovies, discoverMovies, getMovieStreamingProviders } from '../lib/tmdb'
 import { addSeries, addMovie } from '../lib/api'
 import type { TmdbSearchResult, Series, Movie, WatchProvider } from '../types'
-import { useViewMode } from '../lib/useViewMode'
+import type { ViewMode } from '../lib/useViewMode'
 import { getCountry, getDefaultProviders } from '../lib/settings'
 import { toast } from 'sonner'
 
@@ -54,9 +54,10 @@ interface Props {
   allMovies: Movie[]
   onMovieAdded: () => void
   onMovieSelect: (movie: Movie) => void
+  viewMode: ViewMode
 }
 
-export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMovieAdded, onMovieSelect }: Props) {
+export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMovieAdded, onMovieSelect, viewMode }: Props) {
   const [query, setQuery] = useState('')
   const [includedGenres, setIncludedGenres] = useState<number[]>([])
   const [excludedGenres, setExcludedGenres] = useState<number[]>([])
@@ -68,7 +69,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   const [loadingTrending, setLoadingTrending] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [addingId, setAddingId] = useState<number | null>(null)
-  const [viewMode, setViewMode] = useViewMode()
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [trendingPage, setTrendingPage] = useState(1)
@@ -391,12 +391,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     SectionIcon = TrendingUp
   }
 
-  const viewToggleClasses = (mode: string) =>
-    `p-1.5 rounded-lg transition-colors ${viewMode === mode
-      ? 'bg-[#2C2C2E] text-[#F5F5F7]'
-      : 'text-[#48484A] active:text-[#8E8E93]'
-    }`
-
   const activeFilterCount = [
     includedGenres.length > 0 || excludedGenres.length > 0,
     selectedProviders.length > 0,
@@ -492,15 +486,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               </span>
             )}
           </button>
-
-          {/* Grid / list toggle */}
-          <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5 shrink-0">
-            {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
-              <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
-                <Icon className="w-3.5 h-3.5" />
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
