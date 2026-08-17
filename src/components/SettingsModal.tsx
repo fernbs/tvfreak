@@ -102,14 +102,11 @@ export function SettingsModal({ onClose }: Props) {
                       key={p.provider_id}
                       onClick={() => toggleDefaultProvider(p.provider_id)}
                       title={p.provider_name}
-                      className={`flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border transition-colors ${
-                        isSelected
-                          ? 'bg-[rgba(191,90,242,0.15)] border-[rgba(191,90,242,0.35)] text-[#F5F5F7]'
-                          : 'bg-[#1C1C1E] border-white/8 text-[#48484A] active:bg-[#2C2C2E]'
+                      className={`w-9 h-9 rounded-xl overflow-hidden border-2 transition-all ${
+                        isSelected ? 'border-[#BF5AF2]' : 'border-transparent opacity-40'
                       }`}
                     >
-                      <img src={`${IMG_BASE}/w45${p.logo_path}`} alt={p.provider_name} className="w-5 h-5 rounded-sm object-cover shrink-0" />
-                      <span className="text-[11px] font-medium whitespace-nowrap">{p.provider_name}</span>
+                      <img src={`${IMG_BASE}/original${p.logo_path}`} alt={p.provider_name} className="w-full h-full object-cover" />
                     </button>
                   )
                 })}

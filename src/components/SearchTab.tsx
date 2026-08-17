@@ -753,25 +753,19 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                     </button>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   {sortedProviders.map(p => {
                     const isSelected = selectedProviders.includes(p.provider_id)
                     return (
                       <button
                         key={p.provider_id}
                         onClick={() => toggleProvider(p.provider_id)}
-                        className="flex flex-col items-center gap-1 transition-all active:opacity-70"
-                      >
-                        <div className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all ${
+                        title={p.provider_name}
+                        className={`w-9 h-9 rounded-xl overflow-hidden border-2 transition-all active:opacity-70 ${
                           isSelected ? 'border-[#BF5AF2]' : 'border-transparent opacity-40'
-                        }`}>
-                          <img src={`${IMG_BASE}/w92${p.logo_path}`} alt={p.provider_name} className="w-full h-full object-cover" />
-                        </div>
-                        <span className={`text-[9px] text-center leading-tight max-w-[52px] truncate ${
-                          isSelected ? 'text-[#BF5AF2]' : 'text-[#48484A]'
-                        }`}>
-                          {p.provider_name}
-                        </span>
+                        }`}
+                      >
+                        <img src={`${IMG_BASE}/original${p.logo_path}`} alt={p.provider_name} className="w-full h-full object-cover" />
                       </button>
                     )
                   })}

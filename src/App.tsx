@@ -83,6 +83,9 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    // Safety net: if network calls hang, clear loading after 12 s
+    const safetyTimer = setTimeout(() => setLoading(false), 12000)
+
     async function init() {
       // Preload DB migration state once so all per-device jobs can check it.
       // This prevents jobs from re-running on new devices when the DB already
@@ -107,7 +110,7 @@ export default function App() {
         setDuplicates(dupes)
       } catch { /* non-fatal */ }
     }
-    init()
+    init().finally(() => clearTimeout(safetyTimer))
   }, [loadSeries, loadMovies])
 
   const refreshNextEpisodeDates = useCallback(async () => {
