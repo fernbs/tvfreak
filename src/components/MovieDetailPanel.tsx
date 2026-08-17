@@ -364,7 +364,13 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                   <p className="text-[10px] text-[#48484A] mb-2.5 uppercase tracking-widest font-semibold px-4">Cast</p>
                   <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: 'none' }}>
                     {detail.credits.cast.slice(0, 12).map(actor => (
-                      <div key={actor.id} className="shrink-0 w-14 text-center">
+                      <a
+                        key={actor.id}
+                        href={`https://www.themoviedb.org/person/${actor.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 w-14 text-center block active:opacity-70 transition-opacity"
+                      >
                         <div className="w-14 h-14 rounded-full overflow-hidden bg-[#1C1C1E] mb-1 mx-auto">
                           {actor.profile_path ? (
                             <img src={`${IMG_BASE}/w185${actor.profile_path}`} alt={actor.name} className="w-full h-full object-cover" loading="lazy" />
@@ -376,7 +382,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                         </div>
                         <p className="text-[9px] text-[#F5F5F7] leading-tight font-medium line-clamp-1">{actor.name}</p>
                         <p className="text-[8px] text-[#48484A] leading-tight line-clamp-1">{actor.character}</p>
-                      </div>
+                      </a>
                     ))}
                   </div>
                 </div>

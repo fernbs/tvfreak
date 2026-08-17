@@ -22,18 +22,18 @@ export function TVFreakIcon({ size = 24, className }: Props) {
         <rect x="10" y="14" width="80" height="8"/>
         {/* Row 2: full */}
         <rect x="2" y="22" width="96" height="8"/>
-        {/* Row 3: eye cross top — E at cols 2 and 8; filled at 0-1,3-7,9-11 */}
+        {/* Row 3: eye cross top — E at cols 2 and 9; filled at 0-1,3-8,10-11 */}
         <rect x="2"  y="30" width="16" height="8"/>
-        <rect x="26" y="30" width="40" height="8"/>
-        <rect x="74" y="30" width="24" height="8"/>
-        {/* Row 4: eye cross mid — E at cols 1-3 and 7-9; filled at 0,4-6,10-11 */}
+        <rect x="26" y="30" width="48" height="8"/>
+        <rect x="82" y="30" width="16" height="8"/>
+        {/* Row 4: eye cross mid — E at cols 1-3 and 8-10; filled at 0,4-7,11 */}
         <rect x="2"  y="38" width="8"  height="8"/>
-        <rect x="34" y="38" width="24" height="8"/>
-        <rect x="82" y="38" width="16" height="8"/>
+        <rect x="34" y="38" width="32" height="8"/>
+        <rect x="90" y="38" width="8"  height="8"/>
         {/* Row 5: eye cross bottom — same as row 3 */}
         <rect x="2"  y="46" width="16" height="8"/>
-        <rect x="26" y="46" width="40" height="8"/>
-        <rect x="74" y="46" width="24" height="8"/>
+        <rect x="26" y="46" width="48" height="8"/>
+        <rect x="82" y="46" width="16" height="8"/>
         {/* Row 6: full */}
         <rect x="2" y="54" width="96" height="8"/>
         {/* Row 7: nose — E at cols 5-6; filled at 0-4 and 7-11 */}
@@ -43,10 +43,10 @@ export function TVFreakIcon({ size = 24, className }: Props) {
         <rect x="2" y="70" width="96" height="8"/>
         {/* Row 9: lower jaw — cols 1-10 */}
         <rect x="10" y="78" width="80" height="8"/>
-        {/* Row 10: 3 teeth — cols 1-2, 5-6, 9-10 */}
-        <rect x="10" y="86" width="16" height="8"/>
+        {/* Row 10: 3 teeth — cols 2-3, 5-6, 8-9 */}
+        <rect x="18" y="86" width="16" height="8"/>
         <rect x="42" y="86" width="16" height="8"/>
-        <rect x="74" y="86" width="16" height="8"/>
+        <rect x="66" y="86" width="16" height="8"/>
       </g>
     </svg>
   )

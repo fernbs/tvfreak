@@ -505,103 +505,6 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
               {/* Divider */}
               <div className="border-t border-white/6 mb-5" />
 
-              {/* Creator / overview */}
-              {(detail?.overview || series.overview || (detail?.created_by && detail.created_by.length > 0)) && (
-                <div className="mb-5">
-                  <p className="text-[10px] text-[#48484A] mb-2 uppercase tracking-widest font-semibold">About</p>
-                  {detail?.created_by && detail.created_by.length > 0 && (
-                    <p className="text-[11px] text-[#8E8E93] mb-2">
-                      <span className="text-[#48484A]">Created by</span> {detail.created_by.map(c => c.name).join(', ')}
-                    </p>
-                  )}
-                  {(detail?.overview || series.overview) && (
-                    <p className="text-sm text-[#8E8E93] leading-relaxed line-clamp-4">
-                      {detail?.overview || series.overview}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Cast */}
-              {detail?.credits?.cast && detail.credits.cast.length > 0 && (
-                <div className="mb-5">
-                  <p className="text-[10px] text-[#48484A] mb-2.5 uppercase tracking-widest font-semibold">Cast</p>
-                  <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                    {detail.credits.cast.slice(0, 12).map(actor => (
-                      <div key={actor.id} className="shrink-0 w-14 text-center">
-                        <div className="w-14 h-14 rounded-full overflow-hidden bg-[#1C1C1E] mb-1 mx-auto">
-                          {actor.profile_path ? (
-                            <img src={`${IMG_BASE}/w185${actor.profile_path}`} alt={actor.name} className="w-full h-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-[#2C2C2E]">
-                              <span className="text-[18px] font-bold text-[#48484A]">{actor.name[0]}</span>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-[9px] text-[#F5F5F7] leading-tight font-medium line-clamp-1">{actor.name}</p>
-                        <p className="text-[8px] text-[#48484A] leading-tight line-clamp-1">{actor.character}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Trailer */}
-              {trailerKey && (
-                <div className="mb-5">
-                  <a
-                    href={`https://www.youtube.com/watch?v=${trailerKey}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/6 border border-white/10 text-sm font-semibold text-[#F5F5F7] active:opacity-70 transition-opacity"
-                  >
-                    <Play className="w-4 h-4 text-[var(--color-accent)]" />
-                    Watch Trailer
-                  </a>
-                </div>
-              )}
-
-              {/* Where to watch */}
-              {providers.length > 0 && (
-                <div className="mb-5">
-                  <p className="text-[10px] text-[#48484A] mb-2 uppercase tracking-widest font-semibold">Where to watch</p>
-                  <div className="flex flex-wrap gap-2">
-                    {providers.map(p => (
-                      <a
-                        key={p.provider_id}
-                        href={watchLink ?? undefined}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={p.provider_name}
-                        className="w-9 h-9 rounded-xl overflow-hidden bg-[#1C1C1E] border border-white/8 active:opacity-70 transition-opacity shrink-0"
-                        onClick={e => { if (!watchLink) e.preventDefault() }}
-                      >
-                        <img
-                          src={`${IMG_BASE}/w45${p.logo_path}`}
-                          alt={p.provider_name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Next episode */}
-              {hasUpcoming && nextEp && (
-                <div className="mb-5 px-4 py-3.5 rounded-2xl bg-[rgba(var(--accent-rgb),0.07)] border border-[rgba(var(--accent-rgb),0.18)]">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-                    <p className="text-[10px] text-[var(--color-accent)] font-semibold uppercase tracking-widest">Next episode</p>
-                  </div>
-                  <p className="text-sm text-[#F5F5F7] font-medium">
-                    S{String(nextEp.season_number).padStart(2, '0')} E{String(nextEp.episode_number).padStart(2, '0')} · {nextEp.name}
-                  </p>
-                  <p className="text-xs text-[#8E8E93] mt-0.5">{formatAirDate(nextEp.air_date)}</p>
-                </div>
-              )}
-
               {/* "New episodes coming soon" banners — date known vs TBA */}
               {series.status === 'plantowatch' && inLibrary && !!nextEpDate && (
                 <div
@@ -663,6 +566,109 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                   <p className="relative text-[22px] font-extrabold italic text-[#F5F5F7] leading-tight">
                     That's all, freaks.
                   </p>
+                </div>
+              )}
+
+              {/* Creator / overview */}
+              {(detail?.overview || series.overview || (detail?.created_by && detail.created_by.length > 0)) && (
+                <div className="mb-5">
+                  <p className="text-[10px] text-[#48484A] mb-2 uppercase tracking-widest font-semibold">About</p>
+                  {detail?.created_by && detail.created_by.length > 0 && (
+                    <p className="text-[11px] text-[#8E8E93] mb-2">
+                      <span className="text-[#48484A]">Created by</span> {detail.created_by.map(c => c.name).join(', ')}
+                    </p>
+                  )}
+                  {(detail?.overview || series.overview) && (
+                    <p className="text-sm text-[#8E8E93] leading-relaxed line-clamp-4">
+                      {detail?.overview || series.overview}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Cast */}
+              {detail?.credits?.cast && detail.credits.cast.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-[10px] text-[#48484A] mb-2.5 uppercase tracking-widest font-semibold">Cast</p>
+                  <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                    {detail.credits.cast.slice(0, 12).map(actor => (
+                      <a
+                        key={actor.id}
+                        href={`https://www.themoviedb.org/person/${actor.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 w-14 text-center block active:opacity-70 transition-opacity"
+                      >
+                        <div className="w-14 h-14 rounded-full overflow-hidden bg-[#1C1C1E] mb-1 mx-auto">
+                          {actor.profile_path ? (
+                            <img src={`${IMG_BASE}/w185${actor.profile_path}`} alt={actor.name} className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#2C2C2E]">
+                              <span className="text-[18px] font-bold text-[#48484A]">{actor.name[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[9px] text-[#F5F5F7] leading-tight font-medium line-clamp-1">{actor.name}</p>
+                        <p className="text-[8px] text-[#48484A] leading-tight line-clamp-1">{actor.character}</p>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Trailer */}
+              {trailerKey && (
+                <div className="mb-5">
+                  <a
+                    href={`https://www.youtube.com/watch?v=${trailerKey}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/6 border border-white/10 text-sm font-semibold text-[#F5F5F7] active:opacity-70 transition-opacity"
+                  >
+                    <Play className="w-4 h-4 text-[var(--color-accent)]" />
+                    Watch Trailer
+                  </a>
+                </div>
+              )}
+
+              {/* Where to watch */}
+              {providers.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-[10px] text-[#48484A] mb-2 uppercase tracking-widest font-semibold">Where to watch</p>
+                  <div className="flex flex-wrap gap-2">
+                    {providers.map(p => (
+                      <a
+                        key={p.provider_id}
+                        href={watchLink ?? undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={p.provider_name}
+                        className="w-9 h-9 rounded-xl overflow-hidden bg-[#1C1C1E] border border-white/8 active:opacity-70 transition-opacity shrink-0"
+                        onClick={e => { if (!watchLink) e.preventDefault() }}
+                      >
+                        <img
+                          src={`${IMG_BASE}/w45${p.logo_path}`}
+                          alt={p.provider_name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Next episode */}
+              {hasUpcoming && nextEp && (
+                <div className="mb-5 px-4 py-3.5 rounded-2xl bg-[rgba(var(--accent-rgb),0.07)] border border-[rgba(var(--accent-rgb),0.18)]">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+                    <p className="text-[10px] text-[var(--color-accent)] font-semibold uppercase tracking-widest">Next episode</p>
+                  </div>
+                  <p className="text-sm text-[#F5F5F7] font-medium">
+                    S{String(nextEp.season_number).padStart(2, '0')} E{String(nextEp.episode_number).padStart(2, '0')} · {nextEp.name}
+                  </p>
+                  <p className="text-xs text-[#8E8E93] mt-0.5">{formatAirDate(nextEp.air_date)}</p>
                 </div>
               )}
 
