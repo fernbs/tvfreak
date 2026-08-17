@@ -435,11 +435,9 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   return (
     <div className="flex flex-col h-full bg-black">
 
-      {/* Sticky header — 2 rows */}
+      {/* Sticky header — single row */}
       <div className="shrink-0 bg-black z-10">
-
-        {/* Row 1: TV/Films + Search */}
-        <div className="flex items-center gap-2 px-4 pb-2 pt-2">
+        <div className="flex items-center gap-2 px-4 pt-2 pb-3">
 
           {/* TV / Films segment */}
           <div className="flex bg-[#1C1C1E] rounded-lg p-0.5 shrink-0">
@@ -455,8 +453,9 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               </button>
             ))}
           </div>
+
           {/* Search input */}
-          <div className="flex-1 flex items-center bg-[#1C1C1E] rounded-xl border border-white/8 focus-within:border-white/20 transition-colors pl-3 pr-2 gap-2">
+          <div className="flex-1 flex items-center bg-[#1C1C1E] rounded-xl border border-white/8 focus-within:border-white/20 transition-colors pl-3 pr-2 gap-2 min-w-0">
             {searching && query.trim() ? (
               <Loader2 className="w-4 h-4 text-[#48484A] shrink-0 animate-spin" />
             ) : (
@@ -476,26 +475,25 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
               </button>
             )}
           </div>
-        </div>
 
-        {/* Row 2: Filters button + view toggle */}
-        <div className="flex items-center gap-2 px-4 pb-3">
+          {/* Filters icon button */}
           <button
             onClick={() => setShowFilterSheet(true)}
-            className={`flex-1 flex items-center gap-2 border rounded-xl px-3 py-[5px] text-[12px] font-medium transition-colors ${
+            className={`relative shrink-0 w-8 h-8 flex items-center justify-center rounded-xl border transition-colors ${
               activeFilterCount > 0
-                ? 'bg-[rgba(191,90,242,0.08)] border-[rgba(191,90,242,0.35)] text-[#BF5AF2]'
+                ? 'bg-[rgba(191,90,242,0.12)] border-[rgba(191,90,242,0.35)] text-[#BF5AF2]'
                 : 'bg-[#1C1C1E] border-white/8 text-[#8E8E93]'
             }`}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-            <span className="flex-1 text-left">Filters</span>
+            <SlidersHorizontal className="w-4 h-4" />
             {activeFilterCount > 0 && (
-              <span className="bg-[#BF5AF2] text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shrink-0">
+              <span className="absolute -top-1 -right-1 bg-[#BF5AF2] text-white text-[9px] font-bold min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
           </button>
+
+          {/* Grid / list toggle */}
           <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5 shrink-0">
             {([['big', Grid2X2], ['small', Grid3X3], ['list', List]] as const).map(([mode, Icon]) => (
               <button key={mode} onClick={() => setViewMode(mode)} className={viewToggleClasses(mode)}>
