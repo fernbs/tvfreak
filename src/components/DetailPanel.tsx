@@ -569,6 +569,20 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                 </div>
               )}
 
+              {/* Next episode */}
+              {hasUpcoming && nextEp && (
+                <div className="mb-5 px-4 py-3.5 rounded-2xl bg-[rgba(var(--accent-rgb),0.07)] border border-[rgba(var(--accent-rgb),0.18)]">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+                    <p className="text-[10px] text-[var(--color-accent)] font-semibold uppercase tracking-widest">Next episode</p>
+                  </div>
+                  <p className="text-sm text-[#F5F5F7] font-medium">
+                    S{String(nextEp.season_number).padStart(2, '0')} E{String(nextEp.episode_number).padStart(2, '0')} · {nextEp.name}
+                  </p>
+                  <p className="text-xs text-[#8E8E93] mt-0.5">{formatAirDate(nextEp.air_date)}</p>
+                </div>
+              )}
+
               {/* Creator / overview */}
               {(detail?.overview || series.overview || (detail?.created_by && detail.created_by.length > 0)) && (
                 <div className="mb-5">
@@ -655,20 +669,6 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                       </a>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Next episode */}
-              {hasUpcoming && nextEp && (
-                <div className="mb-5 px-4 py-3.5 rounded-2xl bg-[rgba(var(--accent-rgb),0.07)] border border-[rgba(var(--accent-rgb),0.18)]">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-                    <p className="text-[10px] text-[var(--color-accent)] font-semibold uppercase tracking-widest">Next episode</p>
-                  </div>
-                  <p className="text-sm text-[#F5F5F7] font-medium">
-                    S{String(nextEp.season_number).padStart(2, '0')} E{String(nextEp.episode_number).padStart(2, '0')} · {nextEp.name}
-                  </p>
-                  <p className="text-xs text-[#8E8E93] mt-0.5">{formatAirDate(nextEp.air_date)}</p>
                 </div>
               )}
 
