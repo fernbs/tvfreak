@@ -83,6 +83,9 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
     setLoadingDetail(true)
     getTvDetails(series.tmdbId).then(async d => {
       setDetail(d)
+      if (!series.imdbRating && (d?.vote_average ?? 0) > 0) {
+        setLocalImdbRating(d!.vote_average!.toFixed(1))
+      }
       const updates: Partial<Series> = {}
       if (d?.next_episode_to_air) {
         updates.nextEpisodeDate = d.next_episode_to_air.air_date
@@ -91,22 +94,15 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
         updates.nextEpisodeDate = null
         updates.nextEpisodeName = null
       }
-      let gotImdb = false
       const ext = await getExternalIds(series.tmdbId!)
       if (ext.imdb_id) {
         setImdbId(ext.imdb_id)
         const { imdb, rt } = await getRatings(ext.imdb_id)
         if (rt) setRtRating(rt)
         if (imdb) {
-          gotImdb = true
-          if (!series.imdbRating) {
-            setLocalImdbRating(imdb)
-            if (series.id) updates.imdbRating = imdb
-          }
+          setLocalImdbRating(imdb)
+          if (!series.imdbRating && series.id) updates.imdbRating = imdb
         }
-      }
-      if (!gotImdb && !series.imdbRating && (d?.vote_average ?? 0) > 0) {
-        setLocalImdbRating(d!.vote_average!.toFixed(1))
       }
       if (series.id && Object.keys(updates).length > 0) {
         await updateSeries(series.id, updates)

@@ -90,27 +90,27 @@ export const STATUS_CONFIG: Record<SeriesStatus, {
 }> = {
   watching: {
     label: 'Watching',
-    color: '#38BDF8',
-    bgClass: 'bg-sky-400/12',
-    textClass: 'text-sky-300',
+    color: '#5AC8FA',
+    bgClass: 'bg-cyan-400/12',
+    textClass: 'text-cyan-300',
   },
   completed: {
     label: 'Completed',
-    color: '#34D399',
-    bgClass: 'bg-emerald-400/12',
-    textClass: 'text-emerald-300',
+    color: '#30D158',
+    bgClass: 'bg-green-400/12',
+    textClass: 'text-green-400',
   },
   dropped: {
     label: 'Dropped',
-    color: '#FB7185',
-    bgClass: 'bg-rose-400/12',
-    textClass: 'text-rose-300',
+    color: '#FF375F',
+    bgClass: 'bg-rose-500/12',
+    textClass: 'text-rose-400',
   },
   plantowatch: {
     label: 'Pending',
-    color: '#FBBF24',
-    bgClass: 'bg-amber-400/12',
-    textClass: 'text-amber-300',
+    color: '#FFD60A',
+    bgClass: 'bg-yellow-400/12',
+    textClass: 'text-yellow-300',
   },
 }
 
@@ -145,8 +145,8 @@ export interface TmdbMovieDetail {
 }
 
 export const MOVIE_STATUS_CONFIG: Record<MovieStatus, { label: string; color: string }> = {
-  watching:    { label: 'Watching',  color: '#38BDF8' },
-  completed:   { label: 'Watched',   color: '#34D399' },
-  dropped:     { label: 'Dropped',   color: '#FB7185' },
-  plantowatch: { label: 'Watchlist', color: '#FBBF24' },
+  watching:    { label: 'Watching',  color: '#5AC8FA' },
+  completed:   { label: 'Watched',   color: '#30D158' },
+  dropped:     { label: 'Dropped',   color: '#FF375F' },
+  plantowatch: { label: 'Watchlist', color: '#FFD60A' },
 }
