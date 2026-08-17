@@ -245,7 +245,13 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
-                          <span className="inline-flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#FA320A] text-white font-black leading-none" style={{ fontSize: '6px' }}>RT</span>
+                          {parseInt(rtRating) >= 60 ? (
+                            <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
+                              <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
+                            </svg>
+                          )}
                           <span className="text-white font-medium leading-none">{rtRating}</span>
                         </a>
                       )}
@@ -361,8 +367,9 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                             </div>
                           )}
                           {(r.vote_average ?? 0) > 0 && (
-                            <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-black/65">
-                              <span className="text-[9px] font-medium leading-none"><span className="text-[var(--color-accent)]">★</span><span className="text-white">{r.vote_average!.toFixed(1)}</span></span>
+                            <div className="absolute top-1 left-1 px-1 rounded bg-black/65 flex items-center gap-px">
+                              <span className="text-[var(--color-accent)] leading-none" style={{ fontSize: '9px' }}>★</span>
+                              <span className="text-white font-semibold leading-none" style={{ fontSize: '9px' }}>{r.vote_average!.toFixed(1)}</span>
                             </div>
                           )}
                         </div>
