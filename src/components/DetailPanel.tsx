@@ -519,7 +519,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                   <p className="text-[10px] text-[#48484A] mb-2.5 uppercase tracking-widest font-semibold">
                     More like {series.title.split(' ').slice(0, 2).join(' ')}
                   </p>
-                  <div ref={recsScrollRef} className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                  <div ref={recsScrollRef} className="flex items-start gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                     {recommendations.map(r => (
                       <button
                         key={r.id}
