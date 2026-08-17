@@ -17,11 +17,7 @@ const tabs = [
 export function BottomNav({ active, onChange }: Props) {
   return (
     <nav
-      className="fixed left-0 right-0 flex bg-black/94 backdrop-blur-2xl border-t border-white/6 z-10"
-      style={{
-        bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      }}
+      className="relative shrink-0 w-full flex bg-black/94 backdrop-blur-2xl border-t border-white/6 z-10 nav-safe-pad"
     >
       {tabs.map(({ id, icon: Icon, label }) => {
         const isActive = active === id

@@ -41,6 +41,7 @@
 html {
   height: 100%;
   height: 100svh;
+  height: var(--vvh, 100svh);
   margin: 0;
   padding: 0;
   background-color: #000000;
@@ -99,6 +100,13 @@ body {
 
 .safe-top { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+/* In standalone PWA mode the home indicator is visible and needs accommodation.
+   In browser mode Safari's own toolbar already handles that area. */
+.nav-safe-pad { padding-bottom: 0; }
+@media (display-mode: standalone) {
+  .nav-safe-pad { padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }

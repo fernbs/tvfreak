@@ -488,7 +488,7 @@ export default function App() {
       )}
 
       {/* Tab content */}
-      <main className="flex-1 overflow-hidden min-h-0" style={{ paddingBottom: '3.75rem' }}>
+      <main className="flex-1 overflow-hidden min-h-0">
         {tab === 'home' && (
           <HomeTab series={allSeries} loading={loading} onSelect={setSelected} onRefresh={refreshNextEpisodeDates} />
         )}

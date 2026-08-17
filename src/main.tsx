@@ -4,6 +4,13 @@ import { Toaster } from 'sonner'
 import './index.css'
 import App from './App.tsx'
 
+const setVvh = () => {
+  const h = window.visualViewport?.height ?? window.innerHeight
+  document.documentElement.style.setProperty('--vvh', `${h}px`)
+}
+setVvh()
+window.visualViewport?.addEventListener('resize', setVvh)
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
