@@ -28,9 +28,10 @@ export default function App() {
   const [importProgress, setImportProgress] = useState({ done: 0, total: 0 })
   const [selected, setSelected] = useState<Series | null>(null)
   const [allMovies, setAllMovies] = useState<Movie[]>([])
+  const [moviesLoaded, setMoviesLoaded] = useState(false)
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
 
-  const movieImport = useMovieImport()
+  const movieImport = useMovieImport(moviesLoaded, allMovies.length)
 
   const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([])
   const [showDuplicates, setShowDuplicates] = useState(false)
@@ -62,6 +63,7 @@ export default function App() {
       const data = await getAllMovies()
       setAllMovies(data)
     } catch { /* non-fatal */ }
+    finally { setMoviesLoaded(true) }
   }, [])
 
   useEffect(() => {

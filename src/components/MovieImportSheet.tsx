@@ -331,10 +331,19 @@ function StatRow({ color, label, count, note }: { color: string; label: string; 
 }
 
 // ── Hook to control visibility ─────────────────────────────────────────────────
-export function useMovieImport() {
+export function useMovieImport(moviesLoaded: boolean, moviesCount: number) {
   const [importData, setImportData] = useState<ImportData | null>(null)
   const [importDone, setImportDone] = useState(() => !!localStorage.getItem(IMPORT_DONE_KEY))
   const [sheetOpen, setSheetOpen] = useState(false)
+
+  // If the import was marked done (e.g. from a test or a failed run) but no
+  // movies are actually in the DB, reset so the banner shows again.
+  useEffect(() => {
+    if (moviesLoaded && moviesCount === 0 && importDone) {
+      localStorage.removeItem(IMPORT_DONE_KEY)
+      setImportDone(false)
+    }
+  }, [moviesLoaded, moviesCount, importDone])
 
   useEffect(() => {
     if (importDone) return
