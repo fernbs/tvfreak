@@ -11,6 +11,38 @@ import type { ViewMode } from '../lib/useViewMode'
 type SortKey = 'title' | 'added' | 'updated' | 'nextEpisode'
 
 const RATING_OPTIONS = [null, 5, 6, 7, 8] as const
+
+const TV_GENRES = [
+  { id: 10759, label: 'Action & Adventure' },
+  { id: 18,    label: 'Drama' },
+  { id: 80,    label: 'Crime' },
+  { id: 10765, label: 'Sci-Fi & Fantasy' },
+  { id: 9648,  label: 'Mystery' },
+  { id: 35,    label: 'Comedy' },
+  { id: 99,    label: 'Documentary' },
+  { id: 16,    label: 'Animation' },
+  { id: 10768, label: 'War & Politics' },
+  { id: 37,    label: 'Western' },
+]
+
+const MOVIE_GENRES = [
+  { id: 28,    label: 'Action' },
+  { id: 12,    label: 'Adventure' },
+  { id: 16,    label: 'Animation' },
+  { id: 35,    label: 'Comedy' },
+  { id: 80,    label: 'Crime' },
+  { id: 99,    label: 'Documentary' },
+  { id: 18,    label: 'Drama' },
+  { id: 14,    label: 'Fantasy' },
+  { id: 27,    label: 'Horror' },
+  { id: 9648,  label: 'Mystery' },
+  { id: 10749, label: 'Romance' },
+  { id: 878,   label: 'Sci-Fi' },
+  { id: 53,    label: 'Thriller' },
+  { id: 10752, label: 'War' },
+  { id: 37,    label: 'Western' },
+]
+
 const TV_STATUS_FILTERS: { label: string; value: SeriesStatus | 'all' }[] = [
   { label: 'All', value: 'all' },
   { label: 'Pending', value: 'plantowatch' },
@@ -149,6 +181,7 @@ export function LibraryTab({
   const [mediaMode, setMediaMode] = useState<'tv' | 'movie'>('tv')
   const [movieFilter, setMovieFilter] = useState<MovieStatus | 'all'>('all')
   const [minRating, setMinRating] = useState<number | null>(null)
+  const [genreFilter, setGenreFilter] = useState<number | null>(null)
   const [showFilterSheet, setShowFilterSheet] = useState(false)
   const [filterPlatforms, setFilterPlatforms] = useState<number[]>(getDefaultProviders)
   const [availableProviders, setAvailableProviders] = useState<WatchProvider[]>([])
@@ -181,11 +214,13 @@ export function LibraryTab({
   const filtered = sorted(
     (filter === 'all' ? series : series.filter(s => s.status === filter))
       .filter(s => minRating == null || parseFloat(s.imdbRating ?? '0') >= minRating)
+      .filter(s => genreFilter == null || s.genres?.some(g => g.id === genreFilter))
   )
 
   const filteredMovies = [...allMovies]
     .filter(m => movieFilter === 'all' || m.status === movieFilter)
     .filter(m => minRating == null || parseFloat(m.imdbRating ?? '0') >= minRating)
+    .filter(m => genreFilter == null || m.genres?.some(g => g.id === genreFilter))
     .sort((a, b) => {
       if (sort === 'title') return a.title.localeCompare(b.title)
       if (sort === 'added') return b.addedAt.getTime() - a.addedAt.getTime()
@@ -193,12 +228,13 @@ export function LibraryTab({
     })
 
   const activeStatusFilter = mediaMode === 'tv' ? filter !== 'all' : movieFilter !== 'all'
-  const activeFilterCount = [activeStatusFilter, minRating != null].filter(Boolean).length
+  const activeFilterCount = [activeStatusFilter, minRating != null, genreFilter != null].filter(Boolean).length
 
   function clearFilters() {
     setFilter('all')
     setMovieFilter('all')
     setMinRating(null)
+    setGenreFilter(null)
   }
 
   return (
@@ -345,6 +381,32 @@ export function LibraryTab({
                     </button>
                   )
                 })}
+              </div>
+            </div>
+
+            {/* Genre */}
+            <div className="px-4 pt-2 pb-4 border-t border-white/6">
+              <p className="text-[11px] font-semibold text-[#48484A] uppercase tracking-wide mb-2.5">Genre</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setGenreFilter(null)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    genreFilter === null ? 'bg-[#BF5AF2] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                  }`}
+                >
+                  Any
+                </button>
+                {(mediaMode === 'tv' ? TV_GENRES : MOVIE_GENRES).map(g => (
+                  <button
+                    key={g.id}
+                    onClick={() => setGenreFilter(prev => prev === g.id ? null : g.id)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                      genreFilter === g.id ? 'bg-[#BF5AF2] text-white' : 'bg-[#2C2C2E] text-[#8E8E93] active:bg-[#383838]'
+                    }`}
+                  >
+                    {g.label}
+                  </button>
+                ))}
               </div>
             </div>
 

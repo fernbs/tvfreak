@@ -474,17 +474,17 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
           {/* Year */}
           <div>
             <SectionLabel>Year</SectionLabel>
-            <input
-              type="number"
-              inputMode="numeric"
-              placeholder="e.g. 2022"
-              min={1900}
-              max={new Date().getFullYear() + 2}
+            <select
               value={yearFilter}
-              onChange={e => setYearFilter(e.target.value.slice(0, 4))}
-              className="w-full bg-[#1C1C1E] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-[#F5F5F7] placeholder-[#48484A] outline-none focus:border-white/20 transition-colors"
+              onChange={e => setYearFilter(e.target.value)}
+              className="w-full bg-[#1C1C1E] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-[#F5F5F7] outline-none appearance-none"
               style={{ fontSize: 16 }}
-            />
+            >
+              <option value="" className="bg-[#1C1C1E]">Any year</option>
+              {Array.from({ length: new Date().getFullYear() - 1969 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                <option key={year} value={String(year)} className="bg-[#1C1C1E]">{year}</option>
+              ))}
+            </select>
           </div>
 
           {/* Library toggle */}
