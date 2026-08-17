@@ -30,7 +30,7 @@ export default function App() {
   const [allMovies, setAllMovies] = useState<Movie[]>([])
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
 
-  const movieImport = useMovieImport()
+  const movieImport = useMovieImport(allMovies.length)
 
   const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([])
   const [showDuplicates, setShowDuplicates] = useState(false)

@@ -458,10 +458,19 @@ function StatRow({ color, label, count, note }: { color: string; label: string; 
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
-export function useMovieImport() {
+export function useMovieImport(moviesCount = 0) {
   const [importData, setImportData] = useState<ImportData | null>(null)
   const [importDone, setImportDone] = useState(() => !!localStorage.getItem(IMPORT_DONE_KEY))
   const [sheetOpen, setSheetOpen] = useState(false)
+
+  // If movies already exist in the DB, the import happened in a previous session.
+  // Silence the banner permanently so the user isn't asked to import again.
+  useEffect(() => {
+    if (moviesCount > 0 && !importDone) {
+      localStorage.setItem(IMPORT_DONE_KEY, '1')
+      setImportDone(true)
+    }
+  }, [moviesCount, importDone])
 
   useEffect(() => {
     if (importDone) return
