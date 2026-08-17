@@ -1,25 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="112" fill="#0D0D0D"/>
   <g fill="#BF5AF2">
-    <rect x="136" y="36"  width="240" height="40"/>
-    <rect x="96"  y="76"  width="320" height="40"/>
-    <rect x="56"  y="116" width="400" height="40"/>
-    <rect x="56"  y="156" width="400" height="40"/>
-    <rect x="56"  y="196" width="80"  height="40"/>
-    <rect x="176" y="196" width="160" height="40"/>
-    <rect x="376" y="196" width="80"  height="40"/>
-    <rect x="56"  y="236" width="40"  height="40"/>
-    <rect x="216" y="236" width="80"  height="40"/>
-    <rect x="416" y="236" width="40"  height="40"/>
-    <rect x="56"  y="276" width="80"  height="40"/>
-    <rect x="176" y="276" width="160" height="40"/>
-    <rect x="376" y="276" width="80"  height="40"/>
-    <rect x="56"  y="316" width="400" height="40"/>
-    <rect x="56"  y="356" width="160" height="40"/>
-    <rect x="296" y="356" width="160" height="40"/>
-    <rect x="56"  y="396" width="400" height="40"/>
-    <rect x="96"  y="436" width="80"  height="40"/>
-    <rect x="216" y="436" width="80"  height="40"/>
-    <rect x="336" y="436" width="80"  height="40"/>
+    <rect x="160" y="80"  width="192" height="32"/>
+    <rect x="128" y="112" width="256" height="32"/>
+    <rect x="96"  y="144" width="320" height="32"/>
+    <rect x="96"  y="176" width="320" height="32"/>
+    <rect x="96"  y="208" width="64"  height="32"/>
+    <rect x="192" y="208" width="128" height="32"/>
+    <rect x="352" y="208" width="64"  height="32"/>
+    <rect x="96"  y="240" width="32"  height="32"/>
+    <rect x="224" y="240" width="64"  height="32"/>
+    <rect x="384" y="240" width="32"  height="32"/>
+    <rect x="96"  y="272" width="64"  height="32"/>
+    <rect x="192" y="272" width="128" height="32"/>
+    <rect x="352" y="272" width="64"  height="32"/>
+    <rect x="96"  y="304" width="320" height="32"/>
+    <rect x="96"  y="336" width="128" height="32"/>
+    <rect x="288" y="336" width="128" height="32"/>
+    <rect x="96"  y="368" width="320" height="32"/>
+    <rect x="128" y="400" width="64"  height="32"/>
+    <rect x="224" y="400" width="64"  height="32"/>
+    <rect x="320" y="400" width="64"  height="32"/>
   </g>
 </svg>
