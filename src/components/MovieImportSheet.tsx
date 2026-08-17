@@ -3,7 +3,7 @@ import { X, Check, SkipForward, Download, ChevronRight, Film } from 'lucide-reac
 import { addMovie } from '../lib/api'
 
 const IMPORT_DONE_KEY = 'tvfreak-movie-import-done'
-const IMPORT_JSON_URL = '/movie-import.json'
+const IMPORT_JSON_URL = `${import.meta.env.BASE_URL}movie-import.json`
 
 interface Candidate {
   tmdbId: number
