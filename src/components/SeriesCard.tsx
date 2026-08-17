@@ -46,6 +46,19 @@ export function SeriesCard({ series, onClick }: Props) {
         className="absolute inset-0 pointer-events-none"
         style={{ background: `radial-gradient(circle at 0% 100%, ${config.color}99 0%, transparent 38%)` }}
       />
+      {/* Bottom-left corner border arc */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: 0,
+          left: 0,
+          width: 16,
+          height: 16,
+          borderLeft: `2px solid ${config.color}`,
+          borderBottom: `2px solid ${config.color}`,
+          borderBottomLeftRadius: 16,
+        }}
+      />
 
       {/* Hover overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5">

@@ -100,6 +100,19 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
               className="absolute inset-0 pointer-events-none"
               style={{ background: `radial-gradient(circle at 0% 100%, ${cfg.color}99 0%, transparent 38%)` }}
             />
+            {/* Bottom-left corner border arc */}
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                bottom: 0,
+                left: 0,
+                width: 16,
+                height: 16,
+                borderLeft: `2px solid ${cfg.color}`,
+                borderBottom: `2px solid ${cfg.color}`,
+                borderBottomLeftRadius: 16,
+              }}
+            />
             {/* Rating */}
             {m.imdbRating && (
               <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
