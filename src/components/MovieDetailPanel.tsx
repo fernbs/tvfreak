@@ -121,14 +121,11 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
     if (!movie) return
     setAdding(true)
     try {
-      const todayDate = new Date().toISOString().slice(0, 10)
       const releaseDate = detail?.release_date ?? movie.releaseDate
-      const isFutureMovie = !releaseDate || releaseDate > todayDate
-      const addStatus = isFutureMovie ? 'plantowatch' : 'watching'
       const id = await addMovie({
         tmdbId: movie.tmdbId,
         title: movie.title,
-        status: addStatus,
+        status: 'plantowatch',
         posterPath: detail?.poster_path ?? movie.posterPath,
         overview: detail?.overview ?? movie.overview,
         releaseDate,
@@ -140,7 +137,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
       })
       toast.success(`"${movie.title}" added to watchlist`)
       onUpdated()
-      onSelect({ ...movie, id, status: addStatus, imdbRating: displayRating })
+      onSelect({ ...movie, id, status: 'plantowatch', imdbRating: displayRating })
     } finally { setAdding(false) }
   }
 
@@ -380,8 +377,8 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                             </div>
                           )}
                         </div>
-                        <p className="text-[9px] text-[#F5F5F7] leading-tight font-medium line-clamp-1">{actor.name}</p>
-                        <p className="text-[8px] text-[#48484A] leading-tight line-clamp-1">{actor.character}</p>
+                        <p className="text-[9px] text-[#F5F5F7] leading-tight font-medium line-clamp-2">{actor.name}</p>
+                        <p className="text-[8px] text-[#48484A] leading-tight line-clamp-2">{actor.character}</p>
                       </a>
                     ))}
                   </div>

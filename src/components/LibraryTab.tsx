@@ -51,7 +51,6 @@ const TV_STATUS_FILTERS: { label: string; value: SeriesStatus | 'all' }[] = [
 const MOVIE_STATUS_FILTERS: { label: string; value: MovieStatus | 'all' }[] = [
   { label: 'All', value: 'all' },
   { label: 'Watchlist', value: 'plantowatch' },
-  { label: 'Watching', value: 'watching' },
   { label: 'Watched', value: 'completed' },
   { label: 'Dropped', value: 'dropped' },
 ]
@@ -93,7 +92,7 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
     return (
       <div className="space-y-2 pt-2">
         {movies.map(m => {
-          const cfg = MOVIE_STATUS_CONFIG[m.status]
+          const cfg = MOVIE_STATUS_CONFIG[m.status] ?? MOVIE_STATUS_CONFIG['plantowatch']
           const poster = m.posterPath ? `https://image.tmdb.org/t/p/w185${m.posterPath}` : null
           return (
             <button
@@ -127,7 +126,7 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
   return (
     <div className={`pt-2 ${viewMode === 'big' ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-3 gap-2.5'}`}>
       {movies.map(m => {
-        const cfg = MOVIE_STATUS_CONFIG[m.status]
+        const cfg = MOVIE_STATUS_CONFIG[m.status] ?? MOVIE_STATUS_CONFIG['plantowatch']
         const poster = m.posterPath ? `https://image.tmdb.org/t/p/w342${m.posterPath}` : null
         return (
           <button

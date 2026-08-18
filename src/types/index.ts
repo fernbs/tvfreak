@@ -115,7 +115,7 @@ export const STATUS_CONFIG: Record<SeriesStatus, {
   plantowatch: { label: 'Pending',   color: '#FFD60A' },
 }
 
-export type MovieStatus = 'completed' | 'watching' | 'plantowatch' | 'dropped'
+export type MovieStatus = 'completed' | 'plantowatch' | 'dropped'
 
 export interface Movie {
   id?: number
@@ -147,7 +147,6 @@ export interface TmdbMovieDetail {
 }
 
 export const MOVIE_STATUS_CONFIG: Record<MovieStatus, { label: string; color: string }> = {
-  watching:    { label: 'Watching',  color: '#5AC8FA' },
   completed:   { label: 'Watched',   color: '#30D158' },
   dropped:     { label: 'Dropped',   color: '#FF375F' },
   plantowatch: { label: 'Watchlist', color: '#FFD60A' },

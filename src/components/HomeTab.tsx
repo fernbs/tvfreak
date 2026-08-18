@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { Calendar, ChevronLeft, ChevronRight, ChevronDown, Tv } from 'lucide-react'
-import type { Series } from '../types'
+import type { Series, Movie } from '../types'
 import { SeriesGrid } from './SeriesGrid'
 import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
@@ -12,6 +12,8 @@ interface Props {
   series: Series[]
   loading: boolean
   onSelect: (s: Series) => void
+  allMovies: Movie[]
+  onMovieSelect: (m: Movie) => void
   viewMode: ViewMode
 }
 
@@ -26,7 +28,7 @@ function addMonths(date: Date, n: number): Date {
   return d
 }
 
-export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
+export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, viewMode }: Props) {
   const [view, setView] = useState<'watching' | 'upcoming'>('watching')
   const [calMonth, setCalMonth] = useState(() => {
     const d = new Date()
@@ -52,16 +54,28 @@ export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
     }
   }
 
-  type UpcomingItem = { date: string; series: Series }
+  const movieDateMap = new Map<string, Movie[]>()
+  for (const m of allMovies) {
+    if (!m.id || !m.releaseDate || m.releaseDate <= todayStr) continue
+    if (!movieDateMap.has(m.releaseDate)) movieDateMap.set(m.releaseDate, [])
+    movieDateMap.get(m.releaseDate)!.push(m)
+  }
+
+  type UpcomingItem = { date: string; series: Series } | { date: string; movie: Movie }
   const allUpcoming: UpcomingItem[] = []
-  for (const [date, seriesList] of [...episodeMap.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-    for (const s of seriesList) allUpcoming.push({ date, series: s })
+  const sortedEventDates = [...new Set([...[...episodeMap.keys()], ...[...movieDateMap.keys()]])].sort()
+  for (const date of sortedEventDates) {
+    for (const s of (episodeMap.get(date) ?? [])) allUpcoming.push({ date, series: s })
+    for (const m of (movieDateMap.get(date) ?? [])) allUpcoming.push({ date, movie: m })
   }
 
   const calMonthPrefix = `${calMonth.getFullYear()}-${String(calMonth.getMonth() + 1).padStart(2, '0')}-`
   const listItems: UpcomingItem[] = selectedDate
-    ? (episodeMap.get(selectedDate) ?? []).map(s => ({ date: selectedDate, series: s }))
-    : allUpcoming.filter(({ date }) => date.startsWith(calMonthPrefix))
+    ? [
+        ...(episodeMap.get(selectedDate) ?? []).map(s => ({ date: selectedDate, series: s } as UpcomingItem)),
+        ...(movieDateMap.get(selectedDate) ?? []).map(m => ({ date: selectedDate, movie: m } as UpcomingItem)),
+      ]
+    : allUpcoming.filter(item => item.date.startsWith(calMonthPrefix))
 
   const watchingNow = series
     .filter(s => s.status === 'watching')
@@ -192,7 +206,7 @@ export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
                       const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`
                       const isToday = dateStr === todayStr
                       const isSelected = dateStr === selectedDate
-                      const hasEpisode = episodeMap.has(dateStr)
+                      const hasEpisode = episodeMap.has(dateStr) || movieDateMap.has(dateStr)
                       const isPast = dateStr < todayStr
                       return (
                         <button
@@ -251,27 +265,34 @@ export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
               </div>
             ) : viewMode === 'list' ? (
               <div className="space-y-2">
-                {listItems.slice(0, visibleCount).map(({ date, series: s }, i) => (
-                  <button
-                    key={`${s.id}-${date}-${i}`}
-                    onClick={() => onSelect(s)}
-                    className="w-full flex items-center gap-3 p-3 bg-[#111111] rounded-xl border border-white/7 active:bg-[#1C1C1E] transition-colors text-left"
-                  >
-                    <div className="w-10 h-14 rounded-lg overflow-hidden bg-[#1C1C1E] shrink-0">
-                      {s.posterPath && (
-                        <img src={posterUrl(s.posterPath, 'w185') ?? ''} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#F5F5F7] truncate">{s.title}</p>
-                    </div>
-                    <div className="shrink-0">
-                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(var(--accent-rgb),0.12)] text-[var(--color-accent)] leading-tight">
-                        {formatAirDate(date)}
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                {listItems.slice(0, visibleCount).map((item, i) => {
+                  const isMovie = 'movie' in item
+                  const title = isMovie ? item.movie.title : item.series.title
+                  const posterPath = isMovie ? item.movie.posterPath : item.series.posterPath
+                  const key = isMovie ? `m-${item.movie.id}-${item.date}-${i}` : `${item.series.id}-${item.date}-${i}`
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => isMovie ? onMovieSelect(item.movie) : onSelect(item.series)}
+                      className="w-full flex items-center gap-3 p-3 bg-[#111111] rounded-xl border border-white/7 active:bg-[#1C1C1E] transition-colors text-left"
+                    >
+                      <div className="w-10 h-14 rounded-lg overflow-hidden bg-[#1C1C1E] shrink-0">
+                        {posterPath && (
+                          <img src={posterUrl(posterPath, 'w185') ?? ''} alt={title} className="w-full h-full object-cover" loading="lazy" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#F5F5F7] truncate">{title}</p>
+                        {isMovie && <p className="text-[10px] text-[#48484A] mt-0.5">Film</p>}
+                      </div>
+                      <div className="shrink-0">
+                        <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(var(--accent-rgb),0.12)] text-[var(--color-accent)] leading-tight">
+                          {formatAirDate(item.date)}
+                        </span>
+                      </div>
+                    </button>
+                  )
+                })}
                 {visibleCount < listItems.length && (
                   <button
                     onClick={() => setVisibleCount(c => c + 20)}
@@ -284,27 +305,33 @@ export function HomeTab({ series, loading, onSelect, viewMode }: Props) {
             ) : (
               <div>
                 <div className={`grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                  {listItems.slice(0, visibleCount).map(({ date, series: s }, i) => (
+                  {listItems.slice(0, visibleCount).map((item, i) => {
+                    const isMovie = 'movie' in item
+                    const title = isMovie ? item.movie.title : item.series.title
+                    const posterPath = isMovie ? item.movie.posterPath : item.series.posterPath
+                    const key = isMovie ? `m-${item.movie.id}-${item.date}-${i}` : `${item.series.id}-${item.date}-${i}`
+                    return (
                     <button
-                      key={`${s.id}-${date}-${i}`}
-                      onClick={() => onSelect(s)}
+                      key={key}
+                      onClick={() => isMovie ? onMovieSelect(item.movie) : onSelect(item.series)}
                       className="relative text-left active:opacity-70 transition-opacity"
                     >
                       <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1C1C1E] mb-1 relative">
-                        {s.posterPath ? (
-                          <img src={posterUrl(s.posterPath, 'w342') ?? ''} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
+                        {posterPath ? (
+                          <img src={posterUrl(posterPath, 'w342') ?? ''} alt={title} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center p-2">
-                            <span className="text-[10px] text-[#48484A] text-center">{s.title}</span>
+                            <span className="text-[10px] text-[#48484A] text-center">{title}</span>
                           </div>
                         )}
                         <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[var(--color-accent)]/90 text-white leading-tight backdrop-blur-sm">
-                          {formatAirDate(date)}
+                          {formatAirDate(item.date)}
                         </div>
                       </div>
-                      <p className={`text-[#8E8E93] leading-tight line-clamp-2 ${viewMode === 'big' ? 'text-[11px]' : 'text-[10px]'}`}>{s.title}</p>
+                      <p className={`text-[#8E8E93] leading-tight line-clamp-2 ${viewMode === 'big' ? 'text-[11px]' : 'text-[10px]'}`}>{title}</p>
                     </button>
-                  ))}
+                    )
+                  })}
                 </div>
                 {visibleCount < listItems.length && (
                   <button
