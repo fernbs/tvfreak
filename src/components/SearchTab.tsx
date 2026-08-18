@@ -87,7 +87,6 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     setMediaMode(mode)
     setIncludedGenres([])
     setExcludedGenres([])
-    setQuery('')
     setYearFilter('')
     setResults([])
     setCurrentPage(1)

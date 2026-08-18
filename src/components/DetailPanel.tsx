@@ -570,7 +570,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
               )}
 
               {/* Next episode */}
-              {hasUpcoming && nextEp && (
+              {hasUpcoming && nextEp && series.status !== 'plantowatch' && (
                 <div className="mb-5 px-4 py-3.5 rounded-2xl bg-[rgba(var(--accent-rgb),0.07)] border border-[rgba(var(--accent-rgb),0.18)]">
                   <div className="flex items-center gap-2 mb-1.5">
                     <Calendar className="w-3.5 h-3.5 text-[var(--color-accent)]" />
@@ -622,8 +622,8 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                             </div>
                           )}
                         </div>
-                        <p className="text-[9px] text-[#F5F5F7] leading-tight font-medium line-clamp-1">{actor.name}</p>
-                        <p className="text-[8px] text-[#48484A] leading-tight line-clamp-1">{actor.character}</p>
+                        <p className="text-[9px] text-[#F5F5F7] leading-tight font-medium line-clamp-2">{actor.name}</p>
+                        <p className="text-[8px] text-[#48484A] leading-tight line-clamp-2">{actor.character}</p>
                       </a>
                     ))}
                   </div>
