@@ -150,12 +150,23 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
               className="absolute pointer-events-none"
               style={{ bottom: 0, left: 0, width: 16, height: 16, borderLeft: `2px solid ${cfg.color}`, borderBottom: `2px solid ${cfg.color}`, borderBottomLeftRadius: 16 }}
             />
-            {m.imdbRating && (
-              <div className="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-black/85 leading-tight">
-                <span className="text-[var(--color-accent)]">★</span>
-                <span className="text-white"> {m.imdbRating}</span>
-              </div>
-            )}
+            <div className="absolute right-1.5 bottom-1.5 flex flex-col items-end gap-0.5">
+              {m.rtRating && (
+                <div className="px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm flex items-center gap-0.5">
+                  {parseInt(m.rtRating) >= 60
+                    ? <span style={{ fontSize: '9px' }}>🍅</span>
+                    : <svg width="9" height="9" viewBox="0 0 12 12"><path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/></svg>
+                  }
+                  <span className="text-white">{m.rtRating}</span>
+                </div>
+              )}
+              {m.imdbRating && (
+                <div className="px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
+                  <span className="text-[var(--color-accent)]">★</span>
+                  <span className="text-white"> {m.imdbRating}</span>
+                </div>
+              )}
+            </div>
           </button>
         )
       })}

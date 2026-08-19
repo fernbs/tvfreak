@@ -43,6 +43,7 @@ function parseSeries(row: Record<string, unknown>): Series {
     nextEpisodeDate: (row.nextEpisodeDate as string | null) ?? null,
     nextEpisodeName: (row.nextEpisodeName as string | null) ?? null,
     imdbRating: (row.imdbRating as string | null) ?? null,
+    rtRating: (row.rtRating as string | null) ?? null,
     futureDates: rawDates ? (() => { try { return JSON.parse(rawDates) as string[] } catch { return null } })() : null,
     addedAt: new Date(row.addedAt as string),
     updatedAt: new Date(row.updatedAt as string),
@@ -201,6 +202,7 @@ function parseMovie(row: Record<string, unknown>): Movie {
   return {
     ...row,
     imdbRating: (row.imdbRating as string | null) ?? null,
+    rtRating: (row.rtRating as string | null) ?? null,
     addedAt: new Date(row.addedAt as string),
     updatedAt: new Date(row.updatedAt as string),
   } as Movie

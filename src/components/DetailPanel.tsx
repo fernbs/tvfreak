@@ -115,8 +115,9 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
         if (mc) setMcRating(mc)
         if (imdb) {
           setLocalImdbRating(imdb)
-          if (!series.imdbRating && series.id) updates.imdbRating = imdb
+          if (series.id) updates.imdbRating = imdb
         }
+        if (rt && series.id) updates.rtRating = rt
       }
       setRatingsLoaded(true)
       if (series.id && Object.keys(updates).length > 0) {

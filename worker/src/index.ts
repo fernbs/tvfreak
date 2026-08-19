@@ -5,12 +5,12 @@ interface Env {
 const ALLOWED_SERIES_FIELDS = new Set([
   'tmdbId', 'title', 'status', 'posterPath', 'overview',
   'firstAirDate', 'lastAirDate', 'numberOfSeasons', 'notes',
-  'addedAt', 'updatedAt', 'nextEpisodeDate', 'nextEpisodeName', 'imdbRating', 'futureDates',
+  'addedAt', 'updatedAt', 'nextEpisodeDate', 'nextEpisodeName', 'imdbRating', 'futureDates', 'rtRating',
 ])
 
 const ALLOWED_MOVIE_FIELDS = new Set([
   'tmdbId', 'title', 'status', 'posterPath', 'overview',
-  'releaseDate', 'runtime', 'notes', 'addedAt', 'updatedAt', 'imdbRating',
+  'releaseDate', 'runtime', 'notes', 'addedAt', 'updatedAt', 'imdbRating', 'rtRating',
 ])
 
 const STATUS_PRIORITY: Record<string, number> = {
@@ -54,6 +54,7 @@ export default {
     try {
       // GET /api/series
       if (path === '/api/series' && method === 'GET') {
+        await ensureSeries()
         const { results } = await env.DB.prepare(
           'SELECT * FROM series ORDER BY title ASC'
         ).all()
@@ -322,7 +323,10 @@ export default {
       }
 
       // ── Movies ──────────────────────────────────────────────────────────
-      // Auto-create movies table on first use (idempotent)
+      async function ensureSeries() {
+        try { await env.DB.prepare('ALTER TABLE series ADD COLUMN rtRating TEXT').run() } catch {}
+      }
+
       async function ensureMovies() {
         await env.DB.prepare(`
           CREATE TABLE IF NOT EXISTS movies (
@@ -336,10 +340,12 @@ export default {
             runtime INTEGER,
             notes TEXT NOT NULL DEFAULT '',
             imdbRating TEXT,
+            rtRating TEXT,
             addedAt TEXT NOT NULL,
             updatedAt TEXT NOT NULL
           )
         `).run()
+        try { await env.DB.prepare('ALTER TABLE movies ADD COLUMN rtRating TEXT').run() } catch {}
       }
 
       if (path === '/api/movies' && method === 'GET') {

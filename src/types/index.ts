@@ -14,6 +14,7 @@ export interface Series {
   nextEpisodeDate: string | null
   nextEpisodeName: string | null
   imdbRating: string | null
+  rtRating: string | null
   futureDates?: string[] | null
   addedAt: Date
   updatedAt: Date
@@ -128,6 +129,7 @@ export interface Movie {
   runtime: number | null
   notes: string
   imdbRating: string | null
+  rtRating: string | null
   addedAt: Date
   updatedAt: Date
 }

@@ -92,6 +92,14 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
               if (rt) setRtRating(rt)
               if (mc) setMcRating(mc)
               setRatingsLoaded(true)
+              if (movie.id) {
+                const ratingUpdates: Partial<Movie> = {}
+                if (imdb && imdb !== movie.imdbRating) ratingUpdates.imdbRating = imdb
+                if (rt) ratingUpdates.rtRating = rt
+                if (Object.keys(ratingUpdates).length > 0) {
+                  updateMovie(movie.id, ratingUpdates).then(() => onUpdated())
+                }
+              }
             })
           } else {
             setRatingsLoaded(true)
@@ -250,25 +258,21 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           <span className="font-medium leading-none" style={{ color: displayRating ? 'white' : '#8E8E93' }}>{displayRating ?? 'N/A'}</span>
                         </a>
                       )}
-                      {ratingsLoaded && (
+                      {ratingsLoaded && rtRating && (
                         <a
                           href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie?.title ?? '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
-                          {rtRating ? (
-                            parseInt(rtRating) >= 60 ? (
-                              <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
-                            ) : (
-                              <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
-                                <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
-                              </svg>
-                            )
+                          {parseInt(rtRating) >= 60 ? (
+                            <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
                           ) : (
-                            <span className="text-[#8E8E93] text-[10px] font-bold leading-none">RT</span>
+                            <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
+                              <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
+                            </svg>
                           )}
-                          <span className="font-medium leading-none" style={{ color: rtRating ? 'white' : '#8E8E93' }}>{rtRating ?? 'N/A'}</span>
+                          <span className="font-medium leading-none text-white">{rtRating}</span>
                         </a>
                       )}
                       {mcRating && (
