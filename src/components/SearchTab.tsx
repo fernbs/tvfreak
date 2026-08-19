@@ -92,7 +92,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     setIncludedGenres([])
     setExcludedGenres([])
     setYearFilter('')
-    setResults([])
+    if (!query.trim()) setResults([])
     setCurrentPage(1)
     scrollRef.current?.scrollTo({ top: 0 })
   }
