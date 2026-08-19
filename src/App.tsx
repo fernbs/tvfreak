@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Settings, Grid2X2, Grid3X3, List } from 'lucide-react'
 import { useViewMode, type ViewMode } from './lib/useViewMode'
-import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration, getAllMovies, deduplicateMovies } from './lib/api'
+import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration, getAllMovies, deduplicateMovies, updateMovie } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
-import { getTvDetails, getSeasonEpisodes } from './lib/tmdb'
+import { getTvDetails, getSeasonEpisodes, getMovieExternalIds, getRatings } from './lib/tmdb'
 import { toast } from 'sonner'
 import type { Series, Movie } from './types'
 import { BottomNav } from './components/BottomNav'
@@ -168,7 +168,7 @@ export default function App() {
           nextEpisodeDate: detail.next_episode_to_air?.air_date ?? null,
           nextEpisodeName: detail.next_episode_to_air?.name ?? null,
           futureDates: futureDates.length > 0 ? futureDates : null,
-          ...(rating ? { imdbRating: rating } : {}),
+          ...(rating && !s.imdbRating ? { imdbRating: rating } : {}),
         }
         await updateSeries(s.id!, updates)
       } catch { /* ignore */ }
@@ -370,6 +370,32 @@ export default function App() {
     }
     populateRatings()
   }, [loading, loadSeries])
+
+  // Once-ever: fetch real OMDB/IMDB ratings for movies that have none
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-movie-ratings-v1')) return
+    async function populateMovieRatings() {
+      const all = await getAllMovies()
+      const toRate = all.filter(m => m.tmdbId && m.id && !m.imdbRating)
+      for (const m of toRate) {
+        try {
+          const ext = await getMovieExternalIds(m.tmdbId!)
+          if (ext.imdb_id) {
+            const { imdb, rt } = await getRatings(ext.imdb_id)
+            const updates: Partial<Movie> = {}
+            if (imdb) updates.imdbRating = imdb
+            if (rt) updates.rtRating = rt
+            if (Object.keys(updates).length > 0) await updateMovie(m.id!, updates)
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 300))
+      }
+      localStorage.setItem('tvfreak-movie-ratings-v1', 'true')
+      if (toRate.length > 0) await loadMovies()
+    }
+    populateMovieRatings()
+  }, [loading, loadMovies])
 
   // DEAD JOB — logic removed. Key preserved so it doesn't re-run on new devices.
   // What it did: changed completed+returning shows → watching. Caused collateral damage.
