@@ -156,14 +156,13 @@ export function StatsTab({ allSeries, allMovies }: Props) {
   }
 
   const moviesByStatus: Record<MovieStatus, number> = {
-    watching:    allMovies.filter(m => m.status === 'watching').length,
     completed:   allMovies.filter(m => m.status === 'completed').length,
     dropped:     allMovies.filter(m => m.status === 'dropped').length,
     plantowatch: allMovies.filter(m => m.status === 'plantowatch').length,
   }
 
   const statusOrder: SeriesStatus[] = ['watching', 'completed', 'plantowatch', 'dropped']
-  const movieStatusOrder: MovieStatus[] = ['watching', 'completed', 'plantowatch', 'dropped']
+  const movieStatusOrder: MovieStatus[] = ['completed', 'plantowatch', 'dropped']
 
   const seriesDonutData: DonutSegment[] = statusOrder.map(s => ({
     color: STATUS_CONFIG[s].color,
