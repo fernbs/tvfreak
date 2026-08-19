@@ -4,6 +4,7 @@ import type { Series, SeriesStatus, Movie, MovieStatus } from '../types'
 import { MOVIE_STATUS_CONFIG } from '../types'
 import type { DuplicateGroup } from '../lib/api'
 import { SeriesGrid } from './SeriesGrid'
+import { formatAirDate } from '../lib/utils'
 import type { ViewMode } from '../lib/useViewMode'
 
 type SortKey = 'title' | 'added' | 'updated' | 'nextEpisode'
@@ -111,7 +112,7 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
                     style={{ backgroundColor: cfg.color + '25', color: cfg.color }}>
                     {cfg.label}
                   </span>
-                  {m.releaseDate && <span className="text-[10px] text-[#48484A]">{m.releaseDate.slice(0, 4)}</span>}
+                  {m.releaseDate && <span className="text-[10px] text-[#48484A]">{formatAirDate(m.releaseDate)}</span>}
                 </div>
               </div>
               {m.imdbRating && (

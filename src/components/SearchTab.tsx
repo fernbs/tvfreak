@@ -5,6 +5,7 @@ import { addSeries, addMovie } from '../lib/api'
 import type { TmdbSearchResult, Series, Movie, WatchProvider } from '../types'
 import type { ViewMode } from '../lib/useViewMode'
 import { getCountry, getDefaultProviders } from '../lib/settings'
+import { formatAirDate } from '../lib/utils'
 import { toast } from 'sonner'
 
 const GENRES: { id: number; label: string }[] = [
@@ -521,7 +522,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[#F5F5F7] leading-snug truncate">{r.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs text-[#48484A]">{r.first_air_date ? r.first_air_date.slice(0, 4) : 'Unknown year'}</p>
+                      <p className="text-xs text-[#48484A]">{r.first_air_date ? (mediaMode === 'movie' ? formatAirDate(r.first_air_date) : r.first_air_date.slice(0, 4)) : 'Unknown year'}</p>
                       {(r.vote_average ?? 0) > 0 && (
                         <span className="text-xs"><span className="text-[var(--color-accent)]">★</span><span className="text-[#8E8E93]"> {r.vote_average!.toFixed(1)}</span></span>
                       )}

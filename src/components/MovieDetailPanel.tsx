@@ -4,6 +4,7 @@ import { X, Loader2, Plus, Play } from 'lucide-react'
 import { getMovieDetails, getMovieRecommendations, getMovieWatchProviders, getMovieExternalIds, getRatings, getTrailerKey, posterUrl, IMG_BASE } from '../lib/tmdb'
 import { getCountry } from '../lib/settings'
 import { addMovie, updateMovie, deleteMovie } from '../lib/api'
+import { formatAirDate } from '../lib/utils'
 import type { Movie, MovieStatus, TmdbMovieDetail, TmdbSearchResult, WatchProvider } from '../types'
 import { MOVIE_STATUS_CONFIG } from '../types'
 import { toast } from 'sonner'
@@ -162,7 +163,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
   }
 
   const poster = posterUrl(detail?.poster_path ?? movie?.posterPath ?? null, 'w500')
-  const releaseYear = (detail?.release_date ?? movie?.releaseDate ?? '').slice(0, 4)
+  const releaseDate = formatAirDate(detail?.release_date ?? movie?.releaseDate)
   const runtime = formatRuntime(detail?.runtime ?? movie?.runtime ?? null)
   const currentStatus = movie?.status ?? 'plantowatch'
 
@@ -239,9 +240,9 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                   <div className="flex-1 min-w-0 pt-1">
                     <h2 className="text-xl font-bold text-[#F5F5F7] leading-tight">{movie?.title}</h2>
                     <div className="mt-1.5">
-                    {(releaseYear || runtime) && (
+                    {(releaseDate || runtime) && (
                       <div className="flex items-center gap-2">
-                        {releaseYear && <span className="text-sm text-[#8E8E93]">{releaseYear}</span>}
+                        {releaseDate && <span className="text-sm text-[#8E8E93]">{releaseDate}</span>}
                         {runtime && <span className="text-sm text-[#8E8E93]">{runtime}</span>}
                       </div>
                     )}
