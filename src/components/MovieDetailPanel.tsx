@@ -265,13 +265,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
-                          {parseInt(rtRating) >= 60 ? (
-                            <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
-                          ) : (
-                            <svg width="12" height="12" viewBox="0 0 12 12" className="shrink-0">
-                              <path d="M6,0.5 L7.4,4.2 L11.5,4.2 L8.3,6.6 L9.5,10.5 L6,8.2 L2.5,10.5 L3.7,6.6 L0.5,4.2 L4.6,4.2 Z" fill="#22C55E"/>
-                            </svg>
-                          )}
+                          <span className="leading-none" style={{ fontSize: '12px' }}>🍅</span>
                           <span className="font-medium leading-none text-white">{rtRating}</span>
                         </a>
                       )}
