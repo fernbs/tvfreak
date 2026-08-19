@@ -5,7 +5,7 @@ import { useViewMode, type ViewMode } from './lib/useViewMode'
 import { getAllSeries, deduplicateSeries, getDuplicates, updateSeries, getWatchedEpisodes, unmarkSeasonEpisodes, preloadMigrations, isMigrationDone, markMigration, getAllMovies, deduplicateMovies, updateMovie } from './lib/api'
 import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
-import { getTvDetails, getSeasonEpisodes, getMovieExternalIds, getRatings } from './lib/tmdb'
+import { getTvDetails, getSeasonEpisodes, getExternalIds, getMovieExternalIds, getRatings } from './lib/tmdb'
 import { toast } from 'sonner'
 import type { Series, Movie } from './types'
 import { BottomNav } from './components/BottomNav'
@@ -396,6 +396,32 @@ export default function App() {
     }
     populateMovieRatings()
   }, [loading, loadMovies])
+
+  // Once-ever: fetch real OMDB/RT ratings for series that have none
+  useEffect(() => {
+    if (loading) return
+    if (localStorage.getItem('tvfreak-series-rt-ratings-v1')) return
+    async function populateSeriesRtRatings() {
+      const all = await getAllSeries()
+      const toRate = all.filter(s => s.tmdbId && s.id && !s.rtRating)
+      for (const s of toRate) {
+        try {
+          const ext = await getExternalIds(s.tmdbId!)
+          if (ext.imdb_id) {
+            const { rt, imdb } = await getRatings(ext.imdb_id)
+            const updates: Partial<Series> = {}
+            if (rt) updates.rtRating = rt
+            if (imdb && !s.imdbRating) updates.imdbRating = imdb
+            if (Object.keys(updates).length > 0) await updateSeries(s.id!, updates)
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 300))
+      }
+      localStorage.setItem('tvfreak-series-rt-ratings-v1', 'true')
+      if (toRate.length > 0) await loadSeries()
+    }
+    populateSeriesRtRatings()
+  }, [loading, loadSeries])
 
   // DEAD JOB — logic removed. Key preserved so it doesn't re-run on new devices.
   // What it did: changed completed+returning shows → watching. Caused collateral damage.
