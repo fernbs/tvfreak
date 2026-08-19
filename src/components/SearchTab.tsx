@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Search, X, Plus, Loader2, Sparkles, ChevronDown, SlidersHorizontal } from 'lucide-react'
-import { searchTv, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE, searchMovie, discoverMovies, getMovieStreamingProviders } from '../lib/tmdb'
+import { searchTv, getDiscoverByGenres, getStreamingProviders, posterUrl, IMG_BASE, searchMovie, discoverMovies, getMovieStreamingProviders, getExternalIds, getMovieExternalIds, getRatings } from '../lib/tmdb'
 import { addSeries, addMovie } from '../lib/api'
 import type { TmdbSearchResult, Series, Movie, WatchProvider } from '../types'
 import type { ViewMode } from '../lib/useViewMode'
@@ -57,6 +57,8 @@ interface Props {
   viewMode: ViewMode
 }
 
+const rtCache: Record<number, string> = {}
+
 export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMovieAdded, onMovieSelect, viewMode }: Props) {
   const [query, setQuery] = useState('')
   const [includedGenres, setIncludedGenres] = useState<number[]>([])
@@ -75,6 +77,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   const [newItemIds, setNewItemIds] = useState<Set<number>>(new Set())
   const [mediaMode, setMediaMode] = useState<'tv' | 'movie'>('tv')
   const [showFilterSheet, setShowFilterSheet] = useState(false)
+  const [rtMap, setRtMap] = useState<Record<number, string>>({})
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -229,6 +232,32 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     const t = setTimeout(() => setNewItemIds(new Set()), 700)
     return () => clearTimeout(t)
   }, [newItemIds])
+
+  // Populate RT ratings: instantly from library, then fetch for remaining results
+  useEffect(() => {
+    for (const s of allSeries) { if (s.tmdbId && s.rtRating) rtCache[s.tmdbId] = s.rtRating }
+    for (const m of allMovies) { if (m.tmdbId && m.rtRating) rtCache[m.tmdbId] = m.rtRating }
+    setRtMap({ ...rtCache })
+    if (results.length === 0) return
+    let cancelled = false
+    const getIds = mediaMode === 'tv' ? getExternalIds : getMovieExternalIds
+    const toFetch = results.slice(0, 10).filter(r => !rtCache[r.id])
+    async function fetchRtRatings() {
+      for (const r of toFetch) {
+        if (cancelled) break
+        try {
+          const ext = await getIds(r.id)
+          if (ext.imdb_id && !cancelled) {
+            const { rt } = await getRatings(ext.imdb_id)
+            if (rt && !cancelled) { rtCache[r.id] = rt; setRtMap(prev => ({ ...prev, [r.id]: rt })) }
+          }
+        } catch { /* ignore */ }
+        if (!cancelled) await new Promise(res => setTimeout(res, 150))
+      }
+    }
+    fetchRtRatings()
+    return () => { cancelled = true }
+  }, [results, mediaMode, allSeries, allMovies])
 
   const libraryIds = new Set(
     (mediaMode === 'tv' ? allSeries : allMovies).map(s => s.tmdbId).filter(Boolean) as number[]
@@ -496,6 +525,9 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                       {(r.vote_average ?? 0) > 0 && (
                         <span className="text-xs"><span className="text-[var(--color-accent)]">★</span><span className="text-[#8E8E93]"> {r.vote_average!.toFixed(1)}</span></span>
                       )}
+                      {rtMap[r.id] && (
+                        <span className="text-xs text-[#8E8E93]">🍅 {rtMap[r.id]}</span>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -523,9 +555,18 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
                       <span className="text-[10px] text-[#48484A] text-center">{r.name}</span>
                     </div>
                   )}
-                  {(r.vote_average ?? 0) > 0 && (
-                    <div className="absolute top-1.5 left-1.5 flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
-                      <span className="text-[10px] font-medium leading-none"><span className="text-[var(--color-accent)]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                  {((r.vote_average ?? 0) > 0 || rtMap[r.id]) && (
+                    <div className="absolute top-1.5 left-1.5 flex flex-col gap-0.5">
+                      {(r.vote_average ?? 0) > 0 && (
+                        <div className="flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
+                          <span className="text-[10px] font-medium leading-none"><span className="text-[var(--color-accent)]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
+                        </div>
+                      )}
+                      {rtMap[r.id] && (
+                        <div className="flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
+                          <span className="text-[10px] font-medium leading-none text-white">🍅 {rtMap[r.id]}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                   <AddButton r={r} />
