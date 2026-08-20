@@ -28,9 +28,8 @@ interface Props {
   viewMode: ViewMode
 }
 
-const rtCache: Record<number, string> = {}
-
 export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMovieAdded, onMovieSelect, viewMode }: Props) {
+  const rtCache = useRef<Record<number, string>>({})
   const [query, setQuery] = useState('')
   const [includedGenres, setIncludedGenres] = useState<number[]>([])
   const [excludedGenres, setExcludedGenres] = useState<number[]>([])
@@ -206,13 +205,13 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
 
   // Populate RT ratings: instantly from library, then fetch for remaining results
   useEffect(() => {
-    for (const s of allSeries) { if (s.tmdbId && s.rtRating) rtCache[s.tmdbId] = s.rtRating }
-    for (const m of allMovies) { if (m.tmdbId && m.rtRating) rtCache[m.tmdbId] = m.rtRating }
-    setRtMap({ ...rtCache })
+    for (const s of allSeries) { if (s.tmdbId && s.rtRating) rtCache.current[s.tmdbId] = s.rtRating }
+    for (const m of allMovies) { if (m.tmdbId && m.rtRating) rtCache.current[m.tmdbId] = m.rtRating }
+    setRtMap({ ...rtCache.current })
     if (results.length === 0) return
     let cancelled = false
     const getIds = mediaMode === 'tv' ? getExternalIds : getMovieExternalIds
-    const toFetch = results.slice(0, 10).filter(r => !rtCache[r.id])
+    const toFetch = results.slice(0, 10).filter(r => !rtCache.current[r.id])
     async function fetchRtRatings() {
       for (const r of toFetch) {
         if (cancelled) break
@@ -220,7 +219,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
           const ext = await getIds(r.id)
           if (ext.imdb_id && !cancelled) {
             const { rt } = await getRatings(ext.imdb_id)
-            if (rt && !cancelled) { rtCache[r.id] = rt; setRtMap(prev => ({ ...prev, [r.id]: rt })) }
+            if (rt && !cancelled) { rtCache.current[r.id] = rt; setRtMap(prev => ({ ...prev, [r.id]: rt })) }
           }
         } catch { /* ignore */ }
         if (!cancelled) await new Promise(res => setTimeout(res, 150))

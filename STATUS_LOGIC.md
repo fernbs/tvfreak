@@ -1,6 +1,6 @@
 # TVFREAK — Status Logic
 
-Last updated: 2026-08-14
+Last updated: 2026-08-20
 
 ---
 
@@ -26,11 +26,17 @@ Last updated: 2026-08-14
 
 These fire in EpisodeList when the user marks or unmarks episodes.
 
+**Mark: first episode on a `plantowatch` series (`handleEpisodeMarked` in DetailPanel)**
+
+Fires on any episode mark (individual toggle, season bulk mark, or confirm modal bulk mark) when current status is `plantowatch`.
+
+- status → `watching`.
+
 **Mark: all aired episodes watched (`handleAllEpisodesWatched` in DetailPanel)**
 
 Fires when `watched.size >= releasedEpisodeCount()` after a mark action.
 
-Only acts when current status is `watching`. Guards prevent it from running if status is `completed`, `dropped`, or `plantowatch`. (Those series show the episode list but marking all episodes won't auto-change their status.)
+Guards prevent it from running if status is `completed` or `dropped`. If status is `plantowatch`, it promotes to `watching` (same as `handleEpisodeMarked` above) and returns without checking TMDB. Only continues to the TMDB check when status is `watching`.
 
 - If TMDB says the show is ongoing (`Returning Series` or `In Production`, or has a `next_episode_to_air`) → status stays `watching`, toast "all caught up."
 - If TMDB says the show has ended → status → `completed`.
@@ -91,11 +97,19 @@ Scope: all series.
 
 What it does: removes watched episode marks for seasons that haven't aired yet (safety net for accidentally marked future seasons). No status change.
 
-#### 5. `populateRatings` — once-ever (key: `tvfreak-ratings-populated-v1`)
+#### 6. `populateRatings` — once-ever (key: `tvfreak-ratings-populated-v1`)
 
 Scope: `completed` and `dropped` series without a rating.
 
 What it does: fetches TMDB vote average and saves it. No status change.
+
+#### 7. `promotePendingToWatching` — once-ever (key: `tvfreak-promote-active-v1`)
+
+Scope: `plantowatch` series where `firstAirDate <= today` and `nextEpisodeDate` or `futureDates` is set.
+
+What it does: fetches TMDB data for each qualifying series. If TMDB confirms `last_episode_to_air` and `next_episode_to_air` both exist (i.e., the show is mid-season and actively airing), status → `watching`.
+
+Run once to fix the backlog of series stuck as `plantowatch` due to a now-fixed Chrome CLI bug. From now on, the `handleEpisodeMarked` callback handles this transition in real time.
 
 ---
 
@@ -117,7 +131,7 @@ These ran once during the Simkl import migration. Their localStorage keys are pe
 2. `completed` is only changed automatically when the user unmarks an episode (→ `watching`). Background jobs notify but do not change it.
 3. `watching` → `completed` only happens via `handleAllEpisodesWatched` or `checkWatchingStatus`, and only when TMDB confirms the show has ended. Both use `season.episode_count` for the threshold, which may be slightly imprecise mid-season.
 4. Adding a series starts it as `watching` if already released, or `plantowatch` if `first_air_date` is in the future.
-5. Episode marking only auto-changes status when current status is `watching`. The `plantowatch`, `completed`, and `dropped` guards in `handleAllEpisodesWatched` prevent any accidental auto-transition for those states. Unchecking only affects `completed` series (reverts to `watching`).
+5. Episode marking on a `plantowatch` series always promotes it to `watching` (via `handleEpisodeMarked`). `completed` and `dropped` series are fully guarded: marking episodes on them never changes their status. Unchecking only affects `completed` series (reverts to `watching`).
 
 ---
 
@@ -133,3 +147,15 @@ Background jobs touched `updatedAt` when updating metadata, causing the order to
 
 **`checkWatchingStatus` episode count accuracy** (fixed 2026-08-14)
 Previously used `season.episode_count` from TMDB, which includes unaired episodes in the currently-airing season. Fixed: for the season matching `last_episode_to_air.season_number`, uses `last_episode_to_air.episode_number` as the released count instead. Completed seasons still use `episode_count` (which is accurate once a season is done).
+
+**Calendar excluding today's episodes** (fixed 2026-08-20)
+The calendar filter used `d > todayStr` (strict greater-than), so today's episodes never appeared. Fixed to `d >= todayStr`.
+
+**Unreleased series added as `watching`** (fixed 2026-08-20)
+SearchTab always set status to `watching` on add. Fixed: series with `first_air_date` in the future are added as `plantowatch`.
+
+**Ongoing `watching` series moved to `plantowatch` when caught up** (fixed 2026-08-20)
+`handleAllEpisodesWatched` incorrectly set status to `plantowatch` for ongoing series. Fixed: ongoing series stay `watching`, with a toast confirming the user is caught up.
+
+**`plantowatch` series not promoted when new episodes air** (fixed 2026-08-20)
+No mechanism existed to move `plantowatch` → `watching` when episodes became available. Fixed via `handleEpisodeMarked` (fires on first episode mark) and the `promotePendingToWatching` once-ever backfill job.
