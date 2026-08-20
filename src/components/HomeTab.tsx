@@ -45,9 +45,10 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
 
   const episodeMap = new Map<string, Series[]>()
   for (const s of series) {
-    const dates = (s.futureDates && s.futureDates.length > 0)
-      ? s.futureDates.filter(d => d > todayStr)
-      : (s.nextEpisodeDate && s.nextEpisodeDate > todayStr ? [s.nextEpisodeDate] : [])
+    const filteredFutureDates = (s.futureDates ?? []).filter(d => d >= todayStr)
+    const dates = filteredFutureDates.length > 0
+      ? filteredFutureDates
+      : (s.nextEpisodeDate && s.nextEpisodeDate >= todayStr ? [s.nextEpisodeDate] : [])
     for (const d of dates) {
       if (!episodeMap.has(d)) episodeMap.set(d, [])
       if (!episodeMap.get(d)!.find(x => x.id === s.id)) episodeMap.get(d)!.push(s)
@@ -56,7 +57,7 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
 
   const movieDateMap = new Map<string, Movie[]>()
   for (const m of allMovies) {
-    if (!m.id || !m.releaseDate || m.releaseDate <= todayStr) continue
+    if (!m.id || !m.releaseDate || m.releaseDate < todayStr) continue
     if (!movieDateMap.has(m.releaseDate)) movieDateMap.set(m.releaseDate, [])
     movieDateMap.get(m.releaseDate)!.push(m)
   }

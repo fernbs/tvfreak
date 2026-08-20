@@ -309,10 +309,11 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     setAddingId(result.id)
     try {
       if (mediaMode === 'tv') {
+        const todayStr = new Date().toISOString().slice(0, 10)
         await addSeries({
           tmdbId: result.id,
           title: result.name,
-          status: 'watching',
+          status: result.first_air_date && result.first_air_date > todayStr ? 'plantowatch' : 'watching',
           posterPath: result.poster_path,
           overview: result.overview,
           firstAirDate: result.first_air_date,

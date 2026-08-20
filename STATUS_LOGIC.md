@@ -20,7 +20,7 @@ Last updated: 2026-08-14
 ### User-initiated (always takes priority)
 
 - Tapping ⋯ → "Change status" in DetailPanel sets any status to any other. This is the only source of truth the user controls directly.
-- Adding a series from Search always sets it to `watching`.
+- Adding a series from Search sets it to `watching` if `first_air_date` is today or in the past, or `plantowatch` if `first_air_date` is in the future (not yet released).
 
 ### Automatic — triggered by episode marking
 
@@ -110,7 +110,7 @@ These ran once during the Simkl import migration. Their localStorage keys are pe
 1. `dropped` is never changed automatically by any job or trigger. Ever.
 2. `completed` is only changed automatically when the user unmarks an episode (→ `watching`). Background jobs notify but do not change it.
 3. `watching` → `completed` only happens via `handleAllEpisodesWatched` or `checkWatchingStatus`, and only when TMDB confirms the show has ended. Both use `season.episode_count` for the threshold, which may be slightly imprecise mid-season.
-4. Adding a series always starts it as `watching`.
+4. Adding a series starts it as `watching` if already released, or `plantowatch` if `first_air_date` is in the future.
 5. Episode marking only auto-changes status when current status is `watching`. The `plantowatch`, `completed`, and `dropped` guards in `handleAllEpisodesWatched` prevent any accidental auto-transition for those states. Unchecking only affects `completed` series (reverts to `watching`).
 
 ---
