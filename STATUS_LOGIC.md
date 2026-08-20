@@ -79,7 +79,13 @@ What it does: checks TMDB for shows that have new episodes announced.
 
 Does NOT change status. Fernando decides whether to move a completed show back to watching via the ⋯ menu.
 
-#### 4. `cleanupUnreleasedWatched` — once per session
+#### 4. `fixFutureWatching` — once-ever (key: `tvfreak-fix-future-watching-v1`)
+
+Scope: `watching` series where `firstAirDate` is in the future.
+
+What it does: changes status to `plantowatch`. No TMDB call needed, uses `firstAirDate` already stored in DB. Corrects series that were added before the status-on-add fix (which now sets unreleased series to `plantowatch` automatically).
+
+#### 5. `cleanupUnreleasedWatched` — once per session
 
 Scope: all series.
 

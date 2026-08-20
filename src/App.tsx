@@ -518,6 +518,23 @@ export default function App() {
     fixWatchingNothingAired()
   }, [loading, loadSeries])
 
+  // Once-ever: fix 'watching' series whose firstAirDate is still in the future (added before the status-on-add fix)
+  useEffect(() => {
+    if (loading) return
+    async function fixFutureWatching() {
+      if (await isMigrationDone('tvfreak-fix-future-watching-v1')) return
+      const all = await getAllSeries()
+      const today = new Date().toISOString().slice(0, 10)
+      const toFix = all.filter(s => s.id && s.status === 'watching' && s.firstAirDate && s.firstAirDate > today)
+      for (const s of toFix) {
+        await updateSeries(s.id!, { status: 'plantowatch' })
+      }
+      await markMigration('tvfreak-fix-future-watching-v1')
+      if (toFix.length > 0) await loadSeries()
+    }
+    fixFutureWatching()
+  }, [loading, loadSeries])
+
   function openSeries(s: Series) { setSeriesStack([s]) }
   function pushSeries(s: Series) { setSeriesStack(prev => [...prev, s]) }
   function popSeries() { setSeriesStack(prev => prev.slice(0, -1)) }
