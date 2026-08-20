@@ -11,6 +11,7 @@ interface Props {
   seasons: TmdbSeason[]
   onAllEpisodesWatched?: () => void
   onSomeEpisodesUnwatched?: () => void
+  onEpisodeMarked?: () => void
 }
 
 interface SeasonState {
@@ -113,7 +114,7 @@ function SpecialsSection({ tmdbId, season }: { tmdbId: number; season: import('.
   )
 }
 
-export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, onSomeEpisodesUnwatched }: Props) {
+export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, onSomeEpisodesUnwatched, onEpisodeMarked }: Props) {
   const [watched, setWatched] = useState<Set<string>>(new Set())
   const [seasonStates, setSeasonStates] = useState<Record<number, SeasonState>>({})
   const [episodeModal, setEpisodeModal] = useState<EpisodeModal | null>(null)
@@ -213,6 +214,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       const next = new Set(watched)
       for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
       setWatched(next)
+      onEpisodeMarked?.()
       checkAllWatched(next, freshSeasonEps)
     }
   }
@@ -296,6 +298,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       await toggleEpisodeWatched(seriesId, sn, en)
       const next = new Set([...watched, key])
       setWatched(next)
+      onEpisodeMarked?.()
       checkAllWatched(next)
     }
   }
@@ -311,6 +314,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
     const next = new Set(watched)
     for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
     setWatched(next)
+    onEpisodeMarked?.()
     checkAllWatched(next)
   }
 

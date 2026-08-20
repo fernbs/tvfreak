@@ -282,9 +282,13 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
 
   async function handleAllEpisodesWatched() {
     if (!series?.id) return
-    if (series.status === 'completed' || series.status === 'dropped' || series.status === 'plantowatch') return
+    if (series.status === 'completed' || series.status === 'dropped') return
+    if (series.status === 'plantowatch') {
+      await updateSeries(series.id, { status: 'watching' })
+      onUpdated()
+      return
+    }
     if (isOngoing) {
-      await updateSeries(series.id, { status: 'plantowatch' })
       const msg = nextEp
         ? `All caught up on ${series.title}! Next episode: ${formatAirDate(nextEp.air_date)}`
         : `All caught up on ${series.title}! Waiting for next season.`
@@ -294,6 +298,12 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
       fireConfetti()
       toast.success(`${series.title} marked as completed!`)
     }
+    onUpdated()
+  }
+
+  async function handleEpisodeMarked() {
+    if (!series?.id || series.status !== 'plantowatch') return
+    await updateSeries(series.id, { status: 'watching' })
     onUpdated()
   }
 
@@ -682,6 +692,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
                     seasons={detail.seasons}
                     onAllEpisodesWatched={handleAllEpisodesWatched}
                     onSomeEpisodesUnwatched={handleSomeEpisodesUnwatched}
+                    onEpisodeMarked={handleEpisodeMarked}
                   />
                 </div>
               ) : !series.tmdbId ? (
