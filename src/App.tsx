@@ -170,11 +170,11 @@ export default function App() {
           futureDates: futureDates.length > 0 ? futureDates : null,
           ...(rating && !s.imdbRating ? { imdbRating: rating } : {}),
         }
-        // Promote plantowatch → watching when a tracked episode has now aired
+        // Promote plantowatch → watching when the series is actively airing
         if (
           s.status === 'plantowatch' &&
-          s.nextEpisodeDate && new Date(s.nextEpisodeDate) <= now &&
-          detail.last_episode_to_air
+          detail.last_episode_to_air &&
+          detail.next_episode_to_air
         ) {
           updates.status = 'watching'
         }
