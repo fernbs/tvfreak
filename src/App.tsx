@@ -170,6 +170,14 @@ export default function App() {
           futureDates: futureDates.length > 0 ? futureDates : null,
           ...(rating && !s.imdbRating ? { imdbRating: rating } : {}),
         }
+        // Promote plantowatch → watching when a tracked episode has now aired
+        if (
+          s.status === 'plantowatch' &&
+          s.nextEpisodeDate && new Date(s.nextEpisodeDate) <= now &&
+          detail.last_episode_to_air
+        ) {
+          updates.status = 'watching'
+        }
         await updateSeries(s.id!, updates)
       } catch { /* ignore */ }
       await new Promise(r => setTimeout(r, 300))
