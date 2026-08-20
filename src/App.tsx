@@ -197,8 +197,8 @@ export default function App() {
         s.status === 'plantowatch' &&
         s.firstAirDate && s.firstAirDate <= todayStr &&
         (
-          (s.nextEpisodeDate && s.nextEpisodeDate >= todayStr) ||
-          (s.futureDates && s.futureDates.some(d => d >= todayStr))
+          (s.nextEpisodeDate && s.nextEpisodeDate <= todayStr) ||
+          (s.futureDates && s.futureDates.some(d => d <= todayStr))
         )
       )
       if (toPromote.length === 0) return
