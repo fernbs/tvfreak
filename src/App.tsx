@@ -182,15 +182,14 @@ export default function App() {
     refreshNextEpisodeDates()
   }, [loading, refreshNextEpisodeDates])
 
-  // Once-per-session: promote plantowatch → watching for series that are actively airing.
-  // Uses TMDB to confirm: last_episode_to_air (has started) + next_episode_to_air (still ongoing).
-  // Local date checks are unreliable because refreshNextEpisodeDates always updates nextEpisodeDate
-  // to the next future episode, so by the time this runs the stored date is already future.
+  // Once-ever: promote plantowatch → watching for series actively mid-season.
+  // DB-tracked so it runs exactly once across all sessions and devices.
+  // Fixes the backlog of series stuck as plantowatch by the since-reverted Chrome CLI behavior.
+  // Future transitions rely on onEpisodeMarked and handleAllEpisodesWatched.
   useEffect(() => {
     if (loading) return
-    if (sessionStorage.getItem('plantowatch-promote-done')) return
-    sessionStorage.setItem('plantowatch-promote-done', '1')
     async function promotePendingToWatching() {
+      if (await isMigrationDone('tvfreak-promote-active-v1')) return
       const all = await getAllSeries()
       const todayStr = new Date().toISOString().slice(0, 10)
       const toCheck = all.filter(s =>
@@ -199,7 +198,6 @@ export default function App() {
         s.firstAirDate && s.firstAirDate <= todayStr &&
         (s.nextEpisodeDate || s.futureDates)
       )
-      if (toCheck.length === 0) return
       let changed = false
       for (const s of toCheck) {
         try {
@@ -212,6 +210,7 @@ export default function App() {
         } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 300))
       }
+      await markMigration('tvfreak-promote-active-v1')
       if (changed) await loadSeries()
     }
     promotePendingToWatching()
