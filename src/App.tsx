@@ -183,8 +183,9 @@ export default function App() {
   }, [loading, refreshNextEpisodeDates])
 
   // Once-per-session: promote plantowatch → watching for series that are actively airing.
-  // Uses only local data — no TMDB calls. Runs for all plantowatch series regardless of
-  // whether refreshNextEpisodeDates would skip them (e.g. nextEpisodeDate is future).
+  // Uses TMDB to confirm: last_episode_to_air (has started) + next_episode_to_air (still ongoing).
+  // Local date checks are unreliable because refreshNextEpisodeDates always updates nextEpisodeDate
+  // to the next future episode, so by the time this runs the stored date is already future.
   useEffect(() => {
     if (loading) return
     if (sessionStorage.getItem('plantowatch-promote-done')) return
@@ -192,20 +193,26 @@ export default function App() {
     async function promotePendingToWatching() {
       const all = await getAllSeries()
       const todayStr = new Date().toISOString().slice(0, 10)
-      const toPromote = all.filter(s =>
-        s.id &&
+      const toCheck = all.filter(s =>
+        s.id && s.tmdbId &&
         s.status === 'plantowatch' &&
         s.firstAirDate && s.firstAirDate <= todayStr &&
-        (
-          (s.nextEpisodeDate && s.nextEpisodeDate <= todayStr) ||
-          (s.futureDates && s.futureDates.some(d => d <= todayStr))
-        )
+        (s.nextEpisodeDate || s.futureDates)
       )
-      if (toPromote.length === 0) return
-      for (const s of toPromote) {
-        await updateSeries(s.id!, { status: 'watching' })
+      if (toCheck.length === 0) return
+      let changed = false
+      for (const s of toCheck) {
+        try {
+          const detail = await getTvDetails(s.tmdbId!)
+          if (!detail) continue
+          if (detail.last_episode_to_air && detail.next_episode_to_air) {
+            await updateSeries(s.id!, { status: 'watching' })
+            changed = true
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 300))
       }
-      await loadSeries()
+      if (changed) await loadSeries()
     }
     promotePendingToWatching()
   }, [loading, loadSeries])
