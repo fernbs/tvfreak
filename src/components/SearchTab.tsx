@@ -6,38 +6,8 @@ import type { TmdbSearchResult, Series, Movie, WatchProvider } from '../types'
 import type { ViewMode } from '../lib/useViewMode'
 import { getCountry, getDefaultProviders } from '../lib/settings'
 import { formatAirDate } from '../lib/utils'
+import { TV_GENRES as GENRES, MOVIE_GENRES } from '../lib/genres'
 import { toast } from 'sonner'
-
-const GENRES: { id: number; label: string }[] = [
-  { id: 10759, label: 'Action & Adventure' },
-  { id: 18,    label: 'Drama' },
-  { id: 80,    label: 'Crime' },
-  { id: 10765, label: 'Sci-Fi & Fantasy' },
-  { id: 9648,  label: 'Mystery' },
-  { id: 35,    label: 'Comedy' },
-  { id: 99,    label: 'Documentary' },
-  { id: 16,    label: 'Animation' },
-  { id: 10768, label: 'War & Politics' },
-  { id: 37,    label: 'Western' },
-]
-
-const MOVIE_GENRES: { id: number; label: string }[] = [
-  { id: 28,    label: 'Action' },
-  { id: 12,    label: 'Adventure' },
-  { id: 16,    label: 'Animation' },
-  { id: 35,    label: 'Comedy' },
-  { id: 80,    label: 'Crime' },
-  { id: 99,    label: 'Documentary' },
-  { id: 18,    label: 'Drama' },
-  { id: 14,    label: 'Fantasy' },
-  { id: 27,    label: 'Horror' },
-  { id: 9648,  label: 'Mystery' },
-  { id: 10749, label: 'Romance' },
-  { id: 878,   label: 'Sci-Fi' },
-  { id: 53,    label: 'Thriller' },
-  { id: 10752, label: 'War' },
-  { id: 37,    label: 'Western' },
-]
 
 function deduped(items: TmdbSearchResult[]): TmdbSearchResult[] {
   const seen = new Set<number>()

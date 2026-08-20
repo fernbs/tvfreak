@@ -6,41 +6,11 @@ import type { DuplicateGroup } from '../lib/api'
 import { SeriesGrid } from './SeriesGrid'
 import { formatAirDate } from '../lib/utils'
 import type { ViewMode } from '../lib/useViewMode'
+import { TV_GENRES, MOVIE_GENRES } from '../lib/genres'
 
 type SortKey = 'title' | 'added' | 'updated' | 'nextEpisode'
 
 const RATING_OPTIONS = [null, 5, 6, 7, 8] as const
-
-const TV_GENRES = [
-  { id: 10759, label: 'Action & Adventure' },
-  { id: 18,    label: 'Drama' },
-  { id: 80,    label: 'Crime' },
-  { id: 10765, label: 'Sci-Fi & Fantasy' },
-  { id: 9648,  label: 'Mystery' },
-  { id: 35,    label: 'Comedy' },
-  { id: 99,    label: 'Documentary' },
-  { id: 16,    label: 'Animation' },
-  { id: 10768, label: 'War & Politics' },
-  { id: 37,    label: 'Western' },
-]
-
-const MOVIE_GENRES = [
-  { id: 28,    label: 'Action' },
-  { id: 12,    label: 'Adventure' },
-  { id: 16,    label: 'Animation' },
-  { id: 35,    label: 'Comedy' },
-  { id: 80,    label: 'Crime' },
-  { id: 99,    label: 'Documentary' },
-  { id: 18,    label: 'Drama' },
-  { id: 14,    label: 'Fantasy' },
-  { id: 27,    label: 'Horror' },
-  { id: 9648,  label: 'Mystery' },
-  { id: 10749, label: 'Romance' },
-  { id: 878,   label: 'Sci-Fi' },
-  { id: 53,    label: 'Thriller' },
-  { id: 10752, label: 'War' },
-  { id: 37,    label: 'Western' },
-]
 
 const TV_STATUS_FILTERS: { label: string; value: SeriesStatus | 'all' }[] = [
   { label: 'All', value: 'all' },
