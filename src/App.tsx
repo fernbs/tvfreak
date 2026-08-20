@@ -170,14 +170,6 @@ export default function App() {
           futureDates: futureDates.length > 0 ? futureDates : null,
           ...(rating && !s.imdbRating ? { imdbRating: rating } : {}),
         }
-        // Promote plantowatch → watching when the series is actively airing
-        if (
-          s.status === 'plantowatch' &&
-          detail.last_episode_to_air &&
-          detail.next_episode_to_air
-        ) {
-          updates.status = 'watching'
-        }
         await updateSeries(s.id!, updates)
       } catch { /* ignore */ }
       await new Promise(r => setTimeout(r, 300))
@@ -189,6 +181,34 @@ export default function App() {
     if (loading) return
     refreshNextEpisodeDates()
   }, [loading, refreshNextEpisodeDates])
+
+  // Once-per-session: promote plantowatch → watching for series that are actively airing.
+  // Uses only local data — no TMDB calls. Runs for all plantowatch series regardless of
+  // whether refreshNextEpisodeDates would skip them (e.g. nextEpisodeDate is future).
+  useEffect(() => {
+    if (loading) return
+    if (sessionStorage.getItem('plantowatch-promote-done')) return
+    sessionStorage.setItem('plantowatch-promote-done', '1')
+    async function promotePendingToWatching() {
+      const all = await getAllSeries()
+      const todayStr = new Date().toISOString().slice(0, 10)
+      const toPromote = all.filter(s =>
+        s.id &&
+        s.status === 'plantowatch' &&
+        s.firstAirDate && s.firstAirDate <= todayStr &&
+        (
+          (s.nextEpisodeDate && s.nextEpisodeDate >= todayStr) ||
+          (s.futureDates && s.futureDates.some(d => d >= todayStr))
+        )
+      )
+      if (toPromote.length === 0) return
+      for (const s of toPromote) {
+        await updateSeries(s.id!, { status: 'watching' })
+      }
+      await loadSeries()
+    }
+    promotePendingToWatching()
+  }, [loading, loadSeries])
 
   // Daily: notify when a completed show has new episodes coming — status stays 'completed' so Fernando decides
   useEffect(() => {
