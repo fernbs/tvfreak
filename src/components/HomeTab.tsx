@@ -79,13 +79,20 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
     : allUpcoming.filter(item => item.date.startsWith(calMonthPrefix))
 
   const watchingNow = series
-    .filter(s => s.status === 'watching')
+    .filter(s =>
+      s.status === 'watching' ||
+      (s.status === 'plantowatch' && s.nextEpisodeDate != null && s.nextEpisodeDate <= todayStr)
+    )
     .sort((a, b) => {
       const aDate = a.nextEpisodeDate ? new Date(a.nextEpisodeDate).getTime() : Infinity
       const bDate = b.nextEpisodeDate ? new Date(b.nextEpisodeDate).getTime() : Infinity
       if (aDate !== bDate) return aDate - bDate
       return a.title.localeCompare(b.title)
     })
+
+  const watchingMovies = allMovies
+    .filter(m => m.status === 'plantowatch' && m.releaseDate != null && m.releaseDate <= todayStr)
+    .sort((a, b) => (b.releaseDate ?? '').localeCompare(a.releaseDate ?? ''))
 
   const year = calMonth.getFullYear()
   const month = calMonth.getMonth()
@@ -145,14 +152,75 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
         {loading ? (
           <p className="text-sm text-[#48484A] py-12 text-center">Loading...</p>
         ) : view === 'watching' ? (
-          watchingNow.length === 0 ? (
+          watchingNow.length === 0 && watchingMovies.length === 0 ? (
             <div className="py-16 text-center">
               <Tv className="w-10 h-10 text-[#2C2C2E] mx-auto mb-3" />
               <p className="text-sm text-[#48484A]">Nothing actively watching right now.</p>
               <p className="text-xs text-[#2C2C2E] mt-1">Series you're mid-way through will appear here.</p>
             </div>
           ) : (
-            <SeriesGrid series={watchingNow} loading={false} onSelect={onSelect} viewMode={viewMode} />
+            <div>
+              {watchingNow.length > 0 && (
+                <SeriesGrid series={watchingNow} loading={false} onSelect={onSelect} viewMode={viewMode} />
+              )}
+              {watchingMovies.length > 0 && (
+                <div className={watchingNow.length > 0 ? 'mt-5' : ''}>
+                  {watchingNow.length > 0 && (
+                    <p className="text-xs text-[#48484A] uppercase tracking-wider font-medium mb-2 mt-1">Films</p>
+                  )}
+                  {viewMode === 'list' ? (
+                    <div className="space-y-2">
+                      {watchingMovies.map(m => (
+                        <button
+                          key={m.id}
+                          onClick={() => onMovieSelect(m)}
+                          className="w-full flex items-center gap-3 p-3 bg-[#111111] rounded-xl border border-white/7 active:bg-[#1C1C1E] transition-colors text-left"
+                        >
+                          <div className="w-10 h-14 rounded-lg overflow-hidden bg-[#1C1C1E] shrink-0">
+                            {m.posterPath && (
+                              <img src={posterUrl(m.posterPath, 'w185') ?? ''} alt={m.title} className="w-full h-full object-cover" loading="lazy" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-[#F5F5F7] truncate">{m.title}</p>
+                            <p className="text-[10px] text-[#48484A] mt-0.5">Film</p>
+                          </div>
+                          <div className="shrink-0">
+                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(var(--accent-rgb),0.12)] text-[var(--color-accent)] leading-tight">
+                              {formatAirDate(m.releaseDate!)}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={`grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                      {watchingMovies.map(m => (
+                        <button
+                          key={m.id}
+                          onClick={() => onMovieSelect(m)}
+                          className="relative text-left active:opacity-70 transition-opacity"
+                        >
+                          <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#1C1C1E] mb-1 relative">
+                            {m.posterPath ? (
+                              <img src={posterUrl(m.posterPath, 'w342') ?? ''} alt={m.title} className="w-full h-full object-cover" loading="lazy" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center p-2">
+                                <span className="text-[10px] text-[#48484A] text-center">{m.title}</span>
+                              </div>
+                            )}
+                            <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(var(--accent-rgb),0.12)] text-[var(--color-accent)] leading-tight backdrop-blur-sm">
+                              {formatAirDate(m.releaseDate!)}
+                            </div>
+                          </div>
+                          <p className={`text-[#8E8E93] leading-tight line-clamp-2 ${viewMode === 'big' ? 'text-[11px]' : 'text-[10px]'}`}>{m.title}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )
         ) : (
           <div>

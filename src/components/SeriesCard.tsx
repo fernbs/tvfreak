@@ -80,14 +80,14 @@ export function SeriesCard({ series, onClick }: Props) {
       )}
 
       {/* TBA chip — plantowatch with no known air date */}
-      {series.status === 'plantowatch' && !hasUpcoming && (
+      {series.status === 'plantowatch' && !hasUpcoming && !hasNewEpisode && (
         <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[var(--color-accent)]/90 text-white leading-tight backdrop-blur-sm">
           TBA
         </div>
       )}
 
       {/* New episode aired badge */}
-      {hasNewEpisode && !hasUpcoming && series.status !== 'plantowatch' && (
+      {hasNewEpisode && !hasUpcoming && (
         <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[var(--color-accent)]/90 text-white leading-tight backdrop-blur-sm">
           New
         </div>
