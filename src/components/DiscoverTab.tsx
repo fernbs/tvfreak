@@ -323,8 +323,11 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
       } else {
         try {
           if (activeModeRef.current === 'tv') {
+            const todayStr = new Date().toISOString().slice(0, 10)
             await addSeries({
-              tmdbId: card.id, title: card.name, status: 'plantowatch',
+              tmdbId: card.id,
+              title: card.name,
+              status: card.first_air_date && card.first_air_date > todayStr ? 'plantowatch' : 'watching',
               posterPath: card.poster_path ?? null, overview: card.overview ?? null,
               firstAirDate: card.first_air_date ?? null, lastAirDate: null,
               numberOfSeasons: null, notes: '', nextEpisodeDate: null, nextEpisodeName: null,

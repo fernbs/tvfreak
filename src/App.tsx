@@ -7,7 +7,7 @@ import type { DuplicateGroup } from './lib/api'
 import { importFromCsv } from './lib/import'
 import { getTvDetails, getSeasonEpisodes, getExternalIds, getMovieExternalIds, getRatings } from './lib/tmdb'
 import { toast } from 'sonner'
-import type { Series, Movie } from './types'
+import type { Series, Movie, TmdbShowDetail, WatchedEpisode } from './types'
 import { BottomNav } from './components/BottomNav'
 import type { Tab } from './components/BottomNav'
 import { HomeTab } from './components/HomeTab'
@@ -33,6 +33,90 @@ const TAB_TITLES: Record<Tab, string> = {
 }
 
 const GRID_TABS: Tab[] = ['home', 'search', 'library']
+
+function isContinuing(detail: TmdbShowDetail): boolean {
+  return detail.status === 'Returning Series' || detail.status === 'In Production'
+}
+
+function releasedEpisodeTotal(detail: TmdbShowDetail, todayStr: string): number {
+  const airedSeasons = detail.seasons
+    .filter(season => season.season_number > 0)
+    .filter(season => season.air_date != null && season.air_date <= todayStr)
+  const activeSeasonNumber = detail.last_episode_to_air?.season_number ?? null
+  return airedSeasons.reduce((sum, season) => {
+    if (activeSeasonNumber && season.season_number === activeSeasonNumber && detail.last_episode_to_air) {
+      return sum + detail.last_episode_to_air.episode_number
+    }
+    return sum + season.episode_count
+  }, 0)
+}
+
+function watchedReleasedEpisodeTotal(watched: WatchedEpisode[], detail: TmdbShowDetail, todayStr: string): number {
+  const releasedBySeason = new Map<number, number>()
+  const activeSeasonNumber = detail.last_episode_to_air?.season_number ?? null
+  for (const season of detail.seasons) {
+    if (season.season_number <= 0 || !season.air_date || season.air_date > todayStr) continue
+    const releasedCount =
+      activeSeasonNumber && season.season_number === activeSeasonNumber && detail.last_episode_to_air
+        ? detail.last_episode_to_air.episode_number
+        : season.episode_count
+    releasedBySeason.set(season.season_number, releasedCount)
+  }
+  return watched.filter(w => {
+    const releasedCount = releasedBySeason.get(w.seasonNumber)
+    return releasedCount != null && w.episodeNumber <= releasedCount
+  }).length
+}
+
+async function collectFutureDates(detail: TmdbShowDetail, todayStr: string): Promise<string[]> {
+  const futureDatesSet = new Set<string>()
+  const activeSeasonNumber = detail.next_episode_to_air?.season_number ?? null
+  const upcomingSeasons = detail.seasons.filter(
+    season => season.season_number > 0 && (
+      !season.air_date ||
+      season.air_date > todayStr ||
+      season.season_number === activeSeasonNumber
+    )
+  )
+  for (const season of upcomingSeasons) {
+    if (season.air_date && season.air_date > todayStr) futureDatesSet.add(season.air_date)
+  }
+  const episodeLists = await Promise.all(
+    upcomingSeasons.map(season => getSeasonEpisodes(detail.id, season.season_number).catch(() => []))
+  )
+  for (const episodes of episodeLists) {
+    for (const ep of episodes) {
+      if (ep.air_date && ep.air_date > todayStr) futureDatesSet.add(ep.air_date)
+    }
+  }
+  if (detail.next_episode_to_air?.air_date && detail.next_episode_to_air.air_date > todayStr) {
+    futureDatesSet.add(detail.next_episode_to_air.air_date)
+  }
+  return [...futureDatesSet].sort()
+}
+
+function nextEpisodeMetadata(detail: TmdbShowDetail, futureDates: string[]) {
+  return {
+    nextEpisodeDate: detail.next_episode_to_air?.air_date ?? futureDates[0] ?? null,
+    nextEpisodeName: detail.next_episode_to_air?.name ?? null,
+  }
+}
+
+function hasExpectedFutureContent(detail: TmdbShowDetail, futureDates: string[]): boolean {
+  return !!detail.next_episode_to_air || futureDates.length > 0 || isContinuing(detail)
+}
+
+function automaticSeriesStatus(
+  detail: TmdbShowDetail,
+  watched: WatchedEpisode[],
+  todayStr: string,
+  futureDates: string[],
+): Series['status'] {
+  const releasedTotal = releasedEpisodeTotal(detail, todayStr)
+  if (releasedTotal === 0) return 'plantowatch'
+  if (watchedReleasedEpisodeTotal(watched, detail, todayStr) < releasedTotal) return 'watching'
+  return hasExpectedFutureContent(detail, futureDates) ? 'plantowatch' : 'completed'
+}
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('home')
@@ -135,38 +219,12 @@ export default function App() {
         if (!detail) continue
         const rating = (detail.vote_average ?? 0) > 0 ? detail.vote_average!.toFixed(1) : null
 
-        // Collect all known future dates: next episode + upcoming season premieres + individual episode dates
-        const futureDatesSet = new Set<string>()
-        // Include future seasons AND the currently-airing season (which may have unreleased episodes)
-        const activeSeasonNumber = detail.next_episode_to_air?.season_number ?? null
-        const upcomingSeasons = detail.seasons.filter(
-          season => season.season_number > 0 && (
-            !season.air_date ||
-            season.air_date > todayStr ||
-            season.season_number === activeSeasonNumber
-          )
-        )
-        // Season premiere dates (future only)
-        for (const season of upcomingSeasons) {
-          if (season.air_date && season.air_date > todayStr) futureDatesSet.add(season.air_date)
-        }
-        // Fetch individual episode dates for upcoming + active seasons (run in parallel per series)
-        const episodeLists = await Promise.all(
-          upcomingSeasons.map(season => getSeasonEpisodes(detail.id, season.season_number).catch(() => []))
-        )
-        for (const episodes of episodeLists) {
-          for (const ep of episodes) {
-            if (ep.air_date && ep.air_date > todayStr) futureDatesSet.add(ep.air_date)
-          }
-        }
-        if (detail.next_episode_to_air?.air_date && detail.next_episode_to_air.air_date > todayStr) {
-          futureDatesSet.add(detail.next_episode_to_air.air_date)
-        }
-        const futureDates = [...futureDatesSet].sort()
+        const futureDates = await collectFutureDates(detail, todayStr)
+        const nextEpisode = nextEpisodeMetadata(detail, futureDates)
 
         const updates: Parameters<typeof updateSeries>[1] = {
-          nextEpisodeDate: detail.next_episode_to_air?.air_date ?? null,
-          nextEpisodeName: detail.next_episode_to_air?.name ?? null,
+          nextEpisodeDate: nextEpisode.nextEpisodeDate,
+          nextEpisodeName: nextEpisode.nextEpisodeName,
           futureDates: futureDates.length > 0 ? futureDates : null,
           ...(rating && !s.imdbRating ? { imdbRating: rating } : {}),
         }
@@ -216,7 +274,7 @@ export default function App() {
     promotePendingToWatching()
   }, [loading, loadSeries])
 
-  // Daily: notify when a completed show has new episodes coming — status stays 'completed' so Fernando decides
+  // Daily: move completed shows back to pending when TMDB confirms new content.
   useEffect(() => {
     if (loading) return
     const lastCheck = parseInt(localStorage.getItem('tvfreak-revival-checked-ts') ?? '0')
@@ -230,16 +288,19 @@ export default function App() {
         try {
           const detail = await getTvDetails(s.tmdbId!)
           if (!detail) continue
-          if (detail.next_episode_to_air) {
-            // Update the date so it shows in Upcoming, but keep status as 'completed'
+          const todayStr = new Date().toISOString().slice(0, 10)
+          const futureDates = await collectFutureDates(detail, todayStr)
+          const nextEpisode = nextEpisodeMetadata(detail, futureDates)
+          if (hasExpectedFutureContent(detail, futureDates)) {
+            // Store the date so the existing Pending banner and Upcoming view can show it.
             await updateSeries(s.id!, {
-              nextEpisodeDate: detail.next_episode_to_air.air_date,
-              nextEpisodeName: detail.next_episode_to_air.name,
+              status: nextEpisode.nextEpisodeDate && nextEpisode.nextEpisodeDate <= todayStr ? 'watching' : 'plantowatch',
+              nextEpisodeDate: nextEpisode.nextEpisodeDate,
+              nextEpisodeName: nextEpisode.nextEpisodeName,
+              futureDates: futureDates.length > 0 ? futureDates : null,
             })
-            toast(`${s.title} is back — new episodes coming. Change status if you want to track it.`, { duration: 7000 })
+            toast(`${s.title} has new episodes coming.`, { duration: 5000 })
             changed = true
-          } else if (detail.status === 'Returning Series' || detail.status === 'In Production') {
-            toast(`${s.title} has a new season confirmed.`, { duration: 5000 })
           }
         } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 500))
@@ -249,66 +310,48 @@ export default function App() {
     checkRevived()
   }, [loading, loadSeries])
 
-  // Daily: auto-flip "watching" series where all episodes are watched
+  // Daily: recalculate active series so caught-up shows become pending/completed
+  // and pending shows become watching when new episodes release.
   useEffect(() => {
     if (loading) return
-    const lastCheck = parseInt(localStorage.getItem('tvfreak-status-check-ts-v2') ?? '0')
+    const lastCheck = parseInt(localStorage.getItem('tvfreak-status-check-ts-v3') ?? '0')
     if (Date.now() - lastCheck < 24 * 60 * 60 * 1000) return
-    localStorage.setItem('tvfreak-status-check-ts-v2', String(Date.now()))
+    localStorage.setItem('tvfreak-status-check-ts-v3', String(Date.now()))
     async function checkWatchingStatus() {
       const all = await getAllSeries()
-      const watching = all.filter(s => s.tmdbId && s.id && s.status === 'watching')
-      if (watching.length === 0) return
+      const active = all.filter(s => s.tmdbId && s.id && (s.status === 'watching' || s.status === 'plantowatch'))
+      if (active.length === 0) return
       let changed = false
-      for (const s of watching) {
+      for (const s of active) {
         try {
           const [detail, watched] = await Promise.all([
             getTvDetails(s.tmdbId!),
             getWatchedEpisodes(s.id!),
           ])
           if (!detail) continue
-          const today = new Date().toISOString().slice(0, 10)
-          const airedSeasons = detail.seasons
-            .filter(season => season.season_number > 0)
-            .filter(season => season.air_date != null && season.air_date <= today)
-          // For the currently-active season, use last_episode_to_air.episode_number as the
-          // released count rather than season.episode_count (which includes unaired episodes).
-          // For all older completed seasons, episode_count is accurate.
-          const activeSeasonNumber = detail.last_episode_to_air?.season_number ?? null
-          const totalEpisodes = airedSeasons.reduce((sum, season) => {
-            if (activeSeasonNumber && season.season_number === activeSeasonNumber && detail.last_episode_to_air) {
-              return sum + detail.last_episode_to_air.episode_number
-            }
-            return sum + season.episode_count
-          }, 0)
-          if (totalEpisodes === 0) {
-            // No episodes have aired yet — series should be pending, not watching
-            const nextEp = detail.next_episode_to_air
-            if (nextEp) {
-              await updateSeries(s.id!, { status: 'plantowatch', nextEpisodeDate: nextEp.air_date, nextEpisodeName: nextEp.name })
-            } else {
-              await updateSeries(s.id!, { status: 'plantowatch' })
-            }
-            changed = true
-            continue
+          const todayStr = new Date().toISOString().slice(0, 10)
+          const futureDates = await collectFutureDates(detail, todayStr)
+          const nextEpisode = nextEpisodeMetadata(detail, futureDates)
+          const nextStatus = automaticSeriesStatus(detail, watched, todayStr, futureDates)
+          const updates: Parameters<typeof updateSeries>[1] = {
+            status: nextStatus,
+            nextEpisodeDate: nextEpisode.nextEpisodeDate,
+            nextEpisodeName: nextEpisode.nextEpisodeName,
+            futureDates: futureDates.length > 0 ? futureDates : null,
           }
-          const airedSeasonNumbers = new Set(airedSeasons.map(s => s.season_number))
-          const watchedCount = watched.filter(w => w.seasonNumber > 0 && airedSeasonNumbers.has(w.seasonNumber)).length
-          if (watchedCount >= totalEpisodes) {
-            const isReturning = detail.status === 'Returning Series' || detail.status === 'In Production'
-            if (detail.next_episode_to_air) {
-              await updateSeries(s.id!, {
-                status: 'plantowatch',
-                nextEpisodeDate: detail.next_episode_to_air.air_date,
-                nextEpisodeName: detail.next_episode_to_air.name,
-              })
+          const changedStatus = nextStatus !== s.status
+          const changedDates =
+            s.nextEpisodeDate !== updates.nextEpisodeDate ||
+            s.nextEpisodeName !== updates.nextEpisodeName ||
+            JSON.stringify(s.futureDates ?? null) !== JSON.stringify(updates.futureDates ?? null)
+          if (changedStatus || changedDates) {
+            await updateSeries(s.id!, updates)
+            if (changedStatus && nextStatus === 'plantowatch') {
               toast(`All caught up on ${s.title}! New episodes coming.`, { duration: 5000 })
-            } else if (isReturning) {
-              await updateSeries(s.id!, { status: 'plantowatch', nextEpisodeDate: null, nextEpisodeName: null })
-              toast(`All caught up on ${s.title}! Waiting for new season.`, { duration: 4000 })
-            } else {
-              await updateSeries(s.id!, { status: 'completed' })
+            } else if (changedStatus && nextStatus === 'completed') {
               toast.success(`${s.title} marked as completed.`, { duration: 5000 })
+            } else if (changedStatus && nextStatus === 'watching') {
+              toast(`${s.title} has a new episode ready.`, { duration: 5000 })
             }
             changed = true
           }

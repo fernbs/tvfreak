@@ -71,14 +71,16 @@ export async function getSeriesById(id: number): Promise<Series | undefined> {
 }
 
 export async function addSeries(series: Omit<Series, 'id'>): Promise<number> {
+  const body: Record<string, unknown> = {
+    ...series,
+    addedAt: series.addedAt.toISOString(),
+    updatedAt: series.updatedAt.toISOString(),
+  }
+  if (Array.isArray(body.futureDates)) body.futureDates = JSON.stringify(body.futureDates)
   const res = await fetch(`${BASE}/api/series`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      ...series,
-      addedAt: series.addedAt.toISOString(),
-      updatedAt: series.updatedAt.toISOString(),
-    }),
+    body: JSON.stringify(body),
   })
   const data: { id: number } = await res.json()
   return data.id

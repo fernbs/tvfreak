@@ -9,9 +9,9 @@ interface Props {
   seriesId: number
   tmdbId: number
   seasons: TmdbSeason[]
-  onAllEpisodesWatched?: () => void
-  onSomeEpisodesUnwatched?: () => void
-  onEpisodeMarked?: () => void
+  onAllEpisodesWatched?: () => void | Promise<void>
+  onSomeEpisodesUnwatched?: () => void | Promise<void>
+  onEpisodeMarked?: () => void | Promise<void>
 }
 
 interface SeasonState {
@@ -142,10 +142,35 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
     }, 0)
   }
 
-  function checkAllWatched(newWatched: Set<string>, freshSeasonEps?: Record<number, TmdbEpisode[]>) {
+  function watchedReleasedEpisodeCount(newWatched: Set<string>, freshSeasonEps?: Record<number, TmdbEpisode[]>): number {
+    return seasons.filter(s => s.season_number > 0).reduce((sum, s) => {
+      const fresh = freshSeasonEps?.[s.season_number]
+      const state = seasonStates[s.season_number]
+      if (fresh) {
+        return sum + fresh
+          .filter(ep => isReleased(ep.air_date))
+          .filter(ep => newWatched.has(`${s.season_number}-${ep.episode_number}`))
+          .length
+      }
+      if (state?.episodes && state.episodes.length > 0) {
+        return sum + state.episodes
+          .filter(ep => isReleased(ep.air_date))
+          .filter(ep => newWatched.has(`${s.season_number}-${ep.episode_number}`))
+          .length
+      }
+      if (!s.air_date || s.air_date > today) return sum
+      let watchedReleased = 0
+      for (let i = 1; i <= s.episode_count; i++) {
+        if (newWatched.has(`${s.season_number}-${i}`)) watchedReleased++
+      }
+      return sum + watchedReleased
+    }, 0)
+  }
+
+  async function checkAllWatched(newWatched: Set<string>, freshSeasonEps?: Record<number, TmdbEpisode[]>) {
     const total = releasedEpisodeCount(freshSeasonEps)
-    if (total > 0 && newWatched.size >= total) {
-      onAllEpisodesWatched?.()
+    if (total > 0 && watchedReleasedEpisodeCount(newWatched, freshSeasonEps) >= total) {
+      await onAllEpisodesWatched?.()
     }
   }
 
@@ -214,8 +239,8 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       const next = new Set(watched)
       for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
       setWatched(next)
-      onEpisodeMarked?.()
-      checkAllWatched(next, freshSeasonEps)
+      await onEpisodeMarked?.()
+      await checkAllWatched(next, freshSeasonEps)
     }
   }
 
@@ -240,7 +265,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
         for (let i = 1; i <= season.episode_count; i++) next.delete(`${sn}-${i}`)
         return next
       })
-      onSomeEpisodesUnwatched?.()
+      await onSomeEpisodesUnwatched?.()
       return
     }
 
@@ -287,7 +312,7 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
     if (watched.has(key)) {
       await toggleEpisodeWatched(seriesId, sn, en)
       setWatched(prev => { const next = new Set(prev); next.delete(key); return next })
-      onSomeEpisodesUnwatched?.()
+      await onSomeEpisodesUnwatched?.()
       return
     }
 
@@ -298,8 +323,8 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
       await toggleEpisodeWatched(seriesId, sn, en)
       const next = new Set([...watched, key])
       setWatched(next)
-      onEpisodeMarked?.()
-      checkAllWatched(next)
+      await onEpisodeMarked?.()
+      await checkAllWatched(next)
     }
   }
 
@@ -314,8 +339,8 @@ export function EpisodeList({ seriesId, tmdbId, seasons, onAllEpisodesWatched, o
     const next = new Set(watched)
     for (const ep of toMark) next.add(`${ep.seasonNumber}-${ep.episodeNumber}`)
     setWatched(next)
-    onEpisodeMarked?.()
-    checkAllWatched(next)
+    await onEpisodeMarked?.()
+    await checkAllWatched(next)
   }
 
   const regularSeasons = seasons.filter(s => s.season_number > 0)

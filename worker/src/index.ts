@@ -168,11 +168,12 @@ export default {
 
       // POST /api/series
       if (path === '/api/series' && method === 'POST') {
+        await ensureSeries()
         const body = await request.json() as Record<string, unknown>
         const result = await env.DB.prepare(
           `INSERT INTO series
-             (tmdbId, title, status, posterPath, overview, firstAirDate, lastAirDate, numberOfSeasons, notes, addedAt, updatedAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+             (tmdbId, title, status, posterPath, overview, firstAirDate, lastAirDate, numberOfSeasons, notes, addedAt, updatedAt, nextEpisodeDate, nextEpisodeName, imdbRating, futureDates, rtRating)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           body.tmdbId ?? null,
           body.title,
@@ -185,6 +186,11 @@ export default {
           body.notes ?? '',
           body.addedAt,
           body.updatedAt,
+          body.nextEpisodeDate ?? null,
+          body.nextEpisodeName ?? null,
+          body.imdbRating ?? null,
+          body.futureDates ?? null,
+          body.rtRating ?? null,
         ).run()
         return json({ id: result.meta.last_row_id }, 201, cors)
       }
@@ -324,6 +330,10 @@ export default {
 
       // ── Movies ──────────────────────────────────────────────────────────
       async function ensureSeries() {
+        try { await env.DB.prepare('ALTER TABLE series ADD COLUMN nextEpisodeDate TEXT').run() } catch {}
+        try { await env.DB.prepare('ALTER TABLE series ADD COLUMN nextEpisodeName TEXT').run() } catch {}
+        try { await env.DB.prepare('ALTER TABLE series ADD COLUMN imdbRating TEXT').run() } catch {}
+        try { await env.DB.prepare('ALTER TABLE series ADD COLUMN futureDates TEXT').run() } catch {}
         try { await env.DB.prepare('ALTER TABLE series ADD COLUMN rtRating TEXT').run() } catch {}
       }
 

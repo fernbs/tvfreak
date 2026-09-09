@@ -274,6 +274,9 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const startYear = series?.firstAirDate?.slice(0, 4)
   const endYear = series?.lastAirDate?.slice(0, 4)
   const isOngoing = detail?.status === 'Returning Series' || detail?.status === 'In Production' || !!nextEp
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const futureDates = (series?.futureDates ?? []).filter(d => d >= todayStr).sort()
+  const expectedFutureContent = isOngoing || futureDates.length > 0
   const dateRange = startYear
     ? isOngoing
       ? `${startYear}–present`
@@ -282,13 +285,15 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
 
   async function handleAllEpisodesWatched() {
     if (!series?.id) return
-    if (series.status === 'completed' || series.status === 'dropped') return
-    if (series.status === 'plantowatch') {
-      await updateSeries(series.id, { status: 'watching' })
-      onUpdated()
-      return
-    }
-    if (isOngoing) {
+    if (series.status === 'dropped') return
+    if (expectedFutureContent) {
+      const nextDate = nextEp?.air_date ?? futureDates[0] ?? null
+      await updateSeries(series.id, {
+        status: 'plantowatch',
+        nextEpisodeDate: nextDate,
+        nextEpisodeName: nextEp?.name ?? null,
+        futureDates: futureDates.length > 0 ? futureDates : null,
+      })
       const msg = nextEp
         ? `All caught up on ${series.title}! Next episode: ${formatAirDate(nextEp.air_date)}`
         : `All caught up on ${series.title}! Waiting for next season.`
