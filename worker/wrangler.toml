@@ -7,3 +7,10 @@ binding = "DB"
 database_name = "tvfreak"
 database_id = "13e56846-0113-4009-ae46-46e69ba3b348"
 
+[env.alfon]
+name = "tvfreak-alfon-worker"
+
+[[env.alfon.d1_databases]]
+binding = "DB"
+database_name = "tvfreak-alfon"
+database_id = "__ALFON_D1_DATABASE_ID__"

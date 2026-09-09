@@ -2,14 +2,14 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [friend-alfon]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  deploy-frontend:
+  deploy-alfon:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,47 +24,70 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        env:
-          VITE_TMDB_BEARER_TOKEN: ${{ secrets.VITE_TMDB_BEARER_TOKEN }}
-          VITE_BASE_URL: /tvfreak/
-          VITE_WORKER_URL: ${{ secrets.VITE_WORKER_URL }}
-          VITE_OMDB_API_KEY: ${{ secrets.VITE_OMDB_API_KEY }}
-        run: node node_modules/vite/bin/vite.js build
-
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-
-  deploy-worker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-
       - name: Install worker dependencies
         working-directory: worker
         run: npm install --legacy-peer-deps
 
-      - name: Apply D1 migrations
+      - name: Prepare Alfon D1 database
+        id: alfon-d1
         working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          # 0002 columns were added manually before migration tracking existed.
-          # Mark it as applied so wrangler doesn't try to run it again.
-          npx wrangler d1 execute tvfreak --remote --command="INSERT OR IGNORE INTO d1_migrations (name, applied_at) VALUES ('0002_next_episode_fields.sql', datetime('now'))"
-          npx wrangler d1 migrations apply tvfreak --remote
+          export DB_NAME="tvfreak-alfon"
+          DB_ID="$(npx wrangler d1 list --json | node -e "let data=''; process.stdin.on('data', c => data += c); process.stdin.on('end', () => { const dbs = JSON.parse(data); const db = dbs.find(d => d.name === process.env.DB_NAME); if (db) console.log(db.uuid || db.id || db.database_id || '') })")"
+          if [ -z "$DB_ID" ]; then
+            CREATE_OUTPUT="$(npx wrangler d1 create "$DB_NAME")"
+            echo "$CREATE_OUTPUT"
+            DB_ID="$(echo "$CREATE_OUTPUT" | sed -n 's/.*database_id = "\([^"]*\)".*/\1/p' | tail -n 1)"
+          fi
+          if [ -z "$DB_ID" ]; then
+            echo "Could not resolve D1 database id for $DB_NAME" >&2
+            exit 1
+          fi
+          export DB_ID
+          node -e "const fs = require('fs'); const file = 'wrangler.toml'; const dbId = process.env.DB_ID; const text = fs.readFileSync(file, 'utf8').replace('__ALFON_D1_DATABASE_ID__', dbId); fs.writeFileSync(file, text);"
+          echo "database_id=$DB_ID" >> "$GITHUB_OUTPUT"
+        shell: bash
 
-      - name: Deploy worker
+      - name: Apply Alfon D1 migrations
         working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx wrangler deploy
+        run: |
+          npx wrangler d1 migrations apply tvfreak-alfon --remote
+          npx wrangler d1 execute tvfreak-alfon --remote --command="INSERT OR IGNORE INTO migrations (key, ran_at) VALUES ('tvfreak-csv-import-done', datetime('now'))"
+
+      - name: Deploy Alfon worker
+        id: alfon-worker
+        working-directory: worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          DEPLOY_OUTPUT="$(npx wrangler deploy --env alfon 2>&1)"
+          echo "$DEPLOY_OUTPUT"
+          WORKER_URL="$(echo "$DEPLOY_OUTPUT" | grep -Eo 'https://[^[:space:]]+\.workers\.dev' | tail -n 1)"
+          if [ -z "$WORKER_URL" ]; then
+            MAIN_WORKER_URL="${{ secrets.VITE_WORKER_URL }}"
+            MAIN_WORKER_URL="${MAIN_WORKER_URL%/}"
+            WORKER_URL="${MAIN_WORKER_URL/tvfreak-worker/tvfreak-alfon-worker}"
+          fi
+          echo "url=$WORKER_URL" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Build Alfon frontend
+        env:
+          VITE_TMDB_BEARER_TOKEN: ${{ secrets.VITE_TMDB_BEARER_TOKEN }}
+          VITE_BASE_URL: /tvfreak/alfon/
+          VITE_WORKER_URL: ${{ steps.alfon-worker.outputs.url }}
+          VITE_OMDB_API_KEY: ${{ secrets.VITE_OMDB_API_KEY }}
+          VITE_DISABLE_SEED_IMPORTS: 'true'
+        run: node node_modules/vite/bin/vite.js build
+
+      - name: Deploy Alfon frontend to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          destination_dir: alfon
+          keep_files: true

@@ -456,10 +456,17 @@ function StatRow({ color, label, count, note }: { color: string; label: string; 
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
-export function useMovieImport(moviesCount = 0) {
+export function useMovieImport(moviesCount = 0, disabled = false) {
   const [importData, setImportData] = useState<ImportData | null>(null)
-  const [importDone, setImportDone] = useState(() => !!localStorage.getItem(IMPORT_DONE_KEY))
+  const [importDone, setImportDone] = useState(() => disabled || !!localStorage.getItem(IMPORT_DONE_KEY))
   const [sheetOpen, setSheetOpen] = useState(false)
+
+  useEffect(() => {
+    if (disabled) {
+      localStorage.setItem(IMPORT_DONE_KEY, '1')
+      setImportDone(true)
+    }
+  }, [disabled])
 
   // If movies already exist in the DB, the import happened in a previous session.
   // Silence the banner permanently so the user isn't asked to import again.
@@ -471,12 +478,12 @@ export function useMovieImport(moviesCount = 0) {
   }, [moviesCount, importDone])
 
   useEffect(() => {
-    if (importDone) return
+    if (disabled || importDone) return
     fetch(IMPORT_JSON_URL)
       .then(r => r.json())
       .then((d: ImportData) => { if (d?.movies?.length) setImportData(d) })
       .catch(() => { /* no import file */ })
-  }, [importDone])
+  }, [disabled, importDone])
 
   const matchCount = importData?.movies.filter(m => m.status !== 'no_match').length ?? 0
   const showBanner = !importDone && importData !== null && matchCount > 0

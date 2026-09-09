@@ -33,6 +33,7 @@ const TAB_TITLES: Record<Tab, string> = {
 }
 
 const GRID_TABS: Tab[] = ['home', 'search', 'library']
+const DISABLE_SEED_IMPORTS = import.meta.env.VITE_DISABLE_SEED_IMPORTS === 'true'
 
 function isContinuing(detail: TmdbShowDetail): boolean {
   return detail.status === 'Returning Series' || detail.status === 'In Production'
@@ -140,7 +141,7 @@ export default function App() {
   const [allMovies, setAllMovies] = useState<Movie[]>([])
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
 
-  const movieImport = useMovieImport(allMovies.length)
+  const movieImport = useMovieImport(allMovies.length, DISABLE_SEED_IMPORTS)
 
   const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([])
   const [showDuplicates, setShowDuplicates] = useState(false)
@@ -185,7 +186,9 @@ export default function App() {
       await preloadMigrations()
 
       const CSV_KEY = 'tvfreak-csv-import-done'
-      if (!(await isMigrationDone(CSV_KEY))) {
+      if (DISABLE_SEED_IMPORTS) {
+        await markMigration(CSV_KEY)
+      } else if (!(await isMigrationDone(CSV_KEY))) {
         try {
           setImporting(true)
           await importFromCsv((done, total) => setImportProgress({ done, total }))
