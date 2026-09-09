@@ -10,7 +10,7 @@
 
 ## Alfon instance
 
-- Branch: `friend-alfon`
+- Branch: `alfon`
 - Frontend path: `/tvfreak/alfon/`
 - Worker: `tvfreak-alfon-worker`
 - D1 database: `tvfreak-alfon`
