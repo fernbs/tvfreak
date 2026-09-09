@@ -80,7 +80,7 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
 
   const watchingNow = series
     .filter(s =>
-      s.status === 'watching' ||
+      (s.status === 'watching' && (!s.nextEpisodeDate || s.nextEpisodeDate <= todayStr)) ||
       (s.status === 'plantowatch' && s.nextEpisodeDate != null && s.nextEpisodeDate <= todayStr)
     )
     .sort((a, b) => {

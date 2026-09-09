@@ -18,9 +18,10 @@ Movies currently use `completed`, `plantowatch`, and `dropped`. A released `plan
 For every non-dropped series, the app derives the automatic status from TMDB release state plus the user's watched episodes:
 
 1. If no regular episodes have aired yet, status is `plantowatch`.
-2. If at least one aired regular episode is unwatched, status is `watching`.
-3. If all aired regular episodes are watched and TMDB says more content is expected, status is `plantowatch`.
-4. If all aired regular episodes are watched and TMDB says the show is ended or cancelled, status is `completed`.
+2. If TMDB has a known future next episode or future season date, status is `plantowatch` until that date.
+3. On the next release date, if at least one aired regular episode is unwatched, status is `watching`.
+4. If all aired regular episodes are watched and TMDB says more content is expected, status is `plantowatch`.
+5. If all aired regular episodes are watched and TMDB says the show is ended or cancelled, status is `completed`.
 
 More content is expected when TMDB has `next_episode_to_air`, reports `Returning Series` or `In Production`, or exposes future season or episode dates. If future content has a date, the app stores it in `nextEpisodeDate` and/or `futureDates`. If future content is announced without a date, the series still stays `plantowatch` and uses the existing "New episodes coming soon" banner.
 
@@ -45,6 +46,7 @@ On app load, `refreshNextEpisodeDates` updates next episode dates, future dates,
 Daily, `checkWatchingStatus` recalculates every `watching` and `plantowatch` series so existing library items cannot stay stuck in the wrong active status. This job is allowed to:
 
 - Move `watching` to `plantowatch` when all aired episodes are watched and more content is expected.
+- Move `watching` to `plantowatch` when the next known episode or season date is still in the future.
 - Move `watching` to `completed` when all aired episodes are watched and TMDB says the show has ended or was cancelled.
 - Move `plantowatch` to `watching` on the day a new episode becomes released.
 - Keep unreleased series in `plantowatch`.

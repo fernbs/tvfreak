@@ -112,6 +112,8 @@ function automaticSeriesStatus(
   todayStr: string,
   futureDates: string[],
 ): Series['status'] {
+  const nextEpisode = nextEpisodeMetadata(detail, futureDates)
+  if (nextEpisode.nextEpisodeDate && nextEpisode.nextEpisodeDate > todayStr) return 'plantowatch'
   const releasedTotal = releasedEpisodeTotal(detail, todayStr)
   if (releasedTotal === 0) return 'plantowatch'
   if (watchedReleasedEpisodeTotal(watched, detail, todayStr) < releasedTotal) return 'watching'
@@ -261,7 +263,11 @@ export default function App() {
         try {
           const detail = await getTvDetails(s.tmdbId!)
           if (!detail) continue
-          if (detail.last_episode_to_air && detail.next_episode_to_air) {
+          if (
+            detail.last_episode_to_air &&
+            detail.next_episode_to_air &&
+            detail.next_episode_to_air.air_date <= todayStr
+          ) {
             await updateSeries(s.id!, { status: 'watching' })
             changed = true
           }
@@ -314,9 +320,9 @@ export default function App() {
   // and pending shows become watching when new episodes release.
   useEffect(() => {
     if (loading) return
-    const lastCheck = parseInt(localStorage.getItem('tvfreak-status-check-ts-v3') ?? '0')
+    const lastCheck = parseInt(localStorage.getItem('tvfreak-status-check-ts-v4') ?? '0')
     if (Date.now() - lastCheck < 24 * 60 * 60 * 1000) return
-    localStorage.setItem('tvfreak-status-check-ts-v3', String(Date.now()))
+    localStorage.setItem('tvfreak-status-check-ts-v4', String(Date.now()))
     async function checkWatchingStatus() {
       const all = await getAllSeries()
       const active = all.filter(s => s.tmdbId && s.id && (s.status === 'watching' || s.status === 'plantowatch'))
