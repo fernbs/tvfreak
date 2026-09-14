@@ -14,7 +14,8 @@ Search result tiles should show the same IMDb rating source used by the detail c
 
 1. Use any IMDb rating already stored for the matching library item as an immediate placeholder.
 2. For visible search results, fetch the TMDB external ID and OMDb ratings, then replace the placeholder with the OMDb IMDb value when available.
-3. If no IMDb value is available, do not show an IMDb score badge on the search tile.
+3. The fetch should cover all currently loaded search results, not just the first row or first few tiles.
+4. If no IMDb value is available, do not show an IMDb score badge on the search tile.
 
 Search sorting and filtering can still use TMDB `vote_average` because TMDB powers those APIs, but the visible score badge must not present that value as IMDb.
 
