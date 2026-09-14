@@ -43,7 +43,8 @@ function recToSeries(r: TmdbSearchResult): Series {
     notes: '',
     nextEpisodeDate: null,
     nextEpisodeName: null,
-    imdbRating: (r.vote_average ?? 0) > 0 ? r.vote_average!.toFixed(1) : null,
+    imdbRating: null,
+    rtRating: null,
     futureDates: null,
     addedAt: new Date(),
     updatedAt: new Date(),
@@ -96,9 +97,6 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
     setLoadingDetail(true)
     getTvDetails(series.tmdbId).then(async d => {
       setDetail(d)
-      if (!series.imdbRating && (d?.vote_average ?? 0) > 0) {
-        setLocalImdbRating(d!.vote_average!.toFixed(1))
-      }
       const updates: Partial<Series> = {}
       if (d?.next_episode_to_air) {
         updates.nextEpisodeDate = d.next_episode_to_air.air_date
@@ -218,6 +216,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
         nextEpisodeDate: detail?.next_episode_to_air?.air_date ?? null,
         nextEpisodeName: detail?.next_episode_to_air?.name ?? null,
         imdbRating: series.imdbRating,
+        rtRating,
         futureDates: null,
         addedAt: new Date(),
         updatedAt: new Date(),
@@ -269,7 +268,7 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
   const isComplete = series?.status === 'completed' && !nextEp
   const hasUpcoming = !!nextEp
   const inLibrary = !!series?.id
-  const displayImdbRating = series?.imdbRating ?? localImdbRating ?? ((detail?.vote_average ?? 0) > 0 ? detail!.vote_average!.toFixed(1) : null)
+  const displayImdbRating = localImdbRating ?? series?.imdbRating
 
   const startYear = series?.firstAirDate?.slice(0, 4)
   const endYear = series?.lastAirDate?.slice(0, 4)
@@ -429,16 +428,18 @@ export function DetailPanel({ series, onClose, onUpdated, onSelect }: Props) {
 
                   {!loadingDetail && (
                     <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                      <a
-                        href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={e => { if (!imdbId) e.preventDefault() }}
-                        className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
-                      >
-                        <span className="bg-[#F5C518] text-black font-black px-[3px] py-[2px] rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
-                        <span className="text-xs font-medium leading-none" style={{ color: displayImdbRating ? 'white' : '#8E8E93' }}>{displayImdbRating ?? 'N/A'}</span>
-                      </a>
+                      {displayImdbRating && (
+                        <a
+                          href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => { if (!imdbId) e.preventDefault() }}
+                          className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full active:opacity-70 transition-opacity"
+                        >
+                          <span className="bg-[#F5C518] text-black font-black px-[3px] py-[2px] rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
+                          <span className="text-xs font-medium leading-none text-white">{displayImdbRating}</span>
+                        </a>
+                      )}
                       {ratingsLoaded && rtRating && (
                         <a
                           href={`https://www.rottentomatoes.com/search?search=${encodeURIComponent(series.title)}`}

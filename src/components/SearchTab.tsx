@@ -18,6 +18,10 @@ function deduped(items: TmdbSearchResult[]): TmdbSearchResult[] {
   })
 }
 
+function ratingKey(mode: 'tv' | 'movie', id: number): string {
+  return `${mode}:${id}`
+}
+
 interface Props {
   onSeriesAdded: () => void
   allSeries: Series[]
@@ -29,7 +33,9 @@ interface Props {
 }
 
 export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMovieAdded, onMovieSelect, viewMode }: Props) {
-  const rtCache = useRef<Record<number, string>>({})
+  const imdbCache = useRef<Record<string, string>>({})
+  const rtCache = useRef<Record<string, string>>({})
+  const ratingsFetched = useRef<Set<string>>(new Set())
   const [query, setQuery] = useState('')
   const [includedGenres, setIncludedGenres] = useState<number[]>([])
   const [excludedGenres, setExcludedGenres] = useState<number[]>([])
@@ -47,6 +53,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
   const [newItemIds, setNewItemIds] = useState<Set<number>>(new Set())
   const [mediaMode, setMediaMode] = useState<'tv' | 'movie'>('tv')
   const [showFilterSheet, setShowFilterSheet] = useState(false)
+  const [imdbMap, setImdbMap] = useState<Record<number, string>>({})
   const [rtMap, setRtMap] = useState<Record<number, string>>({})
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -203,29 +210,56 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     return () => clearTimeout(t)
   }, [newItemIds])
 
-  // Populate RT ratings: instantly from library, then fetch for remaining results
+  // Populate visible ratings from the same OMDb source used by detail panels.
   useEffect(() => {
-    for (const s of allSeries) { if (s.tmdbId && s.rtRating) rtCache.current[s.tmdbId] = s.rtRating }
-    for (const m of allMovies) { if (m.tmdbId && m.rtRating) rtCache.current[m.tmdbId] = m.rtRating }
-    setRtMap({ ...rtCache.current })
+    for (const s of allSeries) {
+      if (!s.tmdbId) continue
+      const key = ratingKey('tv', s.tmdbId)
+      if (s.imdbRating) imdbCache.current[key] = s.imdbRating
+      if (s.rtRating) rtCache.current[key] = s.rtRating
+    }
+    for (const m of allMovies) {
+      if (!m.tmdbId) continue
+      const key = ratingKey('movie', m.tmdbId)
+      if (m.imdbRating) imdbCache.current[key] = m.imdbRating
+      if (m.rtRating) rtCache.current[key] = m.rtRating
+    }
+    const nextImdbMap: Record<number, string> = {}
+    const nextRtMap: Record<number, string> = {}
+    for (const r of results) {
+      const key = ratingKey(mediaMode, r.id)
+      if (imdbCache.current[key]) nextImdbMap[r.id] = imdbCache.current[key]
+      if (rtCache.current[key]) nextRtMap[r.id] = rtCache.current[key]
+    }
+    setImdbMap(nextImdbMap)
+    setRtMap(nextRtMap)
     if (results.length === 0) return
     let cancelled = false
     const getIds = mediaMode === 'tv' ? getExternalIds : getMovieExternalIds
-    const toFetch = results.slice(0, 10).filter(r => !rtCache.current[r.id])
-    async function fetchRtRatings() {
+    const toFetch = results.slice(0, 10).filter(r => !ratingsFetched.current.has(ratingKey(mediaMode, r.id)))
+    async function fetchRatings() {
       for (const r of toFetch) {
         if (cancelled) break
+        const key = ratingKey(mediaMode, r.id)
         try {
           const ext = await getIds(r.id)
           if (ext.imdb_id && !cancelled) {
-            const { rt } = await getRatings(ext.imdb_id)
-            if (rt && !cancelled) { rtCache.current[r.id] = rt; setRtMap(prev => ({ ...prev, [r.id]: rt })) }
+            const { imdb, rt } = await getRatings(ext.imdb_id)
+            if (imdb && !cancelled) {
+              imdbCache.current[key] = imdb
+              setImdbMap(prev => ({ ...prev, [r.id]: imdb }))
+            }
+            if (rt && !cancelled) {
+              rtCache.current[key] = rt
+              setRtMap(prev => ({ ...prev, [r.id]: rt }))
+            }
           }
         } catch { /* ignore */ }
+        ratingsFetched.current.add(key)
         if (!cancelled) await new Promise(res => setTimeout(res, 150))
       }
     }
-    fetchRtRatings()
+    fetchRatings()
     return () => { cancelled = true }
   }, [results, mediaMode, allSeries, allMovies])
 
@@ -248,7 +282,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
       notes: '',
       nextEpisodeDate: null,
       nextEpisodeName: null,
-      imdbRating: null,
+      imdbRating: imdbMap[result.id] ?? null,
+      rtRating: rtMap[result.id] ?? null,
       futureDates: null,
       addedAt: new Date(),
       updatedAt: new Date(),
@@ -267,7 +302,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
       releaseDate: result.first_air_date ?? null,
       runtime: null,
       notes: '',
-      imdbRating: (result.vote_average ?? 0) > 0 ? result.vote_average!.toFixed(1) : null,
+      imdbRating: imdbMap[result.id] ?? null,
+      rtRating: rtMap[result.id] ?? null,
       addedAt: new Date(),
       updatedAt: new Date(),
     }
@@ -291,7 +327,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
           notes: '',
           nextEpisodeDate: null,
           nextEpisodeName: null,
-          imdbRating: null,
+          imdbRating: imdbMap[result.id] ?? null,
+          rtRating: rtMap[result.id] ?? null,
           futureDates: null,
           addedAt: new Date(),
           updatedAt: new Date(),
@@ -308,7 +345,8 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
           releaseDate: result.first_air_date ?? null,
           runtime: null,
           notes: '',
-          imdbRating: null,
+          imdbRating: imdbMap[result.id] ?? null,
+          rtRating: rtMap[result.id] ?? null,
           addedAt: new Date(),
           updatedAt: new Date(),
         })
@@ -474,76 +512,84 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
         {/* List view */}
         {visibleResults.length > 0 && viewMode === 'list' && (
           <div className="pb-6">
-            {visibleResults.map(r => (
-              <div
-                key={r.id}
-                className="flex items-center gap-3 px-4 border-b border-white/5"
-                style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
-              >
-                <button
-                  onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
-                  className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
+            {visibleResults.map(r => {
+              const imdbRating = imdbMap[r.id]
+              const rtRating = rtMap[r.id]
+              return (
+                <div
+                  key={r.id}
+                  className="flex items-center gap-3 px-4 border-b border-white/5"
+                  style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
                 >
-                  <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#1C1C1E]">
-                    {r.poster_path && (
-                      <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#F5F5F7] leading-snug truncate">{r.name}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs text-[#48484A]">{r.first_air_date ? (mediaMode === 'movie' ? formatAirDate(r.first_air_date) : r.first_air_date.slice(0, 4)) : 'Unknown year'}</p>
-                      {(r.vote_average ?? 0) > 0 && (
-                        <span className="text-xs"><span className="text-[var(--color-accent)]">★</span><span className="text-[#8E8E93]"> {r.vote_average!.toFixed(1)}</span></span>
-                      )}
-                      {rtMap[r.id] && (
-                        <span className="text-xs text-[#8E8E93]">🍅 {rtMap[r.id]}</span>
+                  <button
+                    onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
+                    className="flex items-center gap-3 flex-1 min-w-0 py-3 text-left active:opacity-70 transition-opacity"
+                  >
+                    <div className="w-10 h-[60px] rounded-lg shrink-0 overflow-hidden bg-[#1C1C1E]">
+                      {r.poster_path && (
+                        <img src={posterUrl(r.poster_path, 'w185') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
                       )}
                     </div>
-                  </div>
-                </button>
-                <AddButton r={r} />
-              </div>
-            ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#F5F5F7] leading-snug truncate">{r.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-[#48484A]">{r.first_air_date ? (mediaMode === 'movie' ? formatAirDate(r.first_air_date) : r.first_air_date.slice(0, 4)) : 'Unknown year'}</p>
+                        {imdbRating && (
+                          <span className="text-xs"><span className="text-[var(--color-accent)]">★</span><span className="text-[#8E8E93]"> {imdbRating}</span></span>
+                        )}
+                        {rtRating && (
+                          <span className="text-xs text-[#8E8E93]">🍅 {rtRating}</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                  <AddButton r={r} />
+                </div>
+              )
+            })}
           </div>
         )}
 
         {/* Grid view */}
         {visibleResults.length > 0 && viewMode !== 'list' && (
           <div className={`px-4 pt-2 pb-6 grid gap-2.5 ${viewMode === 'big' ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4'}`}>
-            {visibleResults.map(r => (
-              <button
-                key={r.id}
-                onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
-                className="relative text-left active:opacity-70 transition-opacity"
-                style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
-              >
-                <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#1C1C1E] relative">
-                  {r.poster_path ? (
-                    <img src={posterUrl(r.poster_path, 'w342') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center p-2">
-                      <span className="text-[10px] text-[#48484A] text-center">{r.name}</span>
-                    </div>
-                  )}
-                  {((r.vote_average ?? 0) > 0 || rtMap[r.id]) && (
-                    <div className="absolute top-1.5 left-1.5 flex flex-col gap-0.5">
-                      {(r.vote_average ?? 0) > 0 && (
-                        <div className="flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
-                          <span className="text-[10px] font-medium leading-none"><span className="text-[var(--color-accent)]">★</span><span className="text-white"> {r.vote_average!.toFixed(1)}</span></span>
-                        </div>
-                      )}
-                      {rtMap[r.id] && (
-                        <div className="flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
-                          <span className="text-[10px] font-medium leading-none text-white">🍅 {rtMap[r.id]}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <AddButton r={r} />
-                </div>
-              </button>
-            ))}
+            {visibleResults.map(r => {
+              const imdbRating = imdbMap[r.id]
+              const rtRating = rtMap[r.id]
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => mediaMode === 'tv' ? onSelect(seriesForPreview(r)) : onMovieSelect(movieForPreview(r))}
+                  className="relative text-left active:opacity-70 transition-opacity"
+                  style={newItemIds.has(r.id) ? { animation: 'fadeInUp 0.35s ease both' } : undefined}
+                >
+                  <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#1C1C1E] relative">
+                    {r.poster_path ? (
+                      <img src={posterUrl(r.poster_path, 'w342') ?? ''} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center p-2">
+                        <span className="text-[10px] text-[#48484A] text-center">{r.name}</span>
+                      </div>
+                    )}
+                    {(imdbRating || rtRating) && (
+                      <div className="absolute top-1.5 left-1.5 flex flex-col gap-0.5">
+                        {imdbRating && (
+                          <div className="flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
+                            <span className="text-[10px] font-medium leading-none"><span className="text-[var(--color-accent)]">★</span><span className="text-white"> {imdbRating}</span></span>
+                          </div>
+                        )}
+                        {rtRating && (
+                          <div className="flex items-center px-1.5 rounded bg-black/65" style={{ height: '16px' }}>
+                            <span className="text-[10px] font-medium leading-none text-white">🍅 {rtRating}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <AddButton r={r} />
+                  </div>
+                </button>
+              )
+            })}
           </div>
         )}
 

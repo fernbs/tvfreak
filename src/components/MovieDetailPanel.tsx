@@ -26,7 +26,8 @@ function recToMovie(r: TmdbSearchResult): Movie {
     releaseDate: r.first_air_date ?? null,
     runtime: null,
     notes: '',
-    imdbRating: (r.vote_average ?? 0) > 0 ? r.vote_average!.toFixed(1) : null,
+    imdbRating: null,
+    rtRating: null,
     addedAt: new Date(),
     updatedAt: new Date(),
   }
@@ -81,9 +82,6 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
       setDetail(d)
       setRecommendations(recs.slice(0, 12))
       setProviders({ flatrate: prov.flatrate, free: prov.free })
-      if (d && (d.vote_average ?? 0) > 0 && !movie.imdbRating) {
-        setDisplayRating(d.vote_average!.toFixed(1))
-      }
       if (movie.tmdbId) {
         getMovieExternalIds(movie.tmdbId).then(ext => {
           if (ext.imdb_id) {
@@ -141,12 +139,13 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
         runtime: detail?.runtime ?? null,
         notes: '',
         imdbRating: displayRating,
+        rtRating,
         addedAt: new Date(),
         updatedAt: new Date(),
       })
       toast.success(`"${movie.title}" added to watchlist`)
       onUpdated()
-      onSelect({ ...movie, id, status: 'plantowatch', imdbRating: displayRating })
+      onSelect({ ...movie, id, status: 'plantowatch', imdbRating: displayRating, rtRating })
     } finally { setAdding(false) }
   }
 
@@ -247,7 +246,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                       </div>
                     )}
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                      {!loadingDetail && (
+                      {!loadingDetail && displayRating && (
                         <a
                           href={imdbId ? `https://www.imdb.com/title/${imdbId}/` : undefined}
                           target="_blank"
@@ -256,7 +255,7 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                           className="inline-flex items-center gap-1 px-2 py-[3px] bg-white/6 border border-white/10 rounded-full text-xs active:opacity-70 transition-opacity"
                         >
                           <span className="bg-[#F5C518] text-black font-black px-[3px] py-[2px] rounded-[2px] leading-none" style={{ fontSize: '7px' }}>IMDb</span>
-                          <span className="font-medium leading-none" style={{ color: displayRating ? 'white' : '#8E8E93' }}>{displayRating ?? 'N/A'}</span>
+                          <span className="font-medium leading-none text-white">{displayRating}</span>
                         </a>
                       )}
                       {ratingsLoaded && rtRating && (
