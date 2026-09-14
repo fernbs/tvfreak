@@ -236,7 +236,7 @@ export function SearchTab({ onSeriesAdded, allSeries, onSelect, allMovies, onMov
     if (results.length === 0) return
     let cancelled = false
     const getIds = mediaMode === 'tv' ? getExternalIds : getMovieExternalIds
-    const toFetch = results.slice(0, 10).filter(r => !ratingsFetched.current.has(ratingKey(mediaMode, r.id)))
+    const toFetch = results.filter(r => !ratingsFetched.current.has(ratingKey(mediaMode, r.id)))
     async function fetchRatings() {
       for (const r of toFetch) {
         if (cancelled) break
