@@ -113,10 +113,10 @@ function automaticSeriesStatus(
   futureDates: string[],
 ): Series['status'] {
   const nextEpisode = nextEpisodeMetadata(detail, futureDates)
-  if (nextEpisode.nextEpisodeDate && nextEpisode.nextEpisodeDate > todayStr) return 'plantowatch'
   const releasedTotal = releasedEpisodeTotal(detail, todayStr)
   if (releasedTotal === 0) return 'plantowatch'
   if (watchedReleasedEpisodeTotal(watched, detail, todayStr) < releasedTotal) return 'watching'
+  if (nextEpisode.nextEpisodeDate && nextEpisode.nextEpisodeDate > todayStr) return 'plantowatch'
   return hasExpectedFutureContent(detail, futureDates) ? 'plantowatch' : 'completed'
 }
 
