@@ -618,6 +618,49 @@ export default function App() {
     fixFutureWatching()
   }, [loading, loadSeries])
 
+  // Once-ever: recover plantowatch shows that silently fell off Watching because
+  // automaticSeriesStatus was returning plantowatch early when nextEpisodeDate > today,
+  // without checking whether released episodes were actually unwatched.
+  useEffect(() => {
+    if (loading) return
+    async function sweepMissingFromWatching() {
+      if (await isMigrationDone('tvfreak-watching-sweep-v1')) return
+      const all = await getAllSeries()
+      const todayStr = new Date().toISOString().slice(0, 10)
+      const toCheck = all.filter(s =>
+        s.id && s.tmdbId &&
+        s.status === 'plantowatch' &&
+        s.firstAirDate && s.firstAirDate <= todayStr
+      )
+      let changed = false
+      for (const s of toCheck) {
+        try {
+          const [detail, watched] = await Promise.all([
+            getTvDetails(s.tmdbId!),
+            getWatchedEpisodes(s.id!),
+          ])
+          if (!detail) continue
+          const futureDates = await collectFutureDates(detail, todayStr)
+          const nextEpisode = nextEpisodeMetadata(detail, futureDates)
+          const nextStatus = automaticSeriesStatus(detail, watched, todayStr, futureDates)
+          if (nextStatus === 'watching') {
+            await updateSeries(s.id!, {
+              status: 'watching',
+              nextEpisodeDate: nextEpisode.nextEpisodeDate,
+              nextEpisodeName: nextEpisode.nextEpisodeName,
+              futureDates: futureDates.length > 0 ? futureDates : null,
+            })
+            changed = true
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, 300))
+      }
+      await markMigration('tvfreak-watching-sweep-v1')
+      if (changed) await loadSeries()
+    }
+    sweepMissingFromWatching()
+  }, [loading, loadSeries])
+
   function openSeries(s: Series) { setSeriesStack([s]) }
   function pushSeries(s: Series) { setSeriesStack(prev => [...prev, s]) }
   function popSeries() { setSeriesStack(prev => prev.slice(0, -1)) }
