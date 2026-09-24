@@ -1,4 +1,4 @@
-const CACHE = 'tvfreak-v3'
+const CACHE = 'tvfreak-v4'
 
 self.addEventListener('install', () => self.skipWaiting())
 
