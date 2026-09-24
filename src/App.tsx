@@ -458,20 +458,23 @@ export default function App() {
     populateRatings()
   }, [loading, loadSeries])
 
-  // Fetch OMDb ratings once per saved movie. Tracking individual TMDB IDs means
-  // newly added films are still populated after the initial library backfill.
+  // Refresh incomplete OMDb ratings periodically. Ratings can appear after a
+  // film's first check, especially while an upcoming release is still unrated.
   useEffect(() => {
     if (loading) return
     async function populateMovieRatings() {
-      const storageKey = 'tvfreak-movie-ratings-checked-v2'
-      let checkedIds = new Set<number>()
+      const storageKey = 'tvfreak-movie-ratings-checked-v3'
+      const retryAfterMs = 7 * 24 * 60 * 60 * 1000
+      let checkedAt: Record<string, number> = {}
       try {
-        checkedIds = new Set(JSON.parse(localStorage.getItem(storageKey) ?? '[]'))
+        const saved = JSON.parse(localStorage.getItem(storageKey) ?? '{}')
+        if (saved && typeof saved === 'object' && !Array.isArray(saved)) checkedAt = saved
       } catch { /* start a fresh per-movie cache */ }
       const all = await getAllMovies()
+      const now = Date.now()
       const toRate = all.filter(m =>
         m.tmdbId && m.id &&
-        !checkedIds.has(m.tmdbId) &&
+        now - (checkedAt[String(m.tmdbId)] ?? 0) >= retryAfterMs &&
         (!m.imdbRating || !m.rtRating)
       )
       for (const m of toRate) {
@@ -482,10 +485,15 @@ export default function App() {
             const updates: Partial<Movie> = {}
             if (imdb) updates.imdbRating = imdb
             if (rt) updates.rtRating = rt
-            if (Object.keys(updates).length > 0) await updateMovie(m.id!, updates)
+            if (Object.keys(updates).length > 0) {
+              await updateMovie(m.id!, updates)
+              setAllMovies(prev => prev.map(movie =>
+                movie.id === m.id ? { ...movie, ...updates, updatedAt: new Date() } : movie
+              ))
+            }
           }
-          checkedIds.add(m.tmdbId!)
-          localStorage.setItem(storageKey, JSON.stringify([...checkedIds]))
+          checkedAt[String(m.tmdbId)] = Date.now()
+          localStorage.setItem(storageKey, JSON.stringify(checkedAt))
         } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 300))
       }
