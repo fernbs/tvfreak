@@ -183,7 +183,11 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-[#F5F5F7] truncate">{m.title}</p>
-                            <p className="text-[10px] text-[#48484A] mt-0.5">Film</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-[10px] text-[#48484A]">Film</p>
+                              {m.imdbRating && <span className="text-[10px] font-semibold text-white"><span className="text-[#F5C518]">IMDb</span> {m.imdbRating}</span>}
+                              {m.rtRating && <span className="text-[10px] font-semibold text-white"><span className="text-[#FA320A]">RT</span> {m.rtRating}</span>}
+                            </div>
                           </div>
                           <div className="shrink-0">
                             <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(var(--accent-rgb),0.12)] text-[var(--color-accent)] leading-tight">
@@ -211,6 +215,10 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
                             )}
                             <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(var(--accent-rgb),0.12)] text-[var(--color-accent)] leading-tight backdrop-blur-sm">
                               {formatAirDate(m.releaseDate!)}
+                            </div>
+                            <div className="absolute right-1.5 bottom-1.5 flex flex-col items-end gap-0.5">
+                              {m.rtRating && <div className="px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75"><span className="text-[#FA320A]">RT</span><span className="text-white"> {m.rtRating}</span></div>}
+                              {m.imdbRating && <div className="px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75"><span className="text-[#F5C518]">IMDb</span><span className="text-white"> {m.imdbRating}</span></div>}
                             </div>
                           </div>
                           <p className={`text-[#8E8E93] leading-tight line-clamp-2 ${viewMode === 'big' ? 'text-[11px]' : 'text-[10px]'}`}>{m.title}</p>
@@ -352,7 +360,13 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-[#F5F5F7] truncate">{title}</p>
-                        {isMovie && <p className="text-[10px] text-[#48484A] mt-0.5">Film</p>}
+                        {isMovie && (
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[10px] text-[#48484A]">Film</p>
+                            {item.movie.imdbRating && <span className="text-[10px] font-semibold text-white"><span className="text-[#F5C518]">IMDb</span> {item.movie.imdbRating}</span>}
+                            {item.movie.rtRating && <span className="text-[10px] font-semibold text-white"><span className="text-[#FA320A]">RT</span> {item.movie.rtRating}</span>}
+                          </div>
+                        )}
                       </div>
                       <div className="shrink-0">
                         <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[rgba(var(--accent-rgb),0.12)] text-[var(--color-accent)] leading-tight">
@@ -396,6 +410,12 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
                         <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[var(--color-accent)]/90 text-white leading-tight backdrop-blur-sm">
                           {formatAirDate(item.date)}
                         </div>
+                        {isMovie && (
+                          <div className="absolute right-1.5 bottom-1.5 flex flex-col items-end gap-0.5">
+                            {item.movie.rtRating && <div className="px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75"><span className="text-[#FA320A]">RT</span><span className="text-white"> {item.movie.rtRating}</span></div>}
+                            {item.movie.imdbRating && <div className="px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75"><span className="text-[#F5C518]">IMDb</span><span className="text-white"> {item.movie.imdbRating}</span></div>}
+                          </div>
+                        )}
                       </div>
                       <p className={`text-[#8E8E93] leading-tight line-clamp-2 ${viewMode === 'big' ? 'text-[11px]' : 'text-[10px]'}`}>{title}</p>
                     </button>

@@ -458,13 +458,22 @@ export default function App() {
     populateRatings()
   }, [loading, loadSeries])
 
-  // Once-ever: fetch real OMDB/IMDB ratings for movies that have none
+  // Fetch OMDb ratings once per saved movie. Tracking individual TMDB IDs means
+  // newly added films are still populated after the initial library backfill.
   useEffect(() => {
     if (loading) return
-    if (localStorage.getItem('tvfreak-movie-ratings-v1')) return
     async function populateMovieRatings() {
+      const storageKey = 'tvfreak-movie-ratings-checked-v2'
+      let checkedIds = new Set<number>()
+      try {
+        checkedIds = new Set(JSON.parse(localStorage.getItem(storageKey) ?? '[]'))
+      } catch { /* start a fresh per-movie cache */ }
       const all = await getAllMovies()
-      const toRate = all.filter(m => m.tmdbId && m.id && !m.imdbRating)
+      const toRate = all.filter(m =>
+        m.tmdbId && m.id &&
+        !checkedIds.has(m.tmdbId) &&
+        (!m.imdbRating || !m.rtRating)
+      )
       for (const m of toRate) {
         try {
           const ext = await getMovieExternalIds(m.tmdbId!)
@@ -475,10 +484,11 @@ export default function App() {
             if (rt) updates.rtRating = rt
             if (Object.keys(updates).length > 0) await updateMovie(m.id!, updates)
           }
+          checkedIds.add(m.tmdbId!)
+          localStorage.setItem(storageKey, JSON.stringify([...checkedIds]))
         } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 300))
       }
-      localStorage.setItem('tvfreak-movie-ratings-v1', 'true')
       if (toRate.length > 0) await loadMovies()
     }
     populateMovieRatings()

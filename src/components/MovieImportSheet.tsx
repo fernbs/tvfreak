@@ -44,6 +44,7 @@ async function saveMovie(entry: { tmdbId: number; title: string; year: string | 
     runtime: null,
     notes: '',
     imdbRating: null,
+    rtRating: null,
     addedAt: new Date(),
     updatedAt: new Date(),
   })
@@ -131,6 +132,7 @@ export function MovieImportSheet({ onClose, onImportDone }: Props) {
         runtime: null,
         notes: '' as string,
         imdbRating: null,
+        rtRating: null,
         addedAt: new Date(),
         updatedAt: new Date(),
       }))

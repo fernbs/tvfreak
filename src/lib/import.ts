@@ -75,6 +75,7 @@ export async function importFromCsv(
           nextEpisodeDate: null,
           nextEpisodeName: null,
           imdbRating: null,
+          rtRating: null,
           futureDates: null,
           addedAt: new Date(),
           updatedAt: new Date(),

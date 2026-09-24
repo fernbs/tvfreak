@@ -332,6 +332,7 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
               firstAirDate: card.first_air_date ?? null, lastAirDate: null,
               numberOfSeasons: null, notes: '', nextEpisodeDate: null, nextEpisodeName: null,
               imdbRating: (card.vote_average ?? 0) > 0 ? card.vote_average!.toFixed(1) : null,
+              rtRating: null,
               futureDates: null, addedAt: new Date(), updatedAt: new Date(),
             })
             toast.success(`"${card.name}" added to library`)
@@ -341,7 +342,8 @@ export function DiscoverTab({ allSeries, allMovies, onSeriesAdded, onMovieAdded 
               tmdbId: card.id, title: card.name, status: 'plantowatch',
               posterPath: card.poster_path ?? null, overview: card.overview ?? null,
               releaseDate: card.first_air_date ?? null, runtime: null, notes: '',
-              imdbRating: (card.vote_average ?? 0) > 0 ? card.vote_average!.toFixed(1) : null,
+              imdbRating: null,
+              rtRating: null,
               addedAt: new Date(), updatedAt: new Date(),
             })
             toast.success(`"${card.name}" added to watchlist`)

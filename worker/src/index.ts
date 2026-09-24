@@ -368,12 +368,12 @@ export default {
         await ensureMovies()
         const body = await request.json() as Record<string, unknown>
         const result = await env.DB.prepare(
-          `INSERT INTO movies (tmdbId, title, status, posterPath, overview, releaseDate, runtime, notes, imdbRating, addedAt, updatedAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO movies (tmdbId, title, status, posterPath, overview, releaseDate, runtime, notes, imdbRating, rtRating, addedAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           body.tmdbId ?? null, body.title, body.status ?? 'plantowatch',
           body.posterPath ?? null, body.overview ?? null, body.releaseDate ?? null,
-          body.runtime ?? null, body.notes ?? '', body.imdbRating ?? null,
+          body.runtime ?? null, body.notes ?? '', body.imdbRating ?? null, body.rtRating ?? null,
           body.addedAt, body.updatedAt,
         ).run()
         return json({ id: result.meta.last_row_id }, 201, cors)
@@ -395,12 +395,12 @@ export default {
         if (toInsert.length === 0) return json({ inserted: 0 }, 200, cors)
         const stmts = toInsert.map(m =>
           env.DB.prepare(
-            `INSERT INTO movies (tmdbId, title, status, posterPath, overview, releaseDate, runtime, notes, imdbRating, addedAt, updatedAt)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            `INSERT INTO movies (tmdbId, title, status, posterPath, overview, releaseDate, runtime, notes, imdbRating, rtRating, addedAt, updatedAt)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           ).bind(
             m.tmdbId ?? null, m.title, m.status ?? 'completed',
             m.posterPath ?? null, m.overview ?? null, m.releaseDate ?? null,
-            m.runtime ?? null, m.notes ?? '', m.imdbRating ?? null,
+            m.runtime ?? null, m.notes ?? '', m.imdbRating ?? null, m.rtRating ?? null,
             m.addedAt, m.updatedAt,
           )
         )

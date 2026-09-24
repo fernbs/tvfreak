@@ -85,9 +85,14 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
                   {m.releaseDate && <span className="text-[10px] text-[#48484A]">{formatAirDate(m.releaseDate)}</span>}
                 </div>
               </div>
-              {m.imdbRating && (
-                <span className="text-xs shrink-0"><span className="text-[var(--color-accent)]">★</span><span className="text-white"> {m.imdbRating}</span></span>
-              )}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {m.rtRating && (
+                  <span className="text-[10px] font-semibold text-white"><span className="text-[#FA320A]">RT</span> {m.rtRating}</span>
+                )}
+                {m.imdbRating && (
+                  <span className="text-[10px] font-semibold text-white"><span className="text-[#F5C518]">IMDb</span> {m.imdbRating}</span>
+                )}
+              </div>
             </button>
           )
         })}
@@ -124,13 +129,13 @@ function MovieGrid({ movies, loading, onSelect, viewMode }: { movies: Movie[]; l
             <div className="absolute right-1.5 bottom-1.5 flex flex-col items-end gap-0.5">
               {m.rtRating && (
                 <div className="px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm flex items-center gap-0.5">
-                  <span style={{ fontSize: '9px' }}>🍅</span>
-                  <span className="text-white">{m.rtRating}</span>
+                  <span className="text-[#FA320A]">RT</span>
+                  <span className="text-white"> {m.rtRating}</span>
                 </div>
               )}
               {m.imdbRating && (
                 <div className="px-1 py-0.5 rounded text-[9px] font-semibold bg-black/75 leading-tight backdrop-blur-sm">
-                  <span className="text-[var(--color-accent)]">★</span>
+                  <span className="text-[#F5C518]">IMDb</span>
                   <span className="text-white"> {m.imdbRating}</span>
                 </div>
               )}
