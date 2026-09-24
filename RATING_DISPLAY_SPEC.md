@@ -29,5 +29,7 @@ Movie tiles in Watching and Library should show IMDb and Rotten Tomatoes chips w
 
 1. Movie create and batch-import endpoints must persist both `imdbRating` and `rtRating` when supplied.
 2. The app must fetch OMDb ratings for saved movies missing either value, including films that already contain an older placeholder IMDb score.
-3. A completed backfill must not prevent newly added unrated movies from being populated on a later launch.
-4. If a source has no rating, omit only that source's chip.
+3. Missing ratings are retried after seven days. A successful check must not permanently exclude an incomplete film because OMDb can add ratings later, especially for new releases.
+4. Newly fetched values must update the loaded movie tiles immediately instead of waiting for the entire backfill to finish or for another app reload.
+5. A completed backfill must not prevent newly added unrated movies from being populated on a later launch.
+6. If a source has no rating, omit only that source's chip.
