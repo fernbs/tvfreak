@@ -41,7 +41,7 @@ Manual status changes from the detail menu are still allowed, but later automati
 
 ## Background transitions
 
-On app load, `refreshNextEpisodeDates` updates next episode dates, future dates, and ratings for active series.
+On app load, `refreshNextEpisodeDates` updates next episode dates, future dates, and ratings for active series. When a stored release date has arrived or passed, the same refresh must also load the watched episodes and recalculate the status before saving the newer TMDB date. Date metadata and status are saved together so advancing `nextEpisodeDate` to the following episode cannot leave an unwatched release stored as `plantowatch` and remove it from Watching.
 
 Daily, `checkWatchingStatus` recalculates every `watching` and `plantowatch` series so existing library items cannot stay stuck in the wrong active status. This job is allowed to:
 
@@ -80,3 +80,5 @@ For open season views, episode-level `air_date` is used when available so same-d
 The daily status recalculation intentionally uses a new migration key when the status logic changes. That forces one fresh pass over existing saved `watching` and `plantowatch` series after deployment, fixing seasons that were already watched but remained stuck as `watching`.
 
 Historical one-off migration keys stay marked as complete so older import repair jobs do not re-run.
+
+When this refresh rule changes, a new database-tracked repair key recalculates existing `plantowatch` series once. This restores titles that already advanced to a future episode date while an earlier released episode remained unwatched.
