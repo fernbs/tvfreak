@@ -217,7 +217,10 @@ export default function App() {
     const todayStr = new Date().toISOString().slice(0, 10)
     for (const s of toRefresh) {
       try {
-        const detail = await getTvDetails(s.tmdbId!)
+        const [detail, watched] = await Promise.all([
+          getTvDetails(s.tmdbId!),
+          getWatchedEpisodes(s.id!),
+        ])
         if (!detail) continue
         const rating = (detail.vote_average ?? 0) > 0 ? detail.vote_average!.toFixed(1) : null
 
@@ -225,6 +228,7 @@ export default function App() {
         const nextEpisode = nextEpisodeMetadata(detail, futureDates)
 
         const updates: Parameters<typeof updateSeries>[1] = {
+          status: automaticSeriesStatus(detail, watched, todayStr, futureDates),
           nextEpisodeDate: nextEpisode.nextEpisodeDate,
           nextEpisodeName: nextEpisode.nextEpisodeName,
           futureDates: futureDates.length > 0 ? futureDates : null,
@@ -618,13 +622,12 @@ export default function App() {
     fixFutureWatching()
   }, [loading, loadSeries])
 
-  // Once-ever: recover plantowatch shows that silently fell off Watching because
-  // automaticSeriesStatus was returning plantowatch early when nextEpisodeDate > today,
-  // without checking whether released episodes were actually unwatched.
+  // Once-ever: recover plantowatch shows that advanced to a future nextEpisodeDate
+  // without recalculating whether the episode that just aired was watched.
   useEffect(() => {
     if (loading) return
     async function sweepMissingFromWatching() {
-      if (await isMigrationDone('tvfreak-watching-sweep-v1')) return
+      if (await isMigrationDone('tvfreak-watching-sweep-v2')) return
       const all = await getAllSeries()
       const todayStr = new Date().toISOString().slice(0, 10)
       const toCheck = all.filter(s =>
@@ -655,7 +658,7 @@ export default function App() {
         } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 300))
       }
-      await markMigration('tvfreak-watching-sweep-v1')
+      await markMigration('tvfreak-watching-sweep-v2')
       if (changed) await loadSeries()
     }
     sweepMissingFromWatching()
