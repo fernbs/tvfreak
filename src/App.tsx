@@ -205,6 +205,15 @@ export default function App() {
     init().finally(() => clearTimeout(safetyTimer))
   }, [loadSeries, loadMovies])
 
+  // Al volver a la app (móvil en segundo plano, otra pestaña), recarga para ver lo marcado en la tele
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === 'visible') { loadSeries(); loadMovies() }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [loadSeries, loadMovies])
+
   const refreshNextEpisodeDates = useCallback(async () => {
     const all = await getAllSeries()
     const now = new Date()

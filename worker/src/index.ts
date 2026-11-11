@@ -262,6 +262,7 @@ export default {
         await env.DB.prepare(
           'DELETE FROM watchedEpisodes WHERE seriesId = ? AND seasonNumber = ?'
         ).bind(id, season).run()
+        await touchTvEpisodes()
         return json({ ok: true }, 200, cors)
       }
 
@@ -276,6 +277,7 @@ export default {
 
         if (existing) {
           await env.DB.prepare('DELETE FROM watchedEpisodes WHERE id = ?').bind(existing.id).run()
+          await touchTvEpisodes()
           return json({ watched: false }, 200, cors)
         }
 
@@ -326,6 +328,15 @@ export default {
           activityByDate: activityResult.results,
           topSeries: topResult.results,
         }, 200, cors)
+      }
+
+      // La tele (Nuvio, vía tvfreak-stremio) mira tv_activity para saber si hay cambios.
+      // Sin esto no se entera de lo que desmarcas aquí. Si la tabla no existe (instancia Alfon), no pasa nada.
+      async function touchTvEpisodes() {
+        try {
+          await env.DB.prepare("INSERT OR REPLACE INTO tv_activity (key, at) VALUES ('episodes', ?)")
+            .bind(new Date().toISOString()).run()
+        } catch {}
       }
 
       // ── Movies ──────────────────────────────────────────────────────────
