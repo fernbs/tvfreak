@@ -184,8 +184,10 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
               {watchingNow.length > 0 && (
                 <SeriesGrid series={watchingNow} loading={false} onSelect={onSelect} viewMode={viewMode} />
               )}
+              {/* Una sección por lista de películas, antes de "Films" para que se vean sin bajar */}
+              <HomeListSections lists={lists} items={movieListItems} allMovies={allMovies} viewMode={viewMode} onMovieSelect={onMovieSelect} />
               {watchingMovies.length > 0 && (
-                <div className={watchingNow.length > 0 ? 'mt-5' : ''}>
+                <div className={watchingNow.length > 0 || hasListSections ? 'mt-5' : ''}>
                   {(watchingNow.length > 0 || hasListSections) && (
                     <p className="text-xs text-[#48484A] uppercase tracking-wider font-medium mb-2 mt-1">Films</p>
                   )}
@@ -249,8 +251,6 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
                   )}
                 </div>
               )}
-              {/* Una sección por lista de películas */}
-              <HomeListSections lists={lists} items={movieListItems} allMovies={allMovies} viewMode={viewMode} onMovieSelect={onMovieSelect} />
             </div>
           )
         ) : (
