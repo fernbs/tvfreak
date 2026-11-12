@@ -494,6 +494,14 @@ export default {
         return json({ ...row, itemCount: 0 }, 201, cors)
       }
 
+      // Todas las películas de todas las listas, para las secciones del Inicio
+      if (path === '/api/lists/items' && method === 'GET') {
+        const { results } = await env.DB.prepare(
+          'SELECT listId, tmdbId, imdbId, title, year, posterPath, overview FROM tv_list_items ORDER BY listId, rank ASC, listedAt ASC'
+        ).all()
+        return json(results, 200, cors)
+      }
+
       const listIdMatch = path.match(/^\/api\/lists\/(\d+)$/)
       if (listIdMatch) {
         const id = parseInt(listIdMatch[1])

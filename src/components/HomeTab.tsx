@@ -1,6 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Calendar, ChevronLeft, ChevronRight, ChevronDown, Tv } from 'lucide-react'
-import type { Series, Movie } from '../types'
+import type { Series, Movie, MovieList, MovieListItem } from '../types'
+import { getLists, getAllListItems } from '../lib/api'
+import { HomeListSections } from './HomeListSections'
+import { LISTS_CHANGED } from './ListChips'
 import { SeriesGrid } from './SeriesGrid'
 import { formatAirDate } from '../lib/utils'
 import { posterUrl } from '../lib/tmdb'
@@ -39,6 +42,19 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
   const [calOpen, setCalOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(20)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [lists, setLists] = useState<MovieList[]>([])
+  const [movieListItems, setMovieListItems] = useState<(MovieListItem & { listId: number })[]>([])
+
+  // Listas de películas: se leen al abrir y cada vez que cambia una (AddToList, ListChips)
+  useEffect(() => {
+    const load = () => {
+      getLists().then(setLists)
+      getAllListItems().then(setMovieListItems)
+    }
+    load()
+    window.addEventListener(LISTS_CHANGED, load)
+    return () => window.removeEventListener(LISTS_CHANGED, load)
+  }, [])
 
   const today = new Date()
   const todayStr = toDateStr(today)
@@ -90,8 +106,13 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
       return a.title.localeCompare(b.title)
     })
 
+  // Las películas que están en alguna lista salen en la sección de su lista, no en "Films"
+  const inAList = new Set(movieListItems.map(it => it.tmdbId))
+  const hasListSections = lists.some(l => movieListItems.some(it => it.listId === l.id))
+
   const watchingMovies = allMovies
     .filter(m => m.status === 'plantowatch' && m.releaseDate != null && m.releaseDate <= todayStr)
+    .filter(m => m.tmdbId == null || !inAList.has(m.tmdbId))
     .sort((a, b) => (b.releaseDate ?? '').localeCompare(a.releaseDate ?? ''))
 
   const year = calMonth.getFullYear()
@@ -152,7 +173,7 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
         {loading ? (
           <p className="text-sm text-[#48484A] py-12 text-center">Loading...</p>
         ) : view === 'watching' ? (
-          watchingNow.length === 0 && watchingMovies.length === 0 ? (
+          watchingNow.length === 0 && watchingMovies.length === 0 && !hasListSections ? (
             <div className="py-16 text-center">
               <Tv className="w-10 h-10 text-[#2C2C2E] mx-auto mb-3" />
               <p className="text-sm text-[#48484A]">Nothing actively watching right now.</p>
@@ -165,7 +186,7 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
               )}
               {watchingMovies.length > 0 && (
                 <div className={watchingNow.length > 0 ? 'mt-5' : ''}>
-                  {watchingNow.length > 0 && (
+                  {(watchingNow.length > 0 || hasListSections) && (
                     <p className="text-xs text-[#48484A] uppercase tracking-wider font-medium mb-2 mt-1">Films</p>
                   )}
                   {viewMode === 'list' ? (
@@ -228,6 +249,8 @@ export function HomeTab({ series, loading, onSelect, allMovies, onMovieSelect, v
                   )}
                 </div>
               )}
+              {/* Una sección por lista de películas */}
+              <HomeListSections lists={lists} items={movieListItems} allMovies={allMovies} viewMode={viewMode} onMovieSelect={onMovieSelect} />
             </div>
           )
         ) : (

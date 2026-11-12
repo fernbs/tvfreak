@@ -326,3 +326,11 @@ export async function removeFromList(id: number, tmdbId: number): Promise<void> 
   const res = await fetch(`${BASE}/api/lists/${id}/items/${tmdbId}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
 }
+
+export async function getAllListItems(): Promise<(MovieListItem & { listId: number })[]> {
+  try {
+    const res = await fetch(`${BASE}/api/lists/items`)
+    if (!res.ok) return []
+    return res.json()
+  } catch { return [] }
+}

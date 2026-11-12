@@ -54,7 +54,7 @@ export function ListChips({ selected, onSelect }: Props) {
       await deleteList(l.id)
       toast.success(`"${l.name}" deleted`)
       onSelect(null, [])
-      setLists(await getLists())
+      window.dispatchEvent(new Event(LISTS_CHANGED)) // el Inicio también se refresca
     } catch { toast.error('Could not delete the list') }
   }
 
