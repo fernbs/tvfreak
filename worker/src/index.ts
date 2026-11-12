@@ -468,6 +468,87 @@ export default {
         }
       }
 
+      // ── Listas de películas (las mismas que ve la tele) ──
+      if (path === '/api/lists' && method === 'GET') {
+        // ?tmdbId=… añade "has" (1 si esa película ya está en la lista), para la ficha
+        const tmdbId = parseInt(url.searchParams.get('tmdbId') ?? '0') || 0
+        const { results } = await env.DB.prepare(
+          `SELECT l.id, l.name, l.updatedAt,
+                  (SELECT COUNT(*) FROM tv_list_items i WHERE i.listId = l.id) AS itemCount,
+                  EXISTS (SELECT 1 FROM tv_list_items i WHERE i.listId = l.id AND i.tmdbId = ?) AS has
+           FROM tv_lists l ORDER BY l.rank ASC, l.id ASC`
+        ).bind(tmdbId).all()
+        return json(results, 200, cors)
+      }
+
+      if (path === '/api/lists' && method === 'POST') {
+        const body = await request.json() as { name?: string }
+        const name = String(body.name ?? '').trim()
+        if (!name) return json({ error: 'Name required' }, 400, cors)
+        const at = new Date().toISOString()
+        const row = await env.DB.prepare(
+          `INSERT INTO tv_lists (name, description, privacy, rank, createdAt, updatedAt)
+           VALUES (?, NULL, 'private', (SELECT COALESCE(MAX(rank), 0) + 1 FROM tv_lists), ?, ?)
+           RETURNING id, name, updatedAt`
+        ).bind(name, at, at).first()
+        return json({ ...row, itemCount: 0 }, 201, cors)
+      }
+
+      const listIdMatch = path.match(/^\/api\/lists\/(\d+)$/)
+      if (listIdMatch) {
+        const id = parseInt(listIdMatch[1])
+        if (method === 'PATCH') {
+          const body = await request.json() as { name?: string }
+          const name = String(body.name ?? '').trim()
+          if (!name) return json({ error: 'Name required' }, 400, cors)
+          await env.DB.prepare('UPDATE tv_lists SET name = ?, updatedAt = ? WHERE id = ?')
+            .bind(name, new Date().toISOString(), id).run()
+          return json({ ok: true }, 200, cors)
+        }
+        if (method === 'DELETE') {
+          await env.DB.batch([
+            env.DB.prepare('DELETE FROM tv_list_items WHERE listId = ?').bind(id),
+            env.DB.prepare('DELETE FROM tv_lists WHERE id = ?').bind(id),
+          ])
+          return json({ ok: true }, 200, cors)
+        }
+      }
+
+      const listItemsMatch = path.match(/^\/api\/lists\/(\d+)\/items$/)
+      if (listItemsMatch) {
+        const id = parseInt(listItemsMatch[1])
+        if (method === 'GET') {
+          const { results } = await env.DB.prepare(
+            'SELECT tmdbId, imdbId, title, year, posterPath, overview, listedAt FROM tv_list_items WHERE listId = ? ORDER BY rank ASC, listedAt ASC'
+          ).bind(id).all()
+          return json(results, 200, cors)
+        }
+        if (method === 'POST') {
+          const b = await request.json() as Record<string, unknown>
+          const tmdbId = Number(b.tmdbId)
+          const title = String(b.title ?? '').trim()
+          if (!tmdbId || !title) return json({ error: 'tmdbId and title required' }, 400, cors)
+          const at = new Date().toISOString()
+          const res = await env.DB.prepare(
+            `INSERT OR IGNORE INTO tv_list_items (listId, tmdbId, imdbId, title, year, posterPath, overview, rank, listedAt)
+             SELECT ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(rank), 0) + 1 FROM tv_list_items WHERE listId = ?), ?
+             WHERE EXISTS (SELECT 1 FROM tv_lists WHERE id = ?)`
+          ).bind(id, tmdbId, b.imdbId ?? null, title, b.year ?? null, b.posterPath ?? null, b.overview ?? null, id, at, id).run()
+          if (res.meta.changes) await env.DB.prepare('UPDATE tv_lists SET updatedAt = ? WHERE id = ?').bind(at, id).run()
+          return json({ added: res.meta.changes }, 200, cors)
+        }
+      }
+
+      const listItemMatch = path.match(/^\/api\/lists\/(\d+)\/items\/(\d+)$/)
+      if (listItemMatch && method === 'DELETE') {
+        const id = parseInt(listItemMatch[1])
+        const res = await env.DB.prepare('DELETE FROM tv_list_items WHERE listId = ? AND tmdbId = ?')
+          .bind(id, parseInt(listItemMatch[2])).run()
+        if (res.meta.changes) await env.DB.prepare('UPDATE tv_lists SET updatedAt = ? WHERE id = ?')
+          .bind(new Date().toISOString(), id).run()
+        return json({ removed: res.meta.changes }, 200, cors)
+      }
+
       return json({ error: 'Not found' }, 404, cors)
     } catch (err) {
       return json({ error: String(err) }, 500, cors)

@@ -153,3 +153,20 @@ export const MOVIE_STATUS_CONFIG: Record<MovieStatus, { label: string; color: st
   dropped:     { label: 'Dropped',   color: '#FF375F' },
   plantowatch: { label: 'Watchlist', color: '#FFD60A' },
 }
+
+// Listas de películas, compartidas con la tele (tablas tv_lists y tv_list_items)
+export interface MovieList {
+  id: number
+  name: string
+  itemCount: number
+  has?: number // 1 si la película pedida ya está en la lista
+}
+
+export interface MovieListItem {
+  tmdbId: number
+  imdbId: string | null
+  title: string
+  year: number | null
+  posterPath: string | null
+  overview: string | null
+}

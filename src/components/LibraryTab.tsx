@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { SlidersHorizontal, GitMerge, Wand2, Film, X } from 'lucide-react'
-import type { Series, SeriesStatus, Movie, MovieStatus } from '../types'
+import type { Series, SeriesStatus, Movie, MovieStatus, MovieListItem } from '../types'
+import { ListChips } from './ListChips'
 import { MOVIE_STATUS_CONFIG } from '../types'
 import type { DuplicateGroup } from '../lib/api'
 import { SeriesGrid } from './SeriesGrid'
@@ -161,6 +162,8 @@ export function LibraryTab({
   const [minRating, setMinRating] = useState<number | null>(null)
   const [genreFilter, setGenreFilter] = useState<number | null>(null)
   const [showFilterSheet, setShowFilterSheet] = useState(false)
+  const [listId, setListId] = useState<number | null>(null)
+  const [listItems, setListItems] = useState<MovieListItem[]>([])
 
   function sorted(list: Series[]): Series[] {
     return [...list].sort((a, b) => {
@@ -190,6 +193,25 @@ export function LibraryTab({
       if (sort === 'added') return b.addedAt.getTime() - a.addedAt.getTime()
       return b.updatedAt.getTime() - a.updatedAt.getTime()
     })
+
+  // Con una lista elegida se ven sus películas, en el orden de la lista. Si ya están
+  // en la biblioteca se usan esas (con su estado), si no, una ficha sin guardar.
+  const listMovies: Movie[] = listItems.map(it =>
+    allMovies.find(m => m.tmdbId === it.tmdbId) ?? {
+      tmdbId: it.tmdbId,
+      title: it.title,
+      status: 'plantowatch',
+      posterPath: it.posterPath,
+      overview: it.overview,
+      releaseDate: it.year ? `${it.year}-01-01` : null,
+      runtime: null,
+      notes: '',
+      imdbRating: null,
+      rtRating: null,
+      addedAt: new Date(),
+      updatedAt: new Date(),
+    }
+  )
 
   const activeStatusFilter = mediaMode === 'tv' ? filter !== 'all' : movieFilter !== 'all'
   const activeFilterCount = [activeStatusFilter, minRating != null, genreFilter != null].filter(Boolean).length
@@ -286,6 +308,11 @@ export function LibraryTab({
             )}
           </button>
         </div>
+
+        {/* Listas propias, solo en películas */}
+        {mediaMode === 'movie' && (
+          <ListChips selected={listId} onSelect={(id, items) => { setListId(id); setListItems(items) }} />
+        )}
       </div>
 
       {/* Grid */}
@@ -297,7 +324,7 @@ export function LibraryTab({
           {mediaMode === 'tv' ? (
             <SeriesGrid series={filtered} loading={loading} onSelect={onSelect} viewMode={viewMode} />
           ) : (
-            <MovieGrid movies={filteredMovies} loading={false} onSelect={onMovieSelect} viewMode={viewMode} />
+            <MovieGrid movies={listId != null ? listMovies : filteredMovies} loading={false} onSelect={onMovieSelect} viewMode={viewMode} />
           )}
         </div>
       </div>

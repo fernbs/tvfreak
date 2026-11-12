@@ -1,4 +1,4 @@
-import type { Series, WatchedEpisode, Movie } from '../types'
+import type { Series, WatchedEpisode, Movie, MovieList, MovieListItem } from '../types'
 
 const BASE = (import.meta.env.VITE_WORKER_URL ?? 'http://localhost:8787').replace(/\/$/, '')
 
@@ -271,4 +271,58 @@ export async function updateMovie(id: number, changes: Partial<Movie>): Promise<
 
 export async function deleteMovie(id: number): Promise<void> {
   await fetch(`${BASE}/api/movies/${id}`, { method: 'DELETE' })
+}
+
+// ── Listas de películas (las mismas que ve la tele) ──
+
+export async function getLists(tmdbId?: number): Promise<MovieList[]> {
+  try {
+    const res = await fetch(`${BASE}/api/lists${tmdbId ? `?tmdbId=${tmdbId}` : ''}`)
+    if (!res.ok) return []
+    return res.json()
+  } catch { return [] }
+}
+
+export async function createList(name: string): Promise<MovieList> {
+  const res = await fetch(`${BASE}/api/lists`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function renameList(id: number, name: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/lists/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+}
+
+export async function deleteList(id: number): Promise<void> {
+  const res = await fetch(`${BASE}/api/lists/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+}
+
+export async function getListItems(id: number): Promise<MovieListItem[]> {
+  const res = await fetch(`${BASE}/api/lists/${id}/items`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function addToList(id: number, item: MovieListItem): Promise<void> {
+  const res = await fetch(`${BASE}/api/lists/${id}/items`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+}
+
+export async function removeFromList(id: number, tmdbId: number): Promise<void> {
+  const res = await fetch(`${BASE}/api/lists/${id}/items/${tmdbId}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
 }

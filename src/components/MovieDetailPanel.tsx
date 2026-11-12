@@ -5,6 +5,7 @@ import { getMovieDetails, getMovieRecommendations, getMovieWatchProviders, getMo
 import { getCountry } from '../lib/settings'
 import { addMovie, updateMovie, deleteMovie } from '../lib/api'
 import { formatAirDate } from '../lib/utils'
+import { AddToList } from './AddToList'
 import type { Movie, MovieStatus, TmdbMovieDetail, TmdbSearchResult, WatchProvider } from '../types'
 import { MOVIE_STATUS_CONFIG } from '../types'
 import { toast } from 'sonner'
@@ -323,6 +324,19 @@ export function MovieDetailPanel({ movie, onClose, onUpdated, onSelect }: Props)
                     {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Add to Watchlist
                   </button>
+                )}
+
+                {/* Listas propias (las mismas que en la tele) */}
+                {movie?.tmdbId && (
+                  <AddToList
+                    key={movie.tmdbId}
+                    tmdbId={movie.tmdbId}
+                    title={movie.title}
+                    releaseDate={detail?.release_date ?? movie.releaseDate}
+                    posterPath={detail?.poster_path ?? movie.posterPath}
+                    overview={detail?.overview ?? movie.overview}
+                    imdbId={imdbId}
+                  />
                 )}
               </div>
 
